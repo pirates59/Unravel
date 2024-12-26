@@ -1,16 +1,20 @@
 import React from "react";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
+import leftarrow from "../assets/leftarrow.png";
+import login from "../assets/login.png";
 
 const Login = () => {
   return (
     <div className="flex flex-col h-screen">
       <Topbar />
-      <div className="flex-1 bg-[#F3F6FA] flex justify-center items-center">
-        <div className="flex w-4/5 md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-lg">
+      <div className="flex-1 bg-[#F3F6FA] flex justify-center items-center ">
+        <div className="flex w-100% md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-lg">
           <div className="w-1/2 p-8">
-            <button className="mb-4 flex items-center text-gray-600">
-              <span className="mr-2">&larr;</span> Welcome back
+            <button className="mb-4 flex items-center text-black-800">
+              <span className="mr-2">
+                    <img src={leftarrow}  alt="" className="h-4" />
+                </span> Welcome back
             </button>
             <h2 className="text-xl font-semibold mb-4">Login with email:</h2>
             <form>
@@ -35,12 +39,8 @@ const Login = () => {
               </button>
             </form>
           </div>
-          <div className="w-1/2 bg-[#F3F6FA] flex items-center justify-center">
-            {/* <img
-              src="path-to-illustration"
-              alt="Illustration"
-              className="max-h-full max-w-full"
-            /> */}
+          <div className="w-1/2 bg-[#F3F6FA] flex items-center justify-center p-4">
+            <img src={login} alt="" className="max-w-full" />
           </div>
         </div>
       </div>
