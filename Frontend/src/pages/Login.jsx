@@ -3,6 +3,7 @@ import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import login from "../assets/login.png";
+import { NavLink } from "react-router-dom";
 
 const Login = () => {
   return (
@@ -34,9 +35,12 @@ const Login = () => {
               <button className="w-full bg-[#EC993D] text-white py-2 rounded mb-4">
                 LOGIN
               </button>
+              
+              <NavLink to="/signup" >
               <button className="w-full bg-[#161F36] text-white py-2 rounded">
                 SIGN UP
               </button>
+              </NavLink>
             </form>
           </div>
           <div className="w-1/2 bg-[#F3F6FA] flex items-center justify-center p-4">

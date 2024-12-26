@@ -3,6 +3,7 @@ import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import login from "../assets/login.png";
+import { NavLink } from "react-router-dom";
 
 const Signup = () => {
   return (
@@ -35,10 +36,13 @@ const Signup = () => {
         placeholder="Re-enter your password"
         className="w-full mb-4 p-2 border rounded"
       />
+       <NavLink to="/" >
       <button className="w-full bg-[#EC993D] text-white py-2 rounded mt-8 ">
         SIGN UP
       </button>
+      </NavLink>
     </form>
+
   </div>
 
   <div className="w-1/2 bg-[#F3F6FA] flex items-center justify-center p-4">
