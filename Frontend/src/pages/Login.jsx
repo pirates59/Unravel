@@ -1,11 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import login from "../assets/login.png";
+import axios from "axios";
 import { NavLink } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
-const Login = () => {
+function Login  () {
+    const [email, setEmail] = useState(""); 
+    const [password, setPassword] = useState(""); 
+    const navigate= useNavigate()
+
+
+    const handleSubmitt = (e) => {
+      e.preventDefault();
+      console.log({ email, password }); // Log to check current values
+      axios
+        .post("http://localhost:3001/login", { email, password })
+        .then((result) => {console.log(result)
+          if(result.data === "Success"){
+               navigate('/service')
+          }
+         
+        })
+        .catch((err) => console.log(err));
+    };
   return (
     <div className="flex flex-col h-screen">
       <Topbar />
@@ -18,21 +38,26 @@ const Login = () => {
                 </span> Welcome back
             </button>
             <h2 className="text-xl font-semibold mb-4">Login with email:</h2>
-            <form>
-              <input
+            <form onSubmit={handleSubmitt}>
+            <input
                 type="email"
+                name="email"
+                autoComplete="off"
                 placeholder="Enter your email"
                 className="w-full mb-4 p-2 border rounded"
+                onChange={(e) => setEmail(e.target.value)}
               />
               <input
                 type="password"
+                name="password"
                 placeholder="Enter your password"
                 className="w-full mb-4 p-2 border rounded"
+                onChange={(e) => setPassword(e.target.value)}
               />
               <p className="text-right text-sm text-gray-500 mb-4">
                 Forgot password
               </p>
-              <button className="w-full bg-[#EC993D] text-white py-2 rounded mb-4">
+              <button type= "submit" className="w-full bg-[#EC993D] text-white py-2 rounded mb-4">
                 LOGIN
               </button>
               
