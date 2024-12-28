@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Login";
 import Signup from './pages/Signup';
+import DatePage from './pages/DatePage';
 import ServiceSelection from './pages/ServiceSelection';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/service" element={<ServiceSelection />} />
+        <Route path="/date" element={<DatePage />} />
         </Routes>
         </BrowserRouter>
       
