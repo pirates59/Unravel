@@ -39,7 +39,7 @@ const Appointment = () => {
           </li>
           {/* Date and Time */}
           <li className="relative flex items-center bg-white rounded-lg p-3">
-            <div className="absolute -right-0 mr-2 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+            <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
             <div className="flex items-center">
               <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
               <span className="ml-2 font-semibold text-sm">Date and Time</span>
@@ -47,7 +47,7 @@ const Appointment = () => {
           </li>
           {/* Your Information */}
           <li className="relative flex items-center bg-white rounded-lg p-3">
-            <div className="absolute -right-0 mr-2 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+            <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
             <div className="flex items-center">
               <img src={user} alt="User Icon" className="h-5 w-5" />
               <span className="ml-2 font-semibold text-sm">Your Information</span>
