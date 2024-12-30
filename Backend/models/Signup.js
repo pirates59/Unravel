@@ -6,7 +6,6 @@ name: String,
 email: String,
 password: String,
 
-
 })
 
 const SignupModel = mongoose.model("signup", SignupSchema)
