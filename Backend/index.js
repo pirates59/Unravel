@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const SignupModel = require("./models/Signup");
 const ServiceSelectionModel = require("./models/ServiceSelection");
 const Booking = require("./models/Booking");
+const InformationSchema = require("./models/Information");
 
 const app = express();
 app.use(express.json());
@@ -135,6 +136,46 @@ app.post("/book", async (req, res) => {
     res.status(500).json({ error: "Failed to book timeslot." });
   }
 });
+
+app.post("/information", async (req, res) => {
+  const { firstName, lastName, contact, email } = req.body;
+
+  // Input validation
+  const errors = [];
+  if (!firstName) errors.push("First name is required.");
+  if (!lastName) errors.push("Last name is required.");
+  if (!contact || !/^\d{10}$/.test(contact)) errors.push("Valid 10-digit contact number is required.");
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("Valid email is required.");
+
+  if (errors.length > 0) {
+    return res.status(400).json({ success: false, message: errors.join(" ") });
+  }
+
+  try {
+    // Save to the Information collection
+    const newInformation = new InformationSchema({
+      firstName,
+      lastName,
+      contact,
+      email,
+    });
+    await newInformation.save();
+
+    res.status(201).json({
+      success: true,
+    
+      data: newInformation,
+    });
+  } catch (err) {
+    console.error("Error saving information:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while saving the information.",
+    });
+  }
+});
+
+
 
 app.listen(3001, () => {
   console.log("Server is running on http://localhost:3001");
