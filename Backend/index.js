@@ -4,12 +4,17 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const SignupModel = require("./models/Signup");
 const ServiceSelectionModel = require("./models/ServiceSelection");
+const Booking = require("./models/Booking");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect("mongodb://127.0.0.1:27017/fyp");
+mongoose.connect("mongodb://127.0.0.1:27017/fyp", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -42,6 +47,22 @@ app.post("/login", async (req, res) => {
     }
 });
 
+app.post("/service-selection", async (req, res) => {
+    const { service, therapist } = req.body;
+
+    if (!service || !therapist) {
+        return res.status(400).json({ success: false, message: "Service and therapist are required." });
+    }
+
+    try {
+        const newSelection = await ServiceSelectionModel.create({ service, therapist });
+        res.status(201).json({ success: true, data: newSelection });
+    } catch (err) {
+        console.error("Error saving service selection:", err.message);
+        res.status(500).json({ success: false, message: "An error occurred while saving the data." });
+    }
+});
+
 
 app.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
@@ -70,9 +91,51 @@ app.post("/check-email", async (req, res) => {
       res.status(500).json({ exists: false });
     }
 });
+app.get("/booked-dates", async (req, res) => {
+  const { month, year } = req.query;
+  try {
+    const bookings = await Booking.find({ month, year });
+    const timeSlots = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM"];
+    const bookedDates = {};
 
-  
+    bookings.forEach((booking) => {
+      const dateKey = `${booking.year}-${booking.month}-${booking.day}`;
+      if (!bookedDates[dateKey]) bookedDates[dateKey] = { times: [], isFullyBooked: false };
+      bookedDates[dateKey].times.push(booking.time);
+      if (bookedDates[dateKey].times.length === timeSlots.length) bookedDates[dateKey].isFullyBooked = true;
+    });
+
+    res.json(bookedDates);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch booked dates." });
+  }
+});
+
+app.post("/book", async (req, res) => {
+  const { date, time } = req.body;
+
+  if (!date || !time) {
+    return res.status(400).json({ message: "Date and time are required." });
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+
+  try {
+    const existing = await Booking.findOne({ year, month, day, time });
+    if (existing) {
+      return res.status(400).json({ message: "Timeslot already booked. Please select another time." });
+    }
+
+    const booking = new Booking({ year, month, day, time });
+    await booking.save();
+
+    res.json({ message: "Booking successful!" });
+  } catch (err) {
+    console.error("Error booking:", err.message);
+    res.status(500).json({ error: "Failed to book timeslot." });
+  }
+});
 
 app.listen(3001, () => {
-    console.log("Server is running");
+  console.log("Server is running on http://localhost:3001");
 });
