@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import service from "../assets/service.png";
@@ -8,10 +9,14 @@ import user from "../assets/user.png";
 import close from "../assets/close.png";
 import appoint from "../assets/appoint.png";
 
+axios.defaults.baseURL = "http://localhost:3001";
+
 const DatePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
+  const [bookedDates, setBookedDates] = useState({});
+  const [showError, setShowError] = useState(false); // Error state
 
   const months = [
     "January",
@@ -29,62 +34,109 @@ const DatePage = () => {
   ];
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const timeSlots = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM"];
+
+  useEffect(() => {
+    const fetchBookedDates = async () => {
+      try {
+        const { data } = await axios.get("/booked-dates", {
+          params: {
+            month: currentDate.getMonth() + 1,
+            year: currentDate.getFullYear(),
+          },
+        });
+        setBookedDates(data);
+      } catch (error) {
+        console.error("Failed to fetch booked dates:", error);
+      }
+    };
+
+    fetchBookedDates();
+  }, [currentDate]);
+
+  const handleBooking = async () => {
+    if (!selectedDate || !selectedTime) {
+      setShowError(true); // Show error if date or time is not selected
+      return;
+    }
+
+    const formattedDate = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+
+    try {
+      const { data } = await axios.post("/book", {
+        date: formattedDate,
+        time: selectedTime,
+      });
+      alert(data.message);
+      setSelectedDate(null);
+      setSelectedTime("");
+      setShowError(false); // Hide error after successful booking
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to book the slot.");
+    }
+  };
+
   const renderDaysInMonth = () => {
-  const days = [];
-  const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const days = [];
+    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-  // Empty slots for days before the first day of the month
-  for (let i = 0; i < startDate.getDay(); i++) {
-    days.push(
-      <div key={`empty-${i}`} className="w-8 h-8 "></div>
-    );
-  }
+    for (let i = 0; i < startDate.getDay(); i++) {
+      days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
+    }
 
-  // Days of the current month
-  for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    days.push(
-      <button
-        key={day}
-        className={`w-8 h-8 flex items-center justify-center ml-3 rounded-full ${
-          selectedDate?.toDateString() === date.toDateString()
-            ? "bg-green-500 text-white"
-            : "hover:bg-gray-200"
-        }`}
-        onClick={() => setSelectedDate(date)}
-      >
-        {day}
-      </button>
-    );
-  }
+    for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const isFullyBooked = bookedDates[`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`]?.isFullyBooked;
 
-  return days;
-};
-
-
-const renderTimes = () => {
-  const times = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM"];
-  return (
-    <div className="flex gap-2 justify-start mr-24 whitespace-nowrap">
-      {times.map((time) => (
+      days.push(
         <button
-          key={time}
-          className={`w-24 h-10 border rounded-lg text-sm font-medium ${
-            selectedTime === time
+          key={day}
+          disabled={isFullyBooked}
+          className={`w-8 h-8 flex items-center justify-center ml-3 rounded-full ${
+            selectedDate?.toDateString() === date.toDateString()
               ? "bg-green-500 text-white"
+              : isFullyBooked
+              ? "bg-gray-300 cursor-not-allowed"
               : "hover:bg-gray-200"
           }`}
-          onClick={() => setSelectedTime(time)}
+          onClick={() => setSelectedDate(date)}
         >
-          {time}
+          {day}
         </button>
-      ))}
-    </div>
-  );
-};
+      );
+    }
 
+    return days;
+  };
 
+  const renderTimes = () => {
+    const formattedDate = selectedDate
+      ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`
+      : null;
+    const bookedTimes = formattedDate ? bookedDates[formattedDate]?.times || [] : [];
+
+    return (
+      <div className="flex gap-2 justify-start mr-24 whitespace-nowrap">
+        {timeSlots.map((time) => (
+          <button
+            key={time}
+            disabled={bookedTimes.includes(time)}
+            className={`w-24 h-10 border rounded-lg text-sm font-medium ${
+              selectedTime === time
+                ? "bg-green-500 text-white"
+                : bookedTimes.includes(time)
+                ? "bg-gray-300 cursor-not-allowed"
+                : "hover:bg-gray-200"
+            }`}
+            onClick={() => setSelectedTime(time)}
+          >
+            {time}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   const handleMonthChange = (direction) => {
     setCurrentDate((prevDate) => {
@@ -126,7 +178,7 @@ const renderTimes = () => {
             </ul>
           </div>
 
-           <div className="flex-1 p-6 flex flex-col justify-between">
+          <div className="flex-1 p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
@@ -137,53 +189,26 @@ const renderTimes = () => {
               </div>
 
               {/* Month Box */}
-              <div className="mb-6 p-4 border rounded-lg shadow-lg" style={{ boxShadow: "0px 0px 10px #FFFFFF" }}>
-                {/* Month Selector */}
+              <div className="mb-6 p-4 border rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <button
-                    onClick={() => handleMonthChange(-1)}
-                    className="text-lg font-semibold"
-                  >
-                    &lt;
-                  </button>
-                  <h3 className="text-lg font-bold text-[#B05677]">
-                    {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-                  </h3>
-                  <button
-                    onClick={() => handleMonthChange(1)}
-                    className="text-lg font-semibold"
-                  >
-                    &gt;
-                  </button>
+                  <button onClick={() => handleMonthChange(-1)}>&lt;</button>
+                  <h3>{months[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
+                  <button onClick={() => handleMonthChange(1)}>&gt;</button>
                 </div>
-
-                {/* Weekday Header */}
-                <div className="grid grid-cols-7 mb-2 text-sm font-semibold text-center">
-                  {daysOfWeek.map((day) => (
-                    <div key={day}>{day}</div>
-                  ))}
-                </div>
-
-                {/* Calendar */}
                 <div className="grid grid-cols-7 gap-2">{renderDaysInMonth()}</div>
               </div>
+              <div>{renderTimes()}</div>
 
-              {/* Times */}
-              <div className="flex space-x-2 justify-center">{renderTimes()}</div>
+              {/* Error Message */}
+              {showError && (
+                <p className="text-red-500 text-sm mt-2">Please select both a date and time to continue.</p>
+              )}
             </div>
 
-            {/* Button at the Bottom */}
             <div className="flex justify-end">
               <button
-                type="button"
                 className="bg-green-500 text-white py-1 px-4 h-8 rounded-lg font-semibold text-sm"
-                onClick={() =>
-                  alert(
-                    `Selected Date: ${
-                      selectedDate?.toDateString() || "None"
-                    }, Time: ${selectedTime || "None"}`
-                  )
-                }
+                onClick={handleBooking}
               >
                 Continue
               </button>
