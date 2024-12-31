@@ -12,7 +12,7 @@ const ServiceSelection = () => {
   const [service, setService] = useState("");
   const [therapist, setTherapist] = useState("");
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -33,7 +33,6 @@ const ServiceSelection = () => {
     setLoading(true); // Set loading to true
 
     try {
-
       const response = await fetch("http://localhost:3001/service-selection", {
         method: "POST",
         headers: {
@@ -58,7 +57,6 @@ const ServiceSelection = () => {
       setLoading(false); // Set loading to false
     }
   };
-
 
   return (
     <div className="flex flex-col h-screen">
@@ -97,14 +95,14 @@ const ServiceSelection = () => {
           </div>
 
           {/* Content Section */}
-          <div className="flex-1 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold mb-4">Service Selection</h2>
-                <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
-              </div>
+          <div className="flex-1 p-6 flex flex-col">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold mb-4">Service Selection</h2>
+              <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
+            </div>
 
-              <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="flex flex-col justify-between flex-grow">
+              <div>
                 <div className="mb-4">
                   <label className="block mb-1 font-medium text-sm">Service:</label>
                   <select
@@ -132,17 +130,17 @@ const ServiceSelection = () => {
                   </select>
                   {errors.therapist && <p className="text-red-500 text-sm mt-1">{errors.therapist}</p>}
                 </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="bg-green-500 text-white py-1 px-4 h-8 rounded-lg font-semibold text-sm"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              {/* Continue button */}
+              <div className="flex justify-end mt-auto">
+                <button
+                  type="submit"
+                  className="bg-green-500 text-white py-1 px-4 h-8 rounded-lg font-semibold text-sm"
+                >
+                  Continue
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate, NavLink } from "react-router-dom";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import service from "../assets/service.png";
@@ -9,12 +10,12 @@ import user from "../assets/user.png";
 import close from "../assets/close.png";
 import appoint from "../assets/appoint.png";
 
-axios.defaults.baseURL = "http://localhost:3001";
 
 const DatePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
+  const navigate = useNavigate();
   const [bookedDates, setBookedDates] = useState({});
   const [showError, setShowError] = useState(false); // Error state
 
@@ -39,7 +40,7 @@ const DatePage = () => {
   useEffect(() => {
     const fetchBookedDates = async () => {
       try {
-        const { data } = await axios.get("/booked-dates", {
+        const { data } = await axios.get("http://localhost:3001/booked-dates", {
           params: {
             month: currentDate.getMonth() + 1,
             year: currentDate.getFullYear(),
@@ -54,27 +55,34 @@ const DatePage = () => {
     fetchBookedDates();
   }, [currentDate]);
 
+  
   const handleBooking = async () => {
     if (!selectedDate || !selectedTime) {
-      setShowError(true); // Show error if date or time is not selected
+      setShowError(true); 
       return;
     }
-
+  
     const formattedDate = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-
+  
     try {
-      const { data } = await axios.post("/book", {
+      // Send booking data to server
+      await axios.post("http://localhost:3001/book", {
         date: formattedDate,
         time: selectedTime,
       });
-      alert(data.message);
+  
+      // Clear the selected date and time after booking
       setSelectedDate(null);
       setSelectedTime("");
-      setShowError(false); // Hide error after successful booking
+      setShowError(false);
+  
+      // Navigate to the appointment page without showing an alert
+      navigate("/appointment"); 
     } catch (error) {
       alert(error.response?.data?.message || "Failed to book the slot.");
     }
   };
+  
 
   const renderDaysInMonth = () => {
     const days = [];
@@ -182,7 +190,10 @@ const DatePage = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                  <img src={leftarrow} alt="Back Icon" className="h-4 w-4" />
+                <NavLink to="/service">
+                    <img src={leftarrow} alt="Back Icon" className="h-4 w-4 cursor-pointer" />
+                  </NavLink>
+                 
                   <h2 className="text-lg font-bold">Date and Time</h2>
                 </div>
                 <img src={close} alt="Close Icon" className="h-5 w-5" />
@@ -201,7 +212,7 @@ const DatePage = () => {
 
               {/* Error Message */}
               {showError && (
-                <p className="text-red-500 text-sm mt-2">Please select both a date and time to continue.</p>
+                <p className="text-red-500 text-sm mt-5">Please select both a date and time to continue.</p>
               )}
             </div>
 
