@@ -49,20 +49,24 @@ app.post("/login", async (req, res) => {
 });
 
 app.post("/service-selection", async (req, res) => {
-    const { service, therapist } = req.body;
+  const { service, therapist, finalize } = req.body;
 
-    if (!service || !therapist) {
-        return res.status(400).json({ success: false, message: "Service and therapist are required." });
-    }
+  if (!service || !therapist) {
+    return res.status(400).json({ success: false, message: "Service and therapist are required." });
+  }
 
-    try {
-        const newSelection = await ServiceSelectionModel.create({ service, therapist });
-        res.status(201).json({ success: true, data: newSelection });
-    } catch (err) {
-        console.error("Error saving service selection:", err.message);
-        res.status(500).json({ success: false, message: "An error occurred while saving the data." });
+  try {
+    if (finalize) {
+      const newSelection = await ServiceSelectionModel.create({ service, therapist });
+      return res.status(201).json({ success: true, data: newSelection });
     }
+    return res.status(200).json({ success: true, message: "Selection temporarily stored." });
+  } catch (err) {
+    console.error("Error saving service selection:", err.message);
+    res.status(500).json({ success: false, message: "An error occurred while saving the data." });
+  }
 });
+
 
 
 app.post("/register", async (req, res) => {
@@ -106,36 +110,58 @@ app.get("/booked-dates", async (req, res) => {
       if (bookedDates[dateKey].times.length === timeSlots.length) bookedDates[dateKey].isFullyBooked = true;
     });
 
-    res.json(bookedDates);
+    res.json(bookedDates); 
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch booked dates." });
   }
 });
 
 app.post("/book", async (req, res) => {
-  const { date, time } = req.body;
+  const { date, time, firstName, lastName, contact, email, service, therapist } = req.body;
 
-  if (!date || !time) {
-    return res.status(400).json({ message: "Date and time are required." });
+  if (!date || !time || !firstName || !lastName || !contact || !email || !service || !therapist) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD." });
   }
 
   const [year, month, day] = date.split("-").map(Number);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD." });
+  }
 
   try {
+    // Check if the timeslot is already booked
     const existing = await Booking.findOne({ year, month, day, time });
     if (existing) {
-      return res.status(400).json({ message: "Timeslot already booked. Please select another time." });
+      return res.status(400).json({ message: "Timeslot already booked." });
     }
 
-    const booking = new Booking({ year, month, day, time });
+    // Save booking
+    const booking = new Booking({
+      year,
+      month,
+      day,
+      time,
+      firstName,
+      lastName,
+      contact,
+      email,
+      service,
+      therapist,
+    });
     await booking.save();
 
-    res.json({ message: "Booking successful!" });
+    res.status(201).json({ message: "Booking successful!" });
   } catch (err) {
-    console.error("Error booking:", err.message);
-    res.status(500).json({ error: "Failed to book timeslot." });
+    console.error("Error booking:", err); // Detailed error log
+    res.status(500).json({ error: err.message || "Failed to book timeslot." });
   }
 });
+
+
 
 app.post("/information", async (req, res) => {
   const { firstName, lastName, contact, email } = req.body;
