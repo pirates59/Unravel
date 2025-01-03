@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import services from "../assets/service.png";
 import calendar from "../assets/calendar.png";
 import user from "../assets/user.png";
@@ -12,13 +12,30 @@ const ServiceSelection = () => {
   const [service, setService] = useState("");
   const [therapist, setTherapist] = useState("");
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+
+  useEffect(() => {
+    const storedService = localStorage.getItem("selectedService");
+    const storedTherapist = localStorage.getItem("selectedTherapist");
+
+    if (location.state?.service) {
+      setService(location.state.service);
+    } else if (storedService) {
+      setService(storedService);
+    }
+
+    if (location.state?.therapist) {
+      setTherapist(location.state.therapist);
+    } else if (storedTherapist) {
+      setTherapist(storedTherapist);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     const validationErrors = {};
     if (!service) validationErrors.service = "Please select a service.";
     if (!therapist) validationErrors.therapist = "Please select a therapist.";
@@ -28,24 +45,23 @@ const ServiceSelection = () => {
       return;
     }
 
-    // Clear errors
     setErrors({});
-    setLoading(true); // Set loading to true
+    setLoading(true);
 
     try {
+      localStorage.setItem("selectedService", service);
+      localStorage.setItem("selectedTherapist", therapist);
 
       const response = await fetch("http://localhost:3001/service-selection", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ service, therapist }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // Navigate to the next page if successful
+      
         navigate("/date", { state: { service, therapist } });
       } else {
         console.error(result.message);
@@ -55,39 +71,33 @@ const ServiceSelection = () => {
       console.error("Error saving data:", error);
       alert("An error occurred while saving the data.");
     } finally {
-      setLoading(false); // Set loading to false
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="flex flex-col h-screen">
       <Topbar />
       <div className="flex-1 bg-[#EDF6FF] flex items-center justify-center px-20">
-        {/* Main Container */}
         <div className="flex w-[800px] h-[500px] bg-white rounded-lg shadow-lg">
-          {/* Sidebar */}
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
             <ul className="space-y-3">
-              {/* Service Selection */}
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-2 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
+                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={services} alt="Service Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Service Selection</span>
                 </div>
               </li>
-              {/* Date and Time */}
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Date and Time</span>
                 </div>
               </li>
-              {/* Your Information */}
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={user} alt="User Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Your Information</span>
@@ -95,16 +105,13 @@ const ServiceSelection = () => {
               </li>
             </ul>
           </div>
-
-          {/* Content Section */}
-          <div className="flex-1 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold mb-4">Service Selection</h2>
-                <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
-              </div>
-
-              <form onSubmit={handleSubmit}>
+          <div className="flex-1 p-6 flex flex-col">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold mb-4">Service Selection</h2>
+              <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col justify-between flex-grow">
+              <div>
                 <div className="mb-4">
                   <label className="block mb-1 font-medium text-sm">Service:</label>
                   <select
@@ -132,21 +139,18 @@ const ServiceSelection = () => {
                   </select>
                   {errors.therapist && <p className="text-red-500 text-sm mt-1">{errors.therapist}</p>}
                 </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="bg-green-500 text-white py-1 px-4 h-8 rounded-lg font-semibold text-sm"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              <div className="flex justify-end mt-auto">
+                <button
+                  type="submit"
+                  className="bg-green-500 text-white py-1 px-4 h-8 rounded-lg font-semibold text-sm"
+                >
+                  Continue
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-
-        {/* Right Image Section */}
         <div className="ml-16 mt-4">
           <img src={appoint} alt="Appointment Illustration" className="h-[480px]" />
         </div>
