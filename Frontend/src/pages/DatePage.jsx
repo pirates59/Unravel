@@ -15,9 +15,9 @@ const DatePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
-  const navigate = useNavigate();
   const [bookedDates, setBookedDates] = useState({});
-  const [showError, setShowError] = useState(false); // Error state
+  const [showError, setShowError] = useState(false);
+  const navigate = useNavigate();
 
   const months = [
     "January",
@@ -33,8 +33,6 @@ const DatePage = () => {
     "November",
     "December",
   ];
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
   const timeSlots = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM"];
 
   useEffect(() => {
@@ -46,98 +44,106 @@ const DatePage = () => {
             year: currentDate.getFullYear(),
           },
         });
-        setBookedDates(data);
+        setBookedDates(data); // Store booked dates with time slots
       } catch (error) {
         console.error("Failed to fetch booked dates:", error);
       }
     };
-
-    fetchBookedDates();
-  }, [currentDate]);
-
   
-  const handleBooking = async () => {
+    fetchBookedDates();
+  }, [currentDate]); // Run when the month or year changes
+  
+  
+
+  const handleMonthChange = (direction) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(currentDate.getMonth() + direction); // Increment or decrement the month
+    setCurrentDate(newDate);
+  };
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setSelectedTime(""); // Clear time when date changes
+  };
+
+  const handleTimeChange = (time) => {
+    setSelectedTime(time);
+  };
+
+  const handleBooking = () => {
     if (!selectedDate || !selectedTime) {
-      setShowError(true); 
+      setShowError(true);
       return;
     }
-  
-    const formattedDate = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-  
-    try {
-      // Send booking data to server
-      await axios.post("http://localhost:3001/book", {
-        date: formattedDate,
-        time: selectedTime,
-      });
-  
-      // Clear the selected date and time after booking
-      setSelectedDate(null);
-      setSelectedTime("");
-      setShowError(false);
-  
-      // Navigate to the appointment page without showing an alert
-      navigate("/appointment"); 
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to book the slot.");
-    }
+
+    // Save temporary booking to localStorage
+    localStorage.setItem(
+      "temporaryBooking",
+      JSON.stringify({ date: selectedDate.toISOString(), time: selectedTime })
+    );
+
+    setShowError(false);
+    navigate("/appointment");
   };
-  
 
   const renderDaysInMonth = () => {
     const days = [];
     const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
+  
     for (let i = 0; i < startDate.getDay(); i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
-
-    for (let day = startDate.getDate(); day <= endDate.getDate(); day++) {
+  
+    for (let day = 1; day <= endDate.getDate(); day++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const isFullyBooked = bookedDates[`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`]?.isFullyBooked;
-
+      const isBooked = bookedDates[`${date.getFullYear()}-${date.getMonth() + 1}-${day}`];
+  
       days.push(
         <button
           key={day}
-          disabled={isFullyBooked}
-          className={`w-8 h-8 flex items-center justify-center ml-3 rounded-full ${
+          disabled={isBooked && isBooked.isFullyBooked}
+          className={`w-8 h-8 rounded-full ${
             selectedDate?.toDateString() === date.toDateString()
               ? "bg-green-500 text-white"
-              : isFullyBooked
+              : isBooked
               ? "bg-gray-300 cursor-not-allowed"
               : "hover:bg-gray-200"
           }`}
-          onClick={() => setSelectedDate(date)}
+          onClick={() => handleDateChange(date)}
         >
           {day}
         </button>
       );
     }
-
+  
     return days;
   };
+  
 
   const renderTimes = () => {
     const formattedDate = selectedDate
       ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`
       : null;
-    const bookedTimes = formattedDate ? bookedDates[formattedDate]?.times || [] : [];
-
+  
+    const bookedTimes = formattedDate
+      ? bookedDates[formattedDate]?.times || []
+      : [];
+  
     return (
-      <div className="flex gap-2 justify-start mr-24 whitespace-nowrap">
+      <div className="flex flex-wrap gap-3">
         {timeSlots.map((time) => (
           <button
             key={time}
-            disabled={bookedTimes.includes(time)}
-            className={`w-24 h-10 border rounded-lg text-sm font-medium ${
-              selectedTime === time
+            disabled={bookedTimes.includes(time)} // Disable if booked
+            className={`w-24 h-10 border rounded-lg text-sm ${
+              bookedTimes.includes(time)
+                ? "bg-gray-300 cursor-not-allowed" // Gray if booked
+                : selectedTime === time
                 ? "bg-green-500 text-white"
-                : bookedTimes.includes(time)
-                ? "bg-gray-300 cursor-not-allowed"
                 : "hover:bg-gray-200"
             }`}
-            onClick={() => setSelectedTime(time)}
+            onClick={() => handleTimeChange(time)} // Select time if not booked
           >
             {time}
           </button>
@@ -145,13 +151,9 @@ const DatePage = () => {
       </div>
     );
   };
-
-  const handleMonthChange = (direction) => {
-    setCurrentDate((prevDate) => {
-      const newMonth = prevDate.getMonth() + direction;
-      return new Date(prevDate.getFullYear(), newMonth, 1);
-    });
-  };
+  
+  
+  
 
   return (
     <div className="flex flex-col h-screen">
@@ -163,24 +165,30 @@ const DatePage = () => {
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
             <ul className="space-y-3">
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-2 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={service} alt="Service Icon" className="h-5 w-5" />
-                  <span className="ml-2 font-semibold text-sm">Service Selection</span>
+                  <span className="ml-2 font-semibold text-sm">
+                    Service Selection
+                  </span>
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
-                  <span className="ml-2 font-semibold text-sm">Date and Time</span>
+                  <span className="ml-2 font-semibold text-sm">
+                    Date and Time
+                  </span>
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={user} alt="User Icon" className="h-5 w-5" />
-                  <span className="ml-2 font-semibold text-sm">Your Information</span>
+                  <span className="ml-2 font-semibold text-sm">
+                    Your Information
+                  </span>
                 </div>
               </li>
             </ul>
@@ -190,10 +198,13 @@ const DatePage = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
-                <NavLink to="/service">
-                    <img src={leftarrow} alt="Back Icon" className="h-4 w-4 cursor-pointer" />
+                  <NavLink to="/service">
+                    <img
+                      src={leftarrow}
+                      alt="Back Icon"
+                      className="h-4 w-4 cursor-pointer"
+                    />
                   </NavLink>
-                 
                   <h2 className="text-lg font-bold">Date and Time</h2>
                 </div>
                 <img src={close} alt="Close Icon" className="h-5 w-5" />
@@ -203,16 +214,22 @@ const DatePage = () => {
               <div className="mb-6 p-4 border rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <button onClick={() => handleMonthChange(-1)}>&lt;</button>
-                  <h3>{months[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
+                  <h3 className="text-lg font-bold">
+                    {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </h3>
                   <button onClick={() => handleMonthChange(1)}>&gt;</button>
                 </div>
-                <div className="grid grid-cols-7 gap-2">{renderDaysInMonth()}</div>
+                <div className="grid grid-cols-7 gap-2">
+                  {renderDaysInMonth()}
+                </div>
               </div>
               <div>{renderTimes()}</div>
 
               {/* Error Message */}
               {showError && (
-                <p className="text-red-500 text-sm mt-5">Please select both a date and time to continue.</p>
+                <p className="text-red-500 text-sm mt-5">
+                  Please select both a date and time to continue.
+                </p>
               )}
             </div>
 
