@@ -7,6 +7,7 @@ import Signup from './pages/Signup';
 import DatePage from './pages/DatePage';
 import Appointment from './pages/Appointment';
 import ServiceSelection from './pages/ServiceSelection';
+import { Forgotpassword,ResetPassword } from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -20,6 +21,8 @@ function App() {
         <Route path="/service" element={<ServiceSelection />} />
         <Route path="/date" element={<DatePage />} />
         <Route path="/appointment" element={<Appointment />} />
+        <Route path="/forgot" element={<Forgotpassword />} />
+        <Route path="/reset" element={<ResetPassword />} />
         </Routes>
         </BrowserRouter>
       
