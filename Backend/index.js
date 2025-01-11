@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 const SignupModel = require("./models/Signup");
 const ServiceSelectionModel = require("./models/ServiceSelection");
 const Booking = require("./models/Booking");
@@ -10,6 +12,14 @@ const InformationSchema = require("./models/Information");
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "lenishaghimire07@gmail.com", // Replace with your Gmail address
+    pass: "aycz dckk hich mciz",   // Replace with the 16-character app password
+  },
+});
 
 mongoose.connect("mongodb://127.0.0.1:27017/fyp", {
   useNewUrlParser: true,
@@ -198,6 +208,71 @@ app.post("/information", async (req, res) => {
       success: false,
       message: "An error occurred while saving the information.",
     });
+  }
+});
+
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await SignupModel.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Email not registered." });
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    user.otp = otp;
+    user.otpExpires = Date.now() + 5 * 60 * 1000; // OTP valid for 5 minutes
+    await user.save();
+
+    await transporter.sendMail({
+      from: "your-email@gmail.com",
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
+    });
+
+    res.json({ success: true, message: "OTP sent to your email." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to send OTP." });
+  }
+});
+
+// Endpoint to verify OTP
+app.post("/verify-otp", async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await SignupModel.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
+    if (!user || user.otp !== otp || Date.now() > user.otpExpires) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP." });
+    }
+    user.otp = null; // Clear OTP after successful verification
+    user.otpExpires = null;
+    await user.save();
+
+    res.json({ success: true, message: "OTP verified." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to verify OTP." });
+  }
+});
+
+// Endpoint to reset password
+app.post("/reset-password", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await SignupModel.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successfully." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to reset password." });
   }
 });
 
