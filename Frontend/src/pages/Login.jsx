@@ -65,9 +65,11 @@ function Login() {
               {errorMessage && (
                 <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
               )}
+              <NavLink to="/forgot">
               <p className="text-right text-sm text-gray-500 mb-4">
                 Forgot password
               </p>
+              </NavLink>
               <button
                 type="submit"
                 className="w-full bg-[#EC993D] text-white py-2 rounded mb-4"
