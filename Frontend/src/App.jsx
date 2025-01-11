@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Signup from './pages/Signup';
 import DatePage from './pages/DatePage';
 import Appointment from './pages/Appointment';
+import Landing from './pages/Landing';
 import ServiceSelection from './pages/ServiceSelection';
 import { Forgotpassword,ResetPassword } from './pages/ForgotPassword';
 
@@ -23,6 +24,7 @@ function App() {
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/forgot" element={<Forgotpassword />} />
         <Route path="/reset" element={<ResetPassword />} />
+        <Route path="/landing" element={<Landing />} />
         </Routes>
         </BrowserRouter>
       
