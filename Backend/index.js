@@ -26,6 +26,12 @@ mongoose.connect("mongodb://127.0.0.1:27017/fyp", {
   useUnifiedTopology: true,
 });
 
+// Helper to normalize date to UTC
+const normalizeToUTC = (dateString) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)); // Month is zero-indexed in JS
+};
+
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -122,10 +128,12 @@ app.get("/booked-dates", async (req, res) => {
 
     res.json(bookedDates); 
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch booked dates." });
+    console.error("Error fetching booked dates:", err.message);
+    res.status(500).json({ success: false, message: "An error occurred while fetching bookings." });
   }
 });
 
+// POST /book endpoint
 app.post("/book", async (req, res) => {
   const { date, time, firstName, lastName, contact, email, service, therapist } = req.body;
 
@@ -137,12 +145,12 @@ app.post("/book", async (req, res) => {
     return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD." });
   }
 
-  const [year, month, day] = date.split("-").map(Number);
-  if (isNaN(year) || isNaN(month) || isNaN(day)) {
-    return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD." });
-  }
-
   try {
+    const normalizedDate = normalizeToUTC(date);
+    const year = normalizedDate.getUTCFullYear();
+    const month = normalizedDate.getUTCMonth() + 1; // Convert back to 1-based
+    const day = normalizedDate.getUTCDate();
+
     // Check if the timeslot is already booked
     const existing = await Booking.findOne({ year, month, day, time });
     if (existing) {
@@ -166,10 +174,11 @@ app.post("/book", async (req, res) => {
 
     res.status(201).json({ message: "Booking successful!" });
   } catch (err) {
-    console.error("Error booking:", err); // Detailed error log
+    console.error("Error booking:", err);
     res.status(500).json({ error: err.message || "Failed to book timeslot." });
   }
 });
+
 
 
 
