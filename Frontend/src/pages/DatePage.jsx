@@ -10,7 +10,6 @@ import user from "../assets/user.png";
 import close from "../assets/close.png";
 import appoint from "../assets/appoint.png";
 
-
 const DatePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -44,30 +43,42 @@ const DatePage = () => {
             year: currentDate.getFullYear(),
           },
         });
-        setBookedDates(data); // Store booked dates with time slots
+        setBookedDates(data);
       } catch (error) {
         console.error("Failed to fetch booked dates:", error);
       }
     };
-  
+
     fetchBookedDates();
-  }, [currentDate]); // Run when the month or year changes
-  
-  
+  }, [currentDate]);
+
+  useEffect(() => {
+    const storedBooking = JSON.parse(localStorage.getItem("temporaryBooking"));
+    if (storedBooking) {
+      setSelectedDate(new Date(storedBooking.date));
+      setSelectedTime(storedBooking.time);
+    }
+  }, []);
 
   const handleMonthChange = (direction) => {
     const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + direction); // Increment or decrement the month
+    newDate.setMonth(currentDate.getMonth() + direction);
     setCurrentDate(newDate);
   };
 
   const handleDateChange = (date) => {
-    setSelectedDate(date);
-    setSelectedTime(""); // Clear time when date changes
+    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    setSelectedDate(localDate);
+    setSelectedTime("");
+    localStorage.setItem("temporaryBooking", JSON.stringify({ date: localDate.toISOString(), time: "" }));
   };
 
   const handleTimeChange = (time) => {
     setSelectedTime(time);
+    localStorage.setItem(
+      "temporaryBooking",
+      JSON.stringify({ date: selectedDate.toISOString(), time })
+    );
   };
 
   const handleBooking = () => {
@@ -75,12 +86,6 @@ const DatePage = () => {
       setShowError(true);
       return;
     }
-
-    // Save temporary booking to localStorage
-    localStorage.setItem(
-      "temporaryBooking",
-      JSON.stringify({ date: selectedDate.toISOString(), time: selectedTime })
-    );
 
     setShowError(false);
     navigate("/appointment");
@@ -90,15 +95,15 @@ const DatePage = () => {
     const days = [];
     const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-  
+
     for (let i = 0; i < startDate.getDay(); i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
-  
+
     for (let day = 1; day <= endDate.getDate(); day++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       const isBooked = bookedDates[`${date.getFullYear()}-${date.getMonth() + 1}-${day}`];
-  
+
       days.push(
         <button
           key={day}
@@ -116,34 +121,33 @@ const DatePage = () => {
         </button>
       );
     }
-  
+
     return days;
   };
-  
 
   const renderTimes = () => {
     const formattedDate = selectedDate
       ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`
       : null;
-  
+
     const bookedTimes = formattedDate
       ? bookedDates[formattedDate]?.times || []
       : [];
-  
+
     return (
       <div className="flex flex-wrap gap-3">
         {timeSlots.map((time) => (
           <button
             key={time}
-            disabled={bookedTimes.includes(time)} // Disable if booked
+            disabled={bookedTimes.includes(time)}
             className={`w-24 h-10 border rounded-lg text-sm ${
               bookedTimes.includes(time)
-                ? "bg-gray-300 cursor-not-allowed" // Gray if booked
+                ? "bg-gray-300 cursor-not-allowed"
                 : selectedTime === time
                 ? "bg-green-500 text-white"
                 : "hover:bg-gray-200"
             }`}
-            onClick={() => handleTimeChange(time)} // Select time if not booked
+            onClick={() => handleTimeChange(time)}
           >
             {time}
           </button>
@@ -151,19 +155,14 @@ const DatePage = () => {
       </div>
     );
   };
-  
-  
-  
 
   return (
     <div className="flex flex-col h-screen">
       <Topbar />
       <div className="flex-1 bg-[#EDF6FF] flex items-center justify-center px-20">
-        {/* Left Section */}
         <div className="flex w-[800px] h-[500px] bg-white rounded-lg shadow-lg">
-          {/* Sidebar */}
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
-            <ul className="space-y-3">
+          <ul className="space-y-3">
               <li className="relative flex items-center bg-white rounded-lg p-3">
                 <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
@@ -192,8 +191,8 @@ const DatePage = () => {
                 </div>
               </li>
             </ul>
-          </div>
 
+          </div>
           <div className="flex-1 p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -210,7 +209,6 @@ const DatePage = () => {
                 <img src={close} alt="Close Icon" className="h-5 w-5" />
               </div>
 
-              {/* Month Box */}
               <div className="mb-6 p-4 border rounded-lg shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <button onClick={() => handleMonthChange(-1)}>&lt;</button>
@@ -219,20 +217,15 @@ const DatePage = () => {
                   </h3>
                   <button onClick={() => handleMonthChange(1)}>&gt;</button>
                 </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {renderDaysInMonth()}
-                </div>
+                <div className="grid grid-cols-7 gap-2">{renderDaysInMonth()}</div>
               </div>
               <div>{renderTimes()}</div>
-
-              {/* Error Message */}
               {showError && (
                 <p className="text-red-500 text-sm mt-5">
                   Please select both a date and time to continue.
                 </p>
               )}
             </div>
-
             <div className="flex justify-end">
               <button
                 className="bg-green-500 text-white py-1 px-4 h-8 rounded-lg font-semibold text-sm"
@@ -243,14 +236,8 @@ const DatePage = () => {
             </div>
           </div>
         </div>
-
-        {/* Right Image Section */}
         <div className="ml-16 mt-4">
-          <img
-            src={appoint}
-            alt="Appointment Illustration"
-            className="h-[480px]"
-          />
+          <img src={appoint} alt="Appointment Illustration" className="h-[480px]" />
         </div>
       </div>
       <Footer />
