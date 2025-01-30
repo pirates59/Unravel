@@ -54,7 +54,10 @@ const Appointment = () => {
     }
 
     if (temporaryBooking) {
-      setSelectedDate(new Date(temporaryBooking.date).toDateString());
+      // Parse the date correctly, adjusting for timezone
+      const date = new Date(temporaryBooking.date);
+      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      setSelectedDate(localDate.toISOString().split("T")[0]); // Store as YYYY-MM-DD
       setSelectedTime(temporaryBooking.time);
     }
   }, []);
@@ -72,63 +75,59 @@ const Appointment = () => {
 
   const handleSubmit = async () => {
     const { firstName, lastName, contact, email } = formData;
-  
+
     if (!firstName || !lastName || !contact || !email || !selectedDate || !selectedTime) {
       setError("All fields and the selected date and time are required.");
       setMessage("");
       return;
     }
-  
+
     if (!/^\d{10}$/.test(contact)) {
       setError("Contact must be a valid 10-digit number.");
       setMessage("");
       return;
     }
-  
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Email must be valid.");
       setMessage("");
       return;
     }
-  
-    const formattedDate = new Date(selectedDate).toISOString().split("T")[0];
-  
+
     const service = localStorage.getItem("selectedService");
     const therapist = localStorage.getItem("selectedTherapist");
-  
+
     if (!service || !therapist) {
       setError("Service and therapist are required.");
       setMessage("");
       return;
     }
-  
+
     try {
       const finalData = {
         ...formData,
-        date: formattedDate,
+        date: selectedDate, // Already in YYYY-MM-DD format
         time: selectedTime,
         service,
         therapist,
       };
-  
+
       const response = await submitInformation(finalData);
-  
+
       setMessage("Appointment booked successfully!");
       setError("");
-  
+
       // Clear all fields and localStorage
       setFormData({ firstName: "", lastName: "", contact: "", email: "" });
       setSelectedDate("");
       setSelectedTime("");
       localStorage.clear(); // Clear all keys from localStorage
-  
-      
     } catch (err) {
       setError(`Error booking the appointment: ${err.message}`);
       setMessage("");
     }
   };
-  
+
   return (
     <div className="flex flex-col h-screen">
       <Topbar />
