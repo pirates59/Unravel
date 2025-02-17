@@ -9,6 +9,7 @@ import appoint from "../assets/appoint.png";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 
+
 // Function to submit the appointment information
 const submitInformation = async (formData) => {
   try {
@@ -128,29 +129,30 @@ const Appointment = () => {
     }
   };
 
+
   return (
     <div className="flex flex-col h-screen">
       <Topbar />
       <div className="flex-1 bg-[#EDF6FF] flex items-center justify-center px-20">
-        <div className="flex w-[800px] h-[500px] bg-white rounded-lg shadow-lg mr-16">
+        <div className="flex w-[800px] h-[500px] bg-white rounded-lg shadow-lg">
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
             <ul className="space-y-3">
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={service} alt="Service Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Service Selection</span>
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Date and Time</span>
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-2 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-[#4BB543] rounded-full border-1 shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={user} alt="User Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Your Information</span>
@@ -158,81 +160,98 @@ const Appointment = () => {
               </li>
             </ul>
           </div>
-
+          
           <div className="flex-1 p-6 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <NavLink to="/date">
-                    <img src={leftarrow} alt="Back Icon" className="h-4 w-4 cursor-pointer" />
-                  </NavLink>
-                  <h2 className="text-lg font-bold">Your Information</h2>
-                </div>
-                <img src={close} alt="Close Icon" className="h-5 w-5" />
-              </div>
+            <div className="flex items-center justify-between mb-3">
+                           <div className="flex items-center space-x-3">
+                             <NavLink to="/date">
+                               <img
+                                 src={leftarrow}
+                                 alt="Back Icon"
+                                 className="h-4 w-4 cursor-pointer"
+                               />
+                             </NavLink>
+                             <h2 className="text-lg font-bold">Your Information</h2>
+                           </div>
+                             <NavLink to="/landing">
+                           <img src={close} alt="Close Icon" className="h-5 w-5" />
+                           </NavLink>
+                         </div>
+  
+           
+           
+                         <div>
+  {/* First Name and Last Name in one row */}
+  <div className="mb-4 flex gap-4">
+    <div className="w-1/2">
+      <label className="block mb-1 font-medium text-sm">First Name</label>
+      <input
+        type="text"
+        name="firstName"
+        placeholder="Enter your first name"
+        value={formData.firstName}
+        onChange={handleChange}
+        className="w-full p-3 border rounded-lg text-sm"
+      />
+    </div>
+    <div className="w-1/2">
+      <label className="block mb-1 font-medium text-sm">Last Name</label>
+      <input
+        type="text"
+        name="lastName"
+        placeholder="Enter your last name"
+        value={formData.lastName}
+        onChange={handleChange}
+        className="w-full p-3 border rounded-lg text-sm"
+      />
+    </div>
+  </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-6">
-                <div>
-                  <label className="block mb-2 text-sm font-medium">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    placeholder="Enter your first name"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="w-full p-3 border rounded-lg text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium">Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    placeholder="Enter your last name"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="w-full p-3 border rounded-lg text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium">Contact</label>
-                  <input
-                    type="text"
-                    name="contact"
-                    placeholder="Enter your contact number"
-                    value={formData.contact}
-                    onChange={handleChange}
-                    className="w-full p-3 border rounded-lg text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-medium">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full p-3 border rounded-lg text-sm"
-                  />
-                </div>
-              </div>
+  {/* Email and Contact in one row below */}
+  <div className="mb-4 flex gap-4">
+    <div className="w-1/2">
+      <label className="block mb-1 font-medium text-sm">Email</label>
+      <input
+        type="email"
+        name="email"
+        placeholder="Enter your email"
+        value={formData.email}
+        onChange={handleChange}
+        className="w-full p-3 border rounded-lg text-sm"
+      />
+    </div>
+    <div className="w-1/2">
+      <label className="block mb-1 font-medium text-sm">Contact</label>
+      <input
+        type="text"
+        name="contact"
+        placeholder="Enter your contact number"
+        value={formData.contact}
+        onChange={handleChange}
+        className="w-full p-3 border rounded-lg text-sm"
+      />
+    </div>
+  </div>
+</div>
+
               {error && <p className="text-red-500 mt-2">{error}</p>}
               {message && <p className="text-green-500 mt-4">{message}</p>}
+             
+ 
             </div>
 
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleSubmit}
-                className="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600"
-              >
+                className="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600">
                 Confirm
               </button>
             </div>
           </div>
         </div>
         <div className="ml-16 mt-4">
-          <img src={appoint} alt="Illustration" className="h-[400px]" />
+          <img src={appoint} alt="Illustration" className="h-[480px]" />
         </div>
       </div>
       <Footer />
