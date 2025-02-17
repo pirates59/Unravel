@@ -17,7 +17,7 @@ const Landing = () => {
         </button>
       </div>
 
-      {/* Hero Section */}
+      
       <div className="flex flex-col lg:flex-row items-center justify-between px-8 py-16">
         <div className="lg:w-1/2 text-center lg:text-left">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
