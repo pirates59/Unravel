@@ -21,10 +21,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-mongoose.connect("mongodb://127.0.0.1:27017/fyp", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect("mongodb://127.0.0.1:27017/fyp")
 
 // Helper to normalize date to UTC
 const normalizeToUTC = (dateString) => {

@@ -95,36 +95,40 @@ const DatePage = () => {
     const days = [];
     const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize time for correct comparison
+  
     for (let i = 0; i < startDate.getDay(); i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
-
+  
     for (let day = 1; day <= endDate.getDate(); day++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      date.setHours(0, 0, 0, 0);
+  
+      const isPastDate = date < today && date.toDateString() !== today.toDateString();
       const isBooked = bookedDates[`${date.getFullYear()}-${date.getMonth() + 1}-${day}`];
-
+  
       days.push(
         <button
           key={day}
-          disabled={isBooked && isBooked.isFullyBooked}
-          className={`w-8 h-8 rounded-full ${
-            selectedDate?.toDateString() === date.toDateString()
-              ? "bg-green-500 text-white"
-              : isBooked
-              ? "bg-gray-300 cursor-not-allowed"
-              : "hover:bg-gray-200"
-          }`}
-          onClick={() => handleDateChange(date)}
+          disabled={isPastDate || (isBooked && isBooked.isFullyBooked)}
+          className={`w-8 h-8 flex items-center justify-center rounded-full
+             ${isPastDate ? "text-gray-400 cursor-not-allowed" : ""}
+            ${isBooked && isBooked.isFullyBooked ? "bg-red-400 text-white cursor-not-allowed" : ""}
+            ${selectedDate?.toDateString() === date.toDateString() ? "bg-green-500 text-white" : "hover:bg-gray-200"}
+          `}
+          onClick={() => !isPastDate && handleDateChange(date)}
         >
           {day}
         </button>
       );
     }
-
+  
     return days;
   };
-
+  
+  
   const renderTimes = () => {
     const formattedDate = selectedDate
       ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`
@@ -164,7 +168,7 @@ const DatePage = () => {
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
           <ul className="space-y-3">
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={service} alt="Service Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">
@@ -173,7 +177,7 @@ const DatePage = () => {
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px]  bg-[#4BB543] rounded-full border-1 shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">
@@ -182,7 +186,7 @@ const DatePage = () => {
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={user} alt="User Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">
@@ -206,7 +210,9 @@ const DatePage = () => {
                   </NavLink>
                   <h2 className="text-lg font-bold">Date and Time</h2>
                 </div>
+                  <NavLink to="/landing">
                 <img src={close} alt="Close Icon" className="h-5 w-5" />
+                </NavLink>
               </div>
 
               <div className="mb-6 p-4 border rounded-lg shadow-lg">
