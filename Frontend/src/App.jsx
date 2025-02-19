@@ -6,8 +6,9 @@ import Login from "./pages/Login";
 import Signup from './pages/Signup';
 import DatePage from './pages/DatePage';
 import Appointment from './pages/Appointment';
-import Sidebar from './components/Sidebar';
-import UserSidebar from './components/UserSidebar';
+import Admin from './pages/Admin';
+import Recent from './pages/Recent';
+import Feed from './pages/Feed';
 import Landing from './pages/Landing';
 import ServiceSelection from './pages/ServiceSelection';
 import { Forgotpassword,ResetPassword } from './pages/ForgotPassword';
@@ -27,8 +28,10 @@ function App() {
         <Route path="/forgot" element={<Forgotpassword />} />
         <Route path="/reset" element={<ResetPassword />} />
         <Route path="/landing" element={<Landing />} />
-        <Route path="/sidebar" element={<Sidebar/>} />
-        <Route path="/UserSidebar" element={<UserSidebar/>} />
+        <Route path="/admin" element={<Admin/>} />
+        <Route path="/recent" element={<Recent/>} />
+        <Route path="/feed" element={<Feed/>} />
+       
         </Routes>
         </BrowserRouter>
       

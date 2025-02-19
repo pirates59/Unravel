@@ -9,19 +9,23 @@ import setting from "../assets/setting.png";
 import logout from "../assets/logout.png";
 import notification from "../assets/notification.png";
 
-const UserSidebar = () => {
+const UserSidebar = ({ children }) => {
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
+      {/* Left Sidebar */}
       <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
         {/* Logo */}
         <div className="mb-10">
-        <img src={userlogo} alt="Logo" className="w-[300px] h-[70px] ml-[-14px] mt-[-14px]" />
+          <img
+            src={userlogo}
+            alt="Logo"
+            className="w-[300px] h-[70px] ml-[-14px] mt-[-14px]"
+          />
         </div>
 
         {/* Menu Items */}
         <nav className="flex flex-col space-y-6">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 ">
             <img src={plus} alt="Write Post" className="w-5 h-5" />
             <span>Write Post</span>
           </div>
@@ -56,19 +60,20 @@ const UserSidebar = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Right Side: Top Bar + Content */}
       <div className="flex-1 flex flex-col">
-        {/* Hero Section (Navbar) */}
+        {/* Top Bar (Notification + Profile) */}
         <div className="flex justify-end items-center p-4 bg-white">
-          {/* Notification Icon */}
           <div className="cursor-pointer mx-4">
             <img src={notification} alt="Notification" className="w-6 h-6" />
           </div>
-
-          {/* Profile Placeholder */}
           <div className="cursor-pointer w-8 h-8 bg-gray-300 rounded-full"></div>
         </div>
 
+        {/* Children: Main Content Below the Top Bar */}
+        <div className="flex-1 p-6  overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   );
