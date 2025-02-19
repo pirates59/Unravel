@@ -3,7 +3,7 @@ import UserSidebar from "../components/UserSidebar";
 import { NavLink } from "react-router-dom";
 const Recent = () => {
   return (
-    <UserSidebar>
+    <div>
       {/* Header with Recent, Feed, and Topic in one line */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
@@ -88,7 +88,7 @@ const Recent = () => {
           </div>
         </div>
       </div>
-    </UserSidebar>
+    </div>
   );
 };
 
