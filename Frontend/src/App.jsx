@@ -7,6 +7,7 @@ import Signup from './pages/Signup';
 import DatePage from './pages/DatePage';
 import Appointment from './pages/Appointment';
 import Sidebar from './components/Sidebar';
+import UserSidebar from './components/UserSidebar';
 import Landing from './pages/Landing';
 import ServiceSelection from './pages/ServiceSelection';
 import { Forgotpassword,ResetPassword } from './pages/ForgotPassword';
@@ -27,6 +28,7 @@ function App() {
         <Route path="/reset" element={<ResetPassword />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/sidebar" element={<Sidebar/>} />
+        <Route path="/UserSidebar" element={<UserSidebar/>} />
         </Routes>
         </BrowserRouter>
       
