@@ -9,6 +9,7 @@ import UserSidebar from "./components/UserSidebar";
 import Admin from './pages/Admin';
 import Recent from './pages/Recent';
 import Post from './pages/Post';
+import EditPost from './pages/EditPost';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
 import Landing from './pages/Landing';
@@ -21,7 +22,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/service" element={<ServiceSelection />} />
           <Route path="/date" element={<DatePage />} />
@@ -34,6 +36,7 @@ function App() {
           {/* Protected Routes with Sidebar */}
           <Route path="/recent" element={<UserSidebar><Recent /></UserSidebar>} />
           <Route path="/post" element={<UserSidebar><Post /></UserSidebar>} />
+          <Route path="/editpost" element={<UserSidebar><EditPost /></UserSidebar>} />
           <Route path="/feed" element={<UserSidebar><Feed /></UserSidebar>} />
           <Route path="/help" element={<UserSidebar><Help /></UserSidebar>} />
         </Routes>

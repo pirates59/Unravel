@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import userlogo from "../assets/userlogo.png";
 import plus from "../assets/plus.png";
 import feed from "../assets/feed.png";
@@ -8,9 +9,20 @@ import wellness from "../assets/wellness.png";
 import setting from "../assets/setting.png";
 import logout from "../assets/logout.png";
 import notification from "../assets/notification.png";
-import { NavLink } from "react-router-dom";
 
 const UserSidebar = ({ children }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // End the current session by removing user-related data from localStorage.
+    localStorage.removeItem("username");
+    // Optionally, you could clear all localStorage if that fits your use case:
+    // localStorage.clear();
+
+    // Redirect to the login page.
+    navigate("/login");
+  };
+
   return (
     <div className="flex h-screen">
       {/* Left Sidebar */}
@@ -26,18 +38,16 @@ const UserSidebar = ({ children }) => {
 
         {/* Menu Items */}
         <nav className="flex flex-col space-y-6">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 ">
-            
+          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={plus} alt="Write Post" className="w-5 h-5" />
             <NavLink to="/post">
-            <span>Write Post</span>
-              </NavLink>
-          
+              <span>Write Post</span>
+            </NavLink>
           </div>
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={feed} alt="Feed" className="w-5 h-5" />
             <NavLink to="/feed">
-            <span>Feed</span>
+              <span>Feed</span>
             </NavLink>
           </div>
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
@@ -51,7 +61,7 @@ const UserSidebar = ({ children }) => {
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={help} alt="I Need Help" className="w-5 h-5" />
             <NavLink to="/help">
-            <span>I Need Help</span>
+              <span>I Need Help</span>
             </NavLink>
           </div>
         </nav>
@@ -62,7 +72,10 @@ const UserSidebar = ({ children }) => {
             <img src={setting} alt="Settings" className="w-5 h-5" />
             <span>Settings</span>
           </div>
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+          <div
+            onClick={handleLogout}
+            className="flex items-center space-x-3 cursor-pointer hover:opacity-80"
+          >
             <img src={logout} alt="Logout" className="w-5 h-5" />
             <span>Logout</span>
           </div>
@@ -80,7 +93,7 @@ const UserSidebar = ({ children }) => {
         </div>
 
         {/* Children: Main Content Below the Top Bar */}
-        <div className="flex-1 p-6  overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto">
           {children}
         </div>
       </div>

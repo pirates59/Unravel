@@ -1,54 +1,193 @@
-import React from "react";
-import UserSidebar from "../components/UserSidebar";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
-import dotIcon from "../assets/dot.png"; // Import your dot icon
+import dotIcon from "../assets/dot.png";
+import Swal from "sweetalert2";
+
+// Helper function to extract hashtags from text
+function extractHashtags(text) {
+  const regex = /#[a-zA-Z0-9_]+/g;
+  return text.match(regex) || [];
+}
+
+// Helper function to keep only the last occurrence of each hashtag
+function getUniqueHashtags(hashtags) {
+  const uniqueHashtags = [];
+  for (let i = hashtags.length - 1; i >= 0; i--) {
+    if (!uniqueHashtags.includes(hashtags[i])) {
+      uniqueHashtags.unshift(hashtags[i]);
+    }
+  }
+  return uniqueHashtags;
+}
+
+// Helper function to format the post date
+function formatDate(date) {
+  const postDate = new Date(date);
+  const now = new Date();
+  const diff = now - postDate;
+  const diffSeconds = Math.floor(diff / 1000);
+  const diffMinutes = Math.floor(diff / (1000 * 60));
+  const diffHours = Math.floor(diff / (1000 * 60 * 60));
+
+  if (diffHours < 24) {
+    if (diffHours > 0) {
+      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
+    } else if (diffMinutes > 0) {
+      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+    } else {
+      return diffSeconds <= 1 ? "1 second ago" : `${diffSeconds} seconds ago`;
+    }
+  } else {
+    // Format as "22 Feb"
+    return postDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short"
+    });
+  }
+}
 
 const Feed = () => {
+  const [posts, setPosts] = useState([]);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [currentUser, setCurrentUser] = useState("");
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    // Retrieve current username from localStorage if needed
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setCurrentUser(storedUsername);
+    }
+
+    fetchPosts();
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/posts");
+      const data = await res.json();
+      setPosts(data);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
+
+  const toggleDropdown = (postId) => {
+    setActiveDropdown(activeDropdown === postId ? null : postId);
+  };
+
+  // Function to actually delete the post from the backend
+  const handleDelete = async (postId) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchPosts();
+      } else {
+        console.error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  // Function to confirm deletion with SweetAlert
+  const confirmDelete = (postId) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to delete this post?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleDelete(postId);
+        Swal.fire("Deleted!", "Your post has been deleted.", "success");
+      }
+    });
+  };
+
   return (
     <div>
-      {/* Header with Recent, Feed, and Topic in one line */}
+      {/* Header with Recent and Feed buttons */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
           <NavLink to="/recent">
-            <button className="border border-[#EC993D] px-6 py-2 rounded-xl">
-              Recent
-            </button>
+            <button className="border border-[#EC993D] px-6 py-2 rounded-xl">Recent</button>
           </NavLink>
-          <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">
-            Feed
-          </button>
+          <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">Feed</button>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex gap-6 w-[1028px]">
-        {/* Posts Section */}
         <div className="flex-1 space-y-4">
-          {Array(2) // Display 5 posts as in the image
-            .fill()
-            .map((_, index) => (
-              <div key={index} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
+          {posts.map((post) => {
+            const hashtags = extractHashtags(post.content);
+            const uniqueHashtags = getUniqueHashtags(hashtags);
+            const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
+
+            return (
+              <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white rounded-full"></div>
                   <div>
-                    <p className="font-semibold">Ashley Haris</p>
-                    <p className="text-sm text-gray-500">4h</p>
+                    <p className="font-semibold">{post.author}</p>
+                    <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                   </div>
                 </div>
-                <p className="mt-2">"I wish someone would notice I’m not okay."</p>
-                <p className="text-blue-500 text-sm cursor-pointer">#YakamozS245</p>
+                <p className="mt-2">{cleanedContent}</p>
+                {uniqueHashtags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {uniqueHashtags.map((tag, index) => (
+                      <p key={index} className="text-blue-500 text-sm cursor-pointer">
+                        {tag}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-500 text-sm mt-2">
                   <p>💬 197</p>
                   <p>❤️ 2,533</p>
                 </div>
-                {/* Three Dots Icon */}
-                <img
-                  src={dotIcon}
-                  alt="Options"
-                  className="absolute top-4 right-4 w-6 h-6 cursor-pointer"
-                />
+                <div className="absolute top-4 right-4">
+                  <img
+                    src={dotIcon}
+                    alt="Options"
+                    className="w-6 h-6 cursor-pointer"
+                    onClick={() => toggleDropdown(post._id)}
+                  />
+                  {activeDropdown === post._id && (
+                    <div ref={dropdownRef} className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10">
+                      <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
+                        <button
+                          onClick={() => setActiveDropdown(null)}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Edit
+                        </button>
+                      </NavLink>
+                      <button
+                        onClick={() => confirmDelete(post._id)}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
+            );
+          })}
         </div>
       </div>
     </div>
