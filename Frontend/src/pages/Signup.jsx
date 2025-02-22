@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
-import login from "../assets/login.png";
+import loginImg from "../assets/login.png";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -22,9 +22,8 @@ function Signup() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setEmailError(""); 
+    setEmailError("");
 
-    // Validate email format
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address.");
       return;
@@ -38,9 +37,14 @@ function Signup() {
         return;
       }
 
-      // Proceed with registration if no errors
+      // Register the user
       await axios.post("http://localhost:3001/register", { name, email, password });
-      navigate("/"); 
+      
+      // Store the username from signup in localStorage
+      localStorage.setItem("username", name);
+      
+      // Redirect to login (or directly to feed)
+      navigate("/login");
     } catch (error) {
       console.error("An error occurred during signup:", error.message);
       setEmailError("An unexpected error occurred. Please try again.");
@@ -51,16 +55,15 @@ function Signup() {
     <div className="flex flex-col h-screen">
       <Topbar />
       <div className="flex-1 bg-[#F3F6FA] flex justify-center items-center">
-        <div className="flex w-100% md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-lg">
+        <div className="flex w-full md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-lg">
           <div className="w-1/2 p-8">
             <button className="mb-4 flex items-center text-black-800">
               <span className="mr-2">
-              <NavLink to="/"> <img src={leftarrow} alt="" className="h-4" />
-              </NavLink>
+                <NavLink to="/"> 
+                  <img src={leftarrow} alt="Back" className="h-4" />
+                </NavLink>
               </span>
-             
               Welcome to Unravel
-             
             </button>
             <h2 className="text-xl font-semibold mb-4">Sign up with email:</h2>
             <form onSubmit={handleSubmit}>
@@ -89,17 +92,13 @@ function Signup() {
                 onChange={(e) => setPassword(e.target.value)}
               />
               {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
-              <button
-                type="submit"
-                className="w-full bg-[#EC993D] text-white py-2 rounded mt-8"
-              >
+              <button type="submit" className="w-full bg-[#EC993D] text-white py-2 rounded mt-8">
                 REGISTER
               </button>
             </form>
           </div>
-
           <div className="w-1/2 bg-[#F3F6FA] flex items-center justify-center p-4">
-            <img src={login} alt="" className="max-w-full" />
+            <img src={loginImg} alt="Signup Illustration" className="max-w-full" />
           </div>
         </div>
       </div>
