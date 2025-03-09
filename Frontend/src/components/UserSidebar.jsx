@@ -14,12 +14,9 @@ const UserSidebar = ({ children }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // End the current session by removing user-related data from localStorage.
+   
     localStorage.removeItem("username");
-    // Optionally, you could clear all localStorage if that fits your use case:
-    // localStorage.clear();
-
-    // Redirect to the login page.
+    
     navigate("/login");
   };
 
@@ -82,9 +79,9 @@ const UserSidebar = ({ children }) => {
         </div>
       </div>
 
-      {/* Right Side: Top Bar + Content */}
+ 
       <div className="flex-1 flex flex-col">
-        {/* Top Bar (Notification + Profile) */}
+       
         <div className="flex justify-end items-center p-4 bg-white">
           <div className="cursor-pointer mx-4">
             <img src={notification} alt="Notification" className="w-6 h-6" />
@@ -92,7 +89,7 @@ const UserSidebar = ({ children }) => {
           <div className="cursor-pointer w-8 h-8 bg-gray-300 rounded-full"></div>
         </div>
 
-        {/* Children: Main Content Below the Top Bar */}
+      
         <div className="flex-1 p-6 overflow-y-auto">
           {children}
         </div>
