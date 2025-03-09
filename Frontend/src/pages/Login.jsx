@@ -14,27 +14,22 @@ function Login() {
 
   const handleSubmitt = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Clear previous errors
-
+    setErrorMessage("");
     try {
-      console.log("Login request initiated.");
       const result = await axios.post("http://localhost:3001/login", { email, password });
-      console.log("Login response received:", result.data);
-
       if (result.data.success) {
-        // Assume the response contains the user name either nested or flat.
-        const username = result.data.user ? result.data.user.name : result.data.name;
-        if (username) {
-          localStorage.setItem("username", username);
-        } else {
-          console.error("Username not found in login response.");
-        }
-        navigate("/recent"); // Redirect on success
+        // Use the returned user data for role-based redirection
+        const username = result.data.user ? result.data.user.name : email.split("@")[0];
+        const role = result.data.user ? result.data.user.role : "user";
+        localStorage.setItem("username", username);
+        localStorage.setItem("role", role);
+
+        // Redirect based on role.
+        role === "admin" ? navigate("/Users") : navigate("/recent");
       } else {
         setErrorMessage(result.data.message);
       }
     } catch (err) {
-      console.error("An error occurred during login:", err.message);
       setErrorMessage("An error occurred while processing your request.");
     }
   };
@@ -71,9 +66,7 @@ function Login() {
                 className="w-full mb-4 p-2 border rounded"
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errorMessage && (
-                <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
-              )}
+              {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
               <NavLink to="/forgot">
                 <p className="text-right text-sm text-gray-500 mb-4">Forgot password</p>
               </NavLink>

@@ -11,45 +11,47 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
-  // Email validation function
   const validateEmail = (email) => {
     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return regex.test(email);
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setEmailError("");
-
+    setSuccessMessage(""); // Clear any previous success message
+  
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address.");
       return;
     }
-
+  
     try {
-      // Check if the email already exists
       const response = await axios.post("http://localhost:3001/check-email", { email });
       if (response.data.exists) {
         setEmailError("This email is already registered.");
         return;
       }
-
-      // Register the user
-      await axios.post("http://localhost:3001/register", { name, email, password });
+  
+      // Call register endpoint. The server will assign role based on whether this is the first user.
+      const regResponse = await axios.post("http://localhost:3001/register", { name, email, password });
       
-      // Store the username from signup in localStorage
-      localStorage.setItem("username", name);
+      // Set success message based on role: include role for admin only.
+      if (regResponse.data.user.role === "admin") {
+        setSuccessMessage(`Registration successful! Your role is: ${regResponse.data.user.role}`);
+      } else {
+        setSuccessMessage("Registration successful!");
+      }
       
-      // Redirect to login (or directly to feed)
-      navigate("/login");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
-      console.error("An error occurred during signup:", error.message);
       setEmailError("An unexpected error occurred. Please try again.");
     }
   };
+  
 
   return (
     <div className="flex flex-col h-screen">
@@ -59,7 +61,7 @@ function Signup() {
           <div className="w-1/2 p-8">
             <button className="mb-4 flex items-center text-black-800">
               <span className="mr-2">
-                <NavLink to="/"> 
+                <NavLink to="/login">
                   <img src={leftarrow} alt="Back" className="h-4" />
                 </NavLink>
               </span>
@@ -92,6 +94,7 @@ function Signup() {
                 onChange={(e) => setPassword(e.target.value)}
               />
               {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+              {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
               <button type="submit" className="w-full bg-[#EC993D] text-white py-2 rounded mt-8">
                 REGISTER
               </button>
