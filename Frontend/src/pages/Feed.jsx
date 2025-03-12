@@ -4,6 +4,7 @@ import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
 import comment from "../assets/comment.png";
 import Swal from "sweetalert2";
+import Comment from "../components/Comment";
 
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
@@ -50,6 +51,9 @@ const Feed = () => {
   const [currentUser, setCurrentUser] = useState("");
   const [profileImage, setProfileImage] = useState("default-avatar.png");
   const dropdownRef = useRef(null);
+
+  // ADDED: State to track which post's comments are open
+  const [openCommentId, setOpenCommentId] = useState(null);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -118,6 +122,11 @@ const Feed = () => {
     });
   };
 
+  // ADDED: Toggle which post's comments are open
+  const toggleComments = (postId) => {
+    setOpenCommentId(openCommentId === postId ? null : postId);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -159,10 +168,28 @@ const Feed = () => {
                     ))}
                   </div>
                 )}
-                <div className="flex items-center gap-10 text-gray-500 text-sm mt-4">
-  <img src={like} alt="Like" className="w-5 h-5 cursor-pointer" />
-  <img src={comment} alt="Comment" className="w-5 h-5 cursor-pointer" />
-</div>
+                <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
+                  <img src={like} alt="Like" className="w-5 h-5 cursor-pointer" /> 
+                  <p className="" >Like</p>
+                  {/* ADDED onClick to toggle comment section */}
+                 
+                  <img
+                    src={comment}
+                    alt="Comment"
+                    className="w-5 h-5 cursor-pointer"
+                    onClick={() => toggleComments(post._id)}
+                  /> 
+                   <p className=""   onClick={() => toggleComments(post._id)}>Comment</p>
+                </div>
+
+                {openCommentId === post._id && (
+  <Comment
+    post={post}                // pass the full post object
+    postId={post._id}
+    closeComments={() => setOpenCommentId(null)}
+  />
+)}
+
                 <div className="absolute top-4 right-4">
                   <img
                     src={dotIcon}
