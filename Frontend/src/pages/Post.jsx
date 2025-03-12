@@ -63,7 +63,7 @@ const Post = () => {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="What's Happening?"
-          className="bg-gray-300 rounded-lg p-4 min-h-[300px] text-white font-semibold w-full resize-none"
+          className="bg-gray-300 rounded-lg p-4 min-h-[300px] text-black font-semibold w-full resize-none"
         ></textarea>
 
         <div className="flex justify-end mt-3">
