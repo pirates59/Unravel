@@ -10,6 +10,10 @@ const PostSchema = new Schema({
     type: String,
     required: true
   },
+  profileImage: {
+    type: String,
+    default: "default-avatar.png"
+  },
   createdAt: {
     type: Date,
     default: Date.now
