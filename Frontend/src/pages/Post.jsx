@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import leftarrow from "../assets/leftarrow.png";
-import icon from "../assets/icon.png";
 
 const Post = () => {
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
   const navigate = useNavigate();
 
-  // Retrieve the current username from localStorage
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setAuthor(storedUsername);
     }
   }, []);
+
+  // Retrieve profile image filename from localStorage, default if not set
+  const profileImageName = localStorage.getItem("profileImage") || "default-avatar.png";
+  const profileImageUrl = profileImageName !== "default-avatar.png"
+    ? `http://localhost:3001/uploads/${profileImageName}`
+    : "default-avatar.png";
 
   const handleSubmit = async () => {
     if (!content) return;
@@ -24,8 +28,8 @@ const Post = () => {
         headers: {
           "Content-Type": "application/json"
         },
-        // Send the dynamic username as the author
-        body: JSON.stringify({ content, author })
+        // Include profileImage so that posts are saved with the user's profile image filename
+        body: JSON.stringify({ content, author, profileImage: profileImageName })
       });
       if (res.ok) {
         navigate("/feed");
@@ -47,7 +51,11 @@ const Post = () => {
       {/* Post Box */}
       <div className="bg-gray-100 p-4 rounded-lg shadow-md w-[80%] h-[65%]">
         <div className="flex items-center mb-3">
-          <img src={icon} alt="User Avatar" className="w-10 h-10 rounded-full mr-3" />
+          <img
+            src={profileImageUrl}
+            alt="User Avatar"
+            className="w-10 h-10 rounded-full mr-3"
+          />
           <span className="font-semibold">{author}</span>
         </div>
 
@@ -59,7 +67,10 @@ const Post = () => {
         ></textarea>
 
         <div className="flex justify-end mt-3">
-          <button className="bg-[#EC993D] text-white px-8 py-2 rounded-lg" onClick={handleSubmit}>
+          <button
+            className="bg-[#EC993D] text-white px-8 py-2 rounded-lg"
+            onClick={handleSubmit}
+          >
             Post
           </button>
         </div>

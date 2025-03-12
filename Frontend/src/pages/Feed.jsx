@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import dotIcon from "../assets/dot.png";
+import like from "../assets/like.png";
+import comment from "../assets/comment.png";
 import Swal from "sweetalert2";
 
-// Helper function to extract hashtags from text
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
   return text.match(regex) || [];
 }
 
-// Helper function to keep only the last occurrence of each hashtag
 function getUniqueHashtags(hashtags) {
   const uniqueHashtags = [];
   for (let i = hashtags.length - 1; i >= 0; i--) {
@@ -20,7 +20,6 @@ function getUniqueHashtags(hashtags) {
   return uniqueHashtags;
 }
 
-// Helper function to format the post date
 function formatDate(date) {
   const postDate = new Date(date);
   const now = new Date();
@@ -38,7 +37,6 @@ function formatDate(date) {
       return diffSeconds <= 1 ? "1 second ago" : `${diffSeconds} seconds ago`;
     }
   } else {
-    // Format as "22 Feb"
     return postDate.toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short"
@@ -50,13 +48,18 @@ const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [currentUser, setCurrentUser] = useState("");
+  const [profileImage, setProfileImage] = useState("default-avatar.png");
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Retrieve current username from localStorage if needed
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setCurrentUser(storedUsername);
+    }
+
+    const storedProfileImage = localStorage.getItem("profileImage");
+    if (storedProfileImage) {
+      setProfileImage(`http://localhost:3001/uploads/${storedProfileImage}`);
     }
 
     fetchPosts();
@@ -74,7 +77,8 @@ const Feed = () => {
     try {
       const res = await fetch("http://localhost:3001/api/posts");
       const data = await res.json();
-      setPosts(data);
+      const userPosts = data.filter((post) => post.author === localStorage.getItem("username"));
+      setPosts(userPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
@@ -84,7 +88,6 @@ const Feed = () => {
     setActiveDropdown(activeDropdown === postId ? null : postId);
   };
 
-  // Function to actually delete the post from the backend
   const handleDelete = async (postId) => {
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}`, { method: "DELETE" });
@@ -98,7 +101,6 @@ const Feed = () => {
     }
   };
 
-  // Function to confirm deletion with SweetAlert
   const confirmDelete = (postId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -118,7 +120,6 @@ const Feed = () => {
 
   return (
     <div>
-      {/* Header with Recent and Feed buttons */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
           <NavLink to="/recent">
@@ -128,7 +129,6 @@ const Feed = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex gap-6 w-[1028px]">
         <div className="flex-1 space-y-4">
           {posts.map((post) => {
@@ -139,7 +139,11 @@ const Feed = () => {
             return (
               <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-white rounded-full"></div>
+                  <img
+                    src={profileImage}
+                    alt="User Avatar"
+                    className="w-10 h-10 rounded-full mr-3"
+                  />
                   <div>
                     <p className="font-semibold">{post.author}</p>
                     <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
@@ -155,10 +159,10 @@ const Feed = () => {
                     ))}
                   </div>
                 )}
-                <div className="flex justify-between text-gray-500 text-sm mt-2">
-                  <p>💬 197</p>
-                  <p>❤️ 2,533</p>
-                </div>
+                <div className="flex items-center gap-10 text-gray-500 text-sm mt-4">
+  <img src={like} alt="Like" className="w-5 h-5 cursor-pointer" />
+  <img src={comment} alt="Comment" className="w-5 h-5 cursor-pointer" />
+</div>
                 <div className="absolute top-4 right-4">
                   <img
                     src={dotIcon}

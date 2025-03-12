@@ -58,7 +58,7 @@ const Help = () => {
         </button>
         
         <NavLink to="/service"> 
-        <button className="bg-green-600 text-white px-6 py-2 rounded-md text-lg w-[100%] mr-[400px]">
+        <button className="bg-green-600 text-white px-6 py-2 rounded-md text-lg w-[100%] mr-[330px]">
           Helpline
         </button>
         </NavLink>
