@@ -9,10 +9,26 @@ const ServiceSelectionModel = require("./models/ServiceSelection");
 const Booking = require("./models/Booking");
 const InformationSchema = require("./models/Information");
 const Post = require("./models/Post"); 
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+
+
+mongoose.connect("mongodb://127.0.0.1:27017/fyp");
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+
+// Optionally serve static files from uploads if you want to access images
+app.use("/uploads", express.static(uploadDir));
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -22,13 +38,37 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-mongoose.connect("mongodb://127.0.0.1:27017/fyp");
+// Set up multer for handling file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext);
+  },
+});
+const uploadMiddleware = multer({ storage: storage });
 
 // Helper to normalize date to UTC
 const normalizeToUTC = (dateString) => {
   const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day)); // Month is zero-indexed
+  return new Date(Date.UTC(year, month - 1, day));
 };
+
+app.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const userCount = await SignupModel.countDocuments();
+    const role = userCount === 0 ? "admin" : "user";
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await SignupModel.create({ name, email, password: hashedPassword, role });
+    res.json({ message: "User registered successfully", user: { name: newUser.name, role: newUser.role } });
+  } catch (err) {
+    console.error("Error during registration:", err.message);
+    res.status(500).json({ message: "Error registering user." });
+  }
+});
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -45,10 +85,41 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       return res.json({ success: false, message: "Incorrect password. Please try again." });
     }
-    return res.json({ success: true, message: "Login successful." });
+    return res.json({
+      success: true,
+      message: "Login successful.",
+      user: { 
+        name: user.name, 
+        email: user.email,
+        role: user.role, 
+        profileImage: user.profileImage, 
+        isFirstLogin: user.isFirstLogin 
+      }
+    });
   } catch (err) {
     console.error("Error during login:", err.message);
     res.status(500).json({ success: false, message: "An error occurred. Please try again later." });
+  }
+});
+
+app.post("/update-profile", uploadMiddleware.single("profileImage"), async (req, res) => {
+  const { email } = req.body;
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No file uploaded." });
+  }
+  try {
+    const updatedUser = await SignupModel.findOneAndUpdate(
+      { email: { $regex: new RegExp(`^${email}$`, "i") } },
+      { profileImage: req.file.filename, isFirstLogin: false },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+    res.json({ success: true, message: "Profile image updated.", user: updatedUser });
+  } catch (err) {
+    console.error("Error updating profile image:", err);
+    res.status(500).json({ success: false, message: "Error updating profile image." });
   }
 });
 
@@ -69,17 +140,7 @@ app.post("/service-selection", async (req, res) => {
   }
 });
 
-app.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await SignupModel.create({ name, email, password: hashedPassword });
-    res.json({ message: "User registered successfully" }); 
-  } catch (err) {
-    console.error("Error during registration:", err.message); 
-    res.status(500).json("Error registering user.");
-  }
-});
+
 
 app.post("/check-email", async (req, res) => {
   const { email } = req.body;
@@ -217,20 +278,39 @@ app.post("/forgot-password", async (req, res) => {
 
 app.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
+  
+  // Validate input fields
+  if (!email || !otp) {
+    return res.status(400).json({ success: false, message: "Email and OTP are required." });
+  }
+  
   try {
+    // Find user case-insensitively
     const user = await SignupModel.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
-    if (!user || user.otp !== otp || Date.now() > user.otpExpires) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP." });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
     }
+    
+    // Check OTP value and expiry
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP." });
+    }
+    if (Date.now() > user.otpExpires) {
+      return res.status(400).json({ success: false, message: "OTP has expired." });
+    }
+    
+    // Clear OTP fields after verification
     user.otp = null;
     user.otpExpires = null;
     await user.save();
+    
     res.json({ success: true, message: "OTP verified." });
   } catch (err) {
-    console.error(err);
+    console.error("Error verifying OTP:", err);
     res.status(500).json({ success: false, message: "Failed to verify OTP." });
   }
 });
+
 
 app.post("/reset-password", async (req, res) => {
   const { email, password } = req.body;
@@ -248,14 +328,28 @@ app.post("/reset-password", async (req, res) => {
   }
 });
 
-// Create a new post
+app.get("/appointments", async (req, res) => {
+  try {
+    const appointments = await Booking.find(); // Fetch all bookings from MongoDB
+    res.json(appointments);
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({ message: "Failed to fetch appointments" });
+  }
+});
+
 app.post("/api/posts", async (req, res) => {
-  const { author, content } = req.body;
+  const { author, content, profileImage } = req.body;
   if (!content) {
     return res.status(400).json({ error: "Content is required" });
   }
   try {
-    const post = new Post({ author: author || "Anonymous", content });
+    // If no profileImage was sent, default to "default-avatar.png"
+    const post = new Post({
+      author: author || "Anonymous",
+      content,
+      profileImage: profileImage || "default-avatar.png",
+    });
     await post.save();
     res.status(201).json(post);
   } catch (error) {
@@ -263,7 +357,7 @@ app.post("/api/posts", async (req, res) => {
   }
 });
 
-// Retrieve all posts (newest first)
+// --------------------- GET ALL POSTS ---------------------
 app.get("/api/posts", async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 });
@@ -273,7 +367,7 @@ app.get("/api/posts", async (req, res) => {
   }
 });
 
-// EDIT POST endpoint: update a post's content based on its ID
+// --------------------- UPDATE A POST ---------------------
 app.put("/api/posts/:postId", async (req, res) => {
   const { postId } = req.params;
   const { content } = req.body;
@@ -293,7 +387,7 @@ app.put("/api/posts/:postId", async (req, res) => {
   }
 });
 
-// DELETE Post endpoint: Delete a post by its ID
+// --------------------- DELETE A POST ---------------------
 app.delete("/api/posts/:postId", async (req, res) => {
   const { postId } = req.params;
   try {
