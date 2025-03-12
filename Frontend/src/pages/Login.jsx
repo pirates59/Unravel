@@ -12,20 +12,31 @@ function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmitt = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     try {
       const result = await axios.post("http://localhost:3001/login", { email, password });
       if (result.data.success) {
-        // Use the returned user data for role-based redirection
-        const username = result.data.user ? result.data.user.name : email.split("@")[0];
-        const role = result.data.user ? result.data.user.role : "user";
+        const user = result.data.user;
+        const username = user ? user.name : email.split("@")[0];
+        const role = user ? user.role : "user";
+        // Save session info
         localStorage.setItem("username", username);
         localStorage.setItem("role", role);
+        localStorage.setItem("email", user.email);
+        localStorage.setItem("profileImage", user.profileImage || "upload.png");
 
-        // Redirect based on role.
-        role === "admin" ? navigate("/Users") : navigate("/recent");
+        // Redirect based on role and first login status
+        if (role === "admin") {
+          navigate("/Users");
+        } else {
+          if (user.isFirstLogin) {
+            navigate("/profile");
+          } else {
+            navigate("/recent");
+          }
+        }
       } else {
         setErrorMessage(result.data.message);
       }
@@ -39,7 +50,6 @@ function Login() {
       <Topbar />
       <div className="flex-1 bg-[#F3F6FA] flex justify-center items-center">
         <div className="flex w-full md:w-2/3 lg:w-1/2 bg-white shadow-lg rounded-lg">
-          {/* Left Section */}
           <div className="w-1/2 p-8">
             <NavLink to="/">
               <button className="mb-4 flex items-center text-black-800">
@@ -50,7 +60,7 @@ function Login() {
               </button>
             </NavLink>
             <h2 className="text-xl font-semibold mb-4">Login with email:</h2>
-            <form onSubmit={handleSubmitt}>
+            <form onSubmit={handleSubmit}>
               <input
                 type="email"
                 name="email"
@@ -78,7 +88,6 @@ function Login() {
               </NavLink>
             </form>
           </div>
-          {/* Right Section */}
           <div className="w-1/2 bg-[#F3F6FA] flex items-center justify-center p-4">
             <img src={loginImg} alt="Login Illustration" className="max-w-full" />
           </div>

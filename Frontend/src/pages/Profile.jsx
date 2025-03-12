@@ -1,39 +1,89 @@
-import React from 'react';
-import upload from '../assets/upload.png';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import uploadDefault from '../assets/upload.jpg';
 
 function Profile() {
+  const [image, setImage] = useState(uploadDefault);
+  const [file, setFile] = useState(null);
+  const navigate = useNavigate();
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setFile(selectedFile);
+      setImage(objectUrl);
+    }
+  };
+
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append("email", localStorage.getItem("email"));
+    
+    if (file) {
+      formData.append("profileImage", file);
+    } else {
+      // If no new file is selected, use the default image
+      const response = await fetch(uploadDefault);
+      const blob = await response.blob();
+      formData.append("profileImage", blob, "upload.jpg");
+    }
+
+    try {
+      const res = await axios.post("http://localhost:3001/update-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (res.data.success) {
+        // Update session with new profile image if changed
+        localStorage.setItem("profileImage", res.data.user.profileImage);
+        navigate("/recent");
+      }
+    } catch (err) {
+      console.error("Upload error", err);
+    }
+  };
+
+  const handleCancel = () => {
+    setImage(uploadDefault);
+    setFile(null);
+  };
+
   return (
     <div className="w-screen h-screen flex items-center justify-center bg-gray-50">
-      {/* Outer container for the card */}
       <div className="max-w-lg h-[500px] w-full bg-white p-8 rounded-md shadow-md">
-        {/* Title */}
-        <h2 className="text-xl font-semibold mb-4">Change profile photo</h2>
-
-        {/* Dotted circle with cloud icon */}
-        <div className="border-2 border-dashed border-gray-300 rounded-full w-[250px] h-[250px] mx-auto mb-4 flex items-center justify-center">
+        <h2 className="text-xl font-semibold mb-4 text-center">Upload Profile Photo</h2>
+        <div className="w-[250px] h-[250px] rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
           <img
-            src={upload}
-            alt="Logo"
-            // "object-contain" ensures the entire image is visible without cropping
-            // Adjust w-48 / h-48 as desired for size
-            className="object-contain w-[400px] h-[400px]"
+            src={image}
+            alt="Profile"
+            className="object-cover w-[250px] h-[250px] rounded-full"
           />
         </div>
-
-        {/* Drag-and-drop instructions */}
-        <p className="text-center text-gray-500 mb-4">
-          Drag and drop your images here or{' '}
-          <span className="text-blue-600 hover:underline cursor-pointer">
-            Upload a photo
-          </span>
-        </p>
-
-        {/* Buttons */}
+        <div className="text-center mb-6">
+          <label className="text-blue-600 hover:underline cursor-pointer">
+            Choose a photo
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+        </div>
         <div className="flex items-center justify-center space-x-4">
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          <button
+            onClick={handleUpload}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
             Upload
           </button>
-          <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+          <button
+            onClick={handleCancel}
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+          >
             Cancel
           </button>
         </div>

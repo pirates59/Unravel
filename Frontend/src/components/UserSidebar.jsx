@@ -7,30 +7,39 @@ import help from "../assets/help.png";
 import room from "../assets/room.png";
 import wellness from "../assets/wellness.png";
 import setting from "../assets/setting.png";
+import upload from "../assets/upload.jpg";
 import logout from "../assets/logout.png";
 import notification from "../assets/notification.png";
 
 const UserSidebar = ({ children }) => {
   const navigate = useNavigate();
-
+  
   const handleLogout = () => {
-   
-    localStorage.removeItem("username");
-    
+    // Clear session data on logout
+    localStorage.clear();
     navigate("/login");
   };
+
+  // Retrieve current user details from localStorage
+  const username = localStorage.getItem("username") || "Guest";
+  const profileImage = localStorage.getItem("profileImage")
+    ? `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`
+    : upload;
 
   return (
     <div className="flex h-screen">
       {/* Left Sidebar */}
-      <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
+      <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5 ">
         {/* Logo */}
-        <div className="mb-10">
+        <div className="mb-4">
           <img
             src={userlogo}
             alt="Logo"
             className="w-[300px] h-[70px] ml-[-14px] mt-[-14px]"
           />
+        </div>
+
+        <div className="flex items-center space-x-3 mb-8">
         </div>
 
         {/* Menu Items */}
@@ -79,17 +88,22 @@ const UserSidebar = ({ children }) => {
         </div>
       </div>
 
- 
       <div className="flex-1 flex flex-col">
-       
+        {/* Top Bar */}
         <div className="flex justify-end items-center p-4 bg-white">
           <div className="cursor-pointer mx-4">
             <img src={notification} alt="Notification" className="w-6 h-6" />
           </div>
-          <div className="cursor-pointer w-8 h-8 bg-gray-300 rounded-full"></div>
+          <div className="cursor-pointer w-8 h-8 rounded-full">
+            <img
+              src={profileImage}
+              alt="User Avatar"
+              className="w-8 h-8 rounded-full"
+            />
+          </div>
         </div>
 
-      
+        {/* Main Content */}
         <div className="flex-1 p-6 overflow-y-auto">
           {children}
         </div>

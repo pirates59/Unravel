@@ -89,7 +89,7 @@ const Landing = () => {
         </div>
       </div>
  {/* Therapy Section*/}
-      <div className="bg-[url('C:\Users\Admin\Desktop\Unravel\Frontend\src\assets\therapy.png')] bg-cover bg-center py-10">
+      <div className="bg-[url('C:\Users\Admin\Desktop\Unravel\Frontend\src\assets\therapy.png')] bg-cover bg-center py-8">
         
         <div className="text-center">
           <h2 className="text-2xl font-semibold text-gray-800">Therapy</h2>
@@ -164,7 +164,7 @@ const Landing = () => {
         </div>
       </div>
        {/* Therapy Section*/}
-       <div className="bg-[url('C:\Users\Admin\Desktop\Unravel\Frontend\src\assets\therapy.png')] bg-cover bg-center py-10 mt-4">
+       <div className="bg-[url('C:\Users\Admin\Desktop\Unravel\Frontend\src\assets\therapy.png')] bg-cover bg-center py-8 mt-4">
         
         <div className="text-center">
           <h2 className="text-2xl font-semibold text-gray-800">Community</h2>
