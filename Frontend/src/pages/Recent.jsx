@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import like from "../assets/like.png";
 import comment from "../assets/comment.png";
+import Comment from "../components/Comment";
+import dotIcon from "../assets/dot.png";
+import redLike from "../assets/redLike.png"; // red version for liked state
+
+
 
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
@@ -18,26 +23,23 @@ function getUniqueHashtags(hashtags) {
   return uniqueHashtags;
 }
 
+
 function formatDate(date) {
   const postDate = new Date(date);
   const now = new Date();
   const diff = now - postDate;
-  const diffSeconds = Math.floor(diff / 1000);
   const diffMinutes = Math.floor(diff / (1000 * 60));
   const diffHours = Math.floor(diff / (1000 * 60 * 60));
 
   if (diffHours < 24) {
-    if (diffHours > 0) {
-      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
-    } else if (diffMinutes > 0) {
-      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
-    } else {
-      return diffSeconds <= 1 ? "1 second ago" : `${diffSeconds} seconds ago`;
-    }
+    if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+    return "Just now";
   } else {
     return postDate.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   }
 }
+
 
 // Build a full image URL if the user uploaded a custom image
 const getImageUrl = (profileImage) => {
@@ -52,7 +54,11 @@ const getImageUrl = (profileImage) => {
 
 const Recent = () => {
   const [posts, setPosts] = useState([]);
+   const [activeDropdown, setActiveDropdown] = useState(null);
   const [currentUser, setCurrentUser] = useState("");
+  const [likes, setLikes] = useState({}); // state for like count & status per post
+    const dropdownRef = useRef(null);
+    const [openCommentId, setOpenCommentId] = useState(null);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -75,6 +81,30 @@ const Recent = () => {
       console.error("Error fetching posts:", error);
     }
   };
+
+    // --- Toggle dropdown for options ---
+    const toggleDropdown = (postId) => {
+      setActiveDropdown(activeDropdown === postId ? null : postId);
+    };
+ 
+ // --- Toggle comment section ---
+ const toggleComments = (postId) => {
+  setOpenCommentId(openCommentId === postId ? null : postId);
+};
+
+ // --- Handle like toggle ---
+ const handleLike = (postId) => {
+  setLikes((prevLikes) => {
+    const postLike = prevLikes[postId] || { count: 0, liked: false };
+    if (postLike.liked) {
+      // Unlike: decrease count and set liked to false
+      return { ...prevLikes, [postId]: { count: postLike.count - 1, liked: false } };
+    } else {
+      // Like: increase count and set liked to true
+      return { ...prevLikes, [postId]: { count: postLike.count + 1, liked: true } };
+    }
+  });
+};
 
   return (
     <div>
@@ -102,7 +132,7 @@ const Recent = () => {
             const hashtags = extractHashtags(post.content);
             const uniqueHashtags = getUniqueHashtags(hashtags);
             const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
-
+            const postLike = likes[post._id] || { count: 0, liked: false };
             return (
               <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md">
                 <div className="flex items-center space-x-3">
@@ -126,15 +156,71 @@ const Recent = () => {
                     ))}
                   </div>
                 )}
-                <div className="flex items-center gap-10 text-gray-500 text-sm mt-4">
-                  <img src={like} alt="Like" className="w-5 h-5 cursor-pointer" />
-                  <img src={comment} alt="Comment" className="w-5 h-5 cursor-pointer" />
+                <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
+                  <img
+                    src={postLike.liked ? redLike : like}
+                    alt="Like"
+                    className="w-5 h-5 cursor-pointer"
+                    onClick={() => handleLike(post._id)}
+                  />
+                  <p onClick={() => handleLike(post._id)} className="cursor-pointer">
+                    {postLike.count > 0
+                      ? postLike.count === 1
+                        ? "1 like"
+                        : `${postLike.count} likes`
+                      : "Like"}
+                  </p>
+                  <img
+                    src={comment}
+                    alt="Comment"
+                    className="w-5 h-5 cursor-pointer"
+                    onClick={() => toggleComments(post._id)}
+                  />
+                  <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
+                    Comment
+                  </p>
+                </div>
+
+                {openCommentId === post._id && (
+                  <Comment
+                    post={post}
+                    postId={post._id}
+                    closeComments={() => setOpenCommentId(null)}
+                  />
+                )}
+
+                <div className="absolute top-4 right-4">
+                  <img
+                    src={dotIcon}
+                    alt="Options"
+                    className="w-6 h-6 cursor-pointer"
+                    onClick={() => toggleDropdown(post._id)}
+                  />
+                  {activeDropdown === post._id && (
+                    <div ref={dropdownRef} className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10">
+                      <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
+                        <button
+                          onClick={() => setActiveDropdown(null)}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Edit
+                        </button>
+                      </NavLink>
+                      <button
+                        onClick={() => confirmDelete(post._id)}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
-
+     
+ 
         {/* Topics Section */}
         <div className="w-1/4 mb-12">
           <div className="bg-gray-300 p-4 rounded-lg shadow-md">

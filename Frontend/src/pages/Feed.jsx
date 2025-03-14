@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
+import redLike from "../assets/redLike.png"; // red version for liked state
 import comment from "../assets/comment.png";
 import Swal from "sweetalert2";
 import Comment from "../components/Comment";
@@ -25,23 +26,15 @@ function formatDate(date) {
   const postDate = new Date(date);
   const now = new Date();
   const diff = now - postDate;
-  const diffSeconds = Math.floor(diff / 1000);
   const diffMinutes = Math.floor(diff / (1000 * 60));
   const diffHours = Math.floor(diff / (1000 * 60 * 60));
 
   if (diffHours < 24) {
-    if (diffHours > 0) {
-      return diffHours === 1 ? "1 hour ago" : `${diffHours} hours ago`;
-    } else if (diffMinutes > 0) {
-      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
-    } else {
-      return diffSeconds <= 1 ? "1 second ago" : `${diffSeconds} seconds ago`;
-    }
+    if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+    return "Just now";
   } else {
-    return postDate.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short"
-    });
+    return postDate.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   }
 }
 
@@ -50,9 +43,9 @@ const Feed = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [currentUser, setCurrentUser] = useState("");
   const [profileImage, setProfileImage] = useState("default-avatar.png");
+  // Store like info as an object: { [postId]: { count, liked } }
+  const [likes, setLikes] = useState({});
   const dropdownRef = useRef(null);
-
-  // ADDED: State to track which post's comments are open
   const [openCommentId, setOpenCommentId] = useState(null);
 
   useEffect(() => {
@@ -60,12 +53,10 @@ const Feed = () => {
     if (storedUsername) {
       setCurrentUser(storedUsername);
     }
-
     const storedProfileImage = localStorage.getItem("profileImage");
     if (storedProfileImage) {
       setProfileImage(`http://localhost:3001/uploads/${storedProfileImage}`);
     }
-
     fetchPosts();
 
     const handleClickOutside = (event) => {
@@ -77,21 +68,32 @@ const Feed = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- Fetch Posts and initialize likes from the backend ---
   const fetchPosts = async () => {
     try {
       const res = await fetch("http://localhost:3001/api/posts");
       const data = await res.json();
+      // Filter posts to only show those for the logged-in user
       const userPosts = data.filter((post) => post.author === localStorage.getItem("username"));
       setPosts(userPosts);
+      const initialLikes = {};
+      userPosts.forEach((post) => {
+        const count = post.likes ? post.likes.length : 0;
+        const liked = post.likes && post.likes.includes(localStorage.getItem("username"));
+        initialLikes[post._id] = { count, liked };
+      });
+      setLikes(initialLikes);
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
   };
 
+  // --- Toggle dropdown for options ---
   const toggleDropdown = (postId) => {
     setActiveDropdown(activeDropdown === postId ? null : postId);
   };
 
+  // --- Delete a post ---
   const handleDelete = async (postId) => {
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}`, { method: "DELETE" });
@@ -122,9 +124,28 @@ const Feed = () => {
     });
   };
 
-  // ADDED: Toggle which post's comments are open
+  // --- Toggle comment section ---
   const toggleComments = (postId) => {
     setOpenCommentId(openCommentId === postId ? null : postId);
+  };
+
+  // --- Handle like toggle with persistence ---
+  const handleLike = async (postId) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentUser }),
+      });
+      if (res.ok) {
+        const updatedLike = await res.json(); // returns { count, liked }
+        setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
+      } else {
+        console.error("Failed to update like");
+      }
+    } catch (error) {
+      console.error("Error updating like:", error);
+    }
   };
 
   return (
@@ -144,6 +165,7 @@ const Feed = () => {
             const hashtags = extractHashtags(post.content);
             const uniqueHashtags = getUniqueHashtags(hashtags);
             const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
+            const postLike = likes[post._id] || { count: 0, liked: false };
 
             return (
               <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
@@ -169,26 +191,37 @@ const Feed = () => {
                   </div>
                 )}
                 <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
-                  <img src={like} alt="Like" className="w-5 h-5 cursor-pointer" /> 
-                  <p className="" >Like</p>
-                  {/* ADDED onClick to toggle comment section */}
-                 
+                  <img
+                    src={postLike.liked ? redLike : like}
+                    alt="Like"
+                    className="w-5 h-5 cursor-pointer"
+                    onClick={() => handleLike(post._id)}
+                  />
+                  <p onClick={() => handleLike(post._id)} className="cursor-pointer">
+                    {postLike.count > 0
+                      ? postLike.count === 1
+                        ? "1 like"
+                        : `${postLike.count} likes`
+                      : "Like"}
+                  </p>
                   <img
                     src={comment}
                     alt="Comment"
                     className="w-5 h-5 cursor-pointer"
                     onClick={() => toggleComments(post._id)}
-                  /> 
-                   <p className=""   onClick={() => toggleComments(post._id)}>Comment</p>
+                  />
+                  <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
+                    Comment
+                  </p>
                 </div>
 
                 {openCommentId === post._id && (
-  <Comment
-    post={post}                // pass the full post object
-    postId={post._id}
-    closeComments={() => setOpenCommentId(null)}
-  />
-)}
+                  <Comment
+                    post={post}
+                    postId={post._id}
+                    closeComments={() => setOpenCommentId(null)}
+                  />
+                )}
 
                 <div className="absolute top-4 right-4">
                   <img
