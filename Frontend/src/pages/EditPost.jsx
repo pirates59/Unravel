@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import leftarrow from "../assets/leftarrow.png";
-import icon from "../assets/icon.png";
 
 const EditPost = () => {
   const navigate = useNavigate();
   const location = useLocation();
-    const [author, setAuthor] = useState("");
+  const [author, setAuthor] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+
   // Retrieve postId and the initial content passed via state from Feed
   const { postId, content: initialContent } = location.state || {};
   const [content, setContent] = useState(initialContent || "");
 
   useEffect(() => {
+    // Fetch username from localStorage
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setAuthor(storedUsername);
     }
+
+    // Fetch profile image filename from localStorage, default if not set
+    const profileImageName = localStorage.getItem("profileImage") || "default-avatar.png";
+    const url =
+      profileImageName !== "default-avatar.png"
+        ? `http://localhost:3001/uploads/${profileImageName}`
+        : "default-avatar.png";
+    setProfileImageUrl(url);
   }, []);
 
   const handleSubmit = async () => {
@@ -49,7 +59,7 @@ const EditPost = () => {
       {/* Edit Post Box */}
       <div className="bg-gray-100 p-4 rounded-lg shadow-md w-[80%] h-[65%]">
         <div className="flex items-center mb-3">
-          <img src={icon} alt="User Avatar" className="w-10 h-10 rounded-full mr-3" />
+          <img src={profileImageUrl} alt="User Avatar" className="w-10 h-10 rounded-full mr-3" />
           <span className="font-semibold">{author}</span>
         </div>
 
@@ -58,7 +68,7 @@ const EditPost = () => {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Edit your post..."
-          className="bg-gray-300 rounded-lg p-4 min-h-[300px] text-white font-semibold w-full resize-none"
+          className="bg-gray-300 rounded-lg p-4 min-h-[300px] text-black font-semibold w-full resize-none"
         ></textarea>
 
         <div className="flex justify-end mt-3">
