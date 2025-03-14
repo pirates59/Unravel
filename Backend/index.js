@@ -8,6 +8,7 @@ const SignupModel = require("./models/Signup");
 const ServiceSelectionModel = require("./models/ServiceSelection");
 const Booking = require("./models/Booking");
 const InformationSchema = require("./models/Information");
+const Comment = require("./models/Comment");
 const Post = require("./models/Post"); 
 const multer = require("multer");
 const path = require("path");
@@ -398,6 +399,148 @@ app.delete("/api/posts/:postId", async (req, res) => {
     res.json({ message: "Post deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/posts/:postId/comments", async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const comments = await Comment.find({ postId }).sort({ createdAt: 1 });
+    res.json(comments);
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    res.status(500).json({ error: "Failed to fetch comments." });
+  }
+});
+
+/**
+ * POST /api/posts/:postId/comments
+ * Create a new comment for a specific post
+ */
+app.post("/api/posts/:postId/comments", async (req, res) => {
+  const { postId } = req.params;
+  const { text, author } = req.body; // "author" will be the logged-in username
+
+  if (!text) {
+    return res.status(400).json({ error: "Comment text is required." });
+  }
+
+  try {
+    const newComment = new Comment({
+      postId,
+      author: author || "Anonymous", // fallback if no author
+      text,
+    });
+    await newComment.save();
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    res.status(500).json({ error: "Failed to add comment." });
+  }
+});
+
+/**
+ * PUT /api/posts/:postId/comments/:commentId
+ * Update a specific comment (only if current user is the author)
+ */
+app.put("/api/posts/:postId/comments/:commentId", async (req, res) => {
+  const { postId, commentId } = req.params;
+  const { text, currentUser } = req.body; // "currentUser" = the logged-in user
+
+  if (!text) {
+    return res.status(400).json({ error: "Comment text is required." });
+  }
+
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found." });
+    }
+    // Check ownership
+    if (comment.author !== currentUser) {
+      return res.status(403).json({ error: "You can only edit your own comments." });
+    }
+    comment.text = text;
+    comment.updatedAt = new Date();
+    await comment.save();
+    res.json(comment);
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    res.status(500).json({ error: "Failed to update comment." });
+  }
+});
+
+/**
+ * DELETE /api/posts/:postId/comments/:commentId
+ * Delete a comment (only if current user is the author)
+ */
+app.delete("/api/posts/:postId/comments/:commentId", async (req, res) => {
+  const { postId, commentId } = req.params;
+  const { currentUser } = req.body;
+
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found." });
+    }
+    // Check ownership
+    if (comment.author !== currentUser) {
+      return res.status(403).json({ error: "You can only delete your own comments." });
+    }
+    await comment.deleteOne();
+    res.json({ message: "Comment deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ error: "Failed to delete comment." });
+  }
+});
+// --------------------- LIKE/UNLIKE A POST ---------------------
+app.post("/api/posts/:postId/like", async (req, res) => {
+  const { postId } = req.params;
+  const { currentUser } = req.body;
+  if (!currentUser) {
+    return res.status(400).json({ error: "currentUser is required." });
+  }
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found." });
+    }
+    const index = post.likes.indexOf(currentUser);
+    if (index === -1) {
+      // User has not liked the post, so add the user to likes.
+      post.likes.push(currentUser);
+    } else {
+      // User has already liked the post, so remove the user (unlike).
+      post.likes.splice(index, 1);
+    }
+    await post.save();
+    res.json({ count: post.likes.length, liked: post.likes.includes(currentUser) });
+  } catch (error) {
+    console.error("Error updating like:", error);
+    res.status(500).json({ error: "Failed to update like." });
+  }
+});
+
+app.post("/api/posts/:postId/comments/:commentId/report", async (req, res) => {
+  const { postId, commentId } = req.params;
+  const { currentUser } = req.body;
+
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found." });
+    }
+    // Users should not report their own comment
+    if (comment.author === currentUser) {
+      return res.status(400).json({ error: "You cannot report your own comment." });
+    }
+    comment.reported = true;
+    await comment.save();
+    res.json({ message: "Comment reported successfully." });
+  } catch (error) {
+    console.error("Error reporting comment:", error);
+    res.status(500).json({ error: "Failed to report comment." });
   }
 });
 

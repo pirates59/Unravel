@@ -17,6 +17,11 @@ const PostSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  // New field to store the usernames of users who liked the post
+  likes: {
+    type: [String],
+    default: []
   }
 });
 
