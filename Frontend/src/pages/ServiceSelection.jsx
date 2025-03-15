@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import services from "../assets/service.png";
 import calendar from "../assets/calendar.png";
 import user from "../assets/user.png";
@@ -83,21 +83,21 @@ const ServiceSelection = () => {
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
             <ul className="space-y-3">
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-3 top-1/2 transform -translate-y-1/2 h-5 w-5 bg-[#4BB543] rounded-full border-2 border-white shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-[#4BB543] rounded-full border-1 shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={services} alt="Service Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Service Selection</span>
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Date and Time</span>
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-4 w-4 bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={user} alt="User Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Your Information</span>
@@ -108,12 +108,14 @@ const ServiceSelection = () => {
           <div className="flex-1 p-6 flex flex-col">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold mb-4">Service Selection</h2>
+              <NavLink to="/landing">
               <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
+                </NavLink>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col justify-between flex-grow">
               <div>
                 <div className="mb-4">
-                  <label className="block mb-1 font-medium text-sm">Service:</label>
+                  <label className="block mb-1 font-medium text-sm">Service</label>
                   <select
                     className="w-full p-2 border rounded-lg text-sm"
                     value={service}
@@ -126,7 +128,7 @@ const ServiceSelection = () => {
                   {errors.service && <p className="text-red-500 text-sm mt-1">{errors.service}</p>}
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-1 font-medium text-sm">Therapist:</label>
+                  <label className="block mb-1 font-medium text-sm">Therapist</label>
                   <select
                     className="w-full p-2 border rounded-lg text-sm"
                     value={therapist}

@@ -1,12 +1,15 @@
 const mongoose = require("mongoose");
 
 const SignupSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-  otp: String, // For OTP storage
-  otpExpires: Date, // For OTP expiration time
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  otp: String,
+  otpExpires: Date,
+  role: { type: String, enum: ["admin", "user"], default: "user" },
+  profileImage: { type: String, default: "upload.png" },
+  isFirstLogin: { type: Boolean, default: true }
 });
 
-const SignupModel = mongoose.model("signup", SignupSchema);
+const SignupModel = mongoose.model("Signup", SignupSchema);
 module.exports = SignupModel;
