@@ -15,6 +15,11 @@ const CommentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Add profileImage to store the commenter's profile picture
+  profileImage: {
+    type: String,
+    default: "default-avatar.png",
+  },
   reported: {
     type: Boolean,
     default: false,
