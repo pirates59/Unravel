@@ -404,7 +404,7 @@ app.get("/api/posts", verifyToken, async (req, res) => {
 });
 
 
-// Get a specific post (protected)
+// Get a specific post
 app.get("/api/posts/:postId", verifyToken, async (req, res) => {
   const { postId } = req.params;
   try {
