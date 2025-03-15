@@ -3,7 +3,7 @@ import sendIcon from "../assets/send.png";
 import hand from "../assets/hand.png";
 import dotIcon from "../assets/dot.png";
 
-// --- Hashtag helpers (optional) ---
+// Hashtag helpers (optional)
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
   return text.match(regex) || [];
@@ -12,7 +12,7 @@ function getUniqueHashtags(hashtags) {
   return [...new Set(hashtags)];
 }
 
-// --- Date formatting helper ---
+// Date formatting helper
 function formatDate(date) {
   const postDate = new Date(date);
   const now = new Date();
@@ -29,19 +29,28 @@ function formatDate(date) {
   }
 }
 
+// Helper to build full image URL for user profile images
+const getImageUrl = (profileImage) => {
+  if (!profileImage || profileImage === "default-avatar.png") {
+    return "default-avatar.png";
+  }
+  if (profileImage.startsWith("http")) {
+    return profileImage;
+  }
+  return `http://localhost:3001/uploads/${profileImage}`;
+};
+
 const Comment = ({ post, postId, closeComments }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  // Current user's profile image (for the input box)
   const [profileImage, setProfileImage] = useState("default-avatar.png");
   const [currentUser, setCurrentUser] = useState("");
-
+  // For editing comment functionality
+  const [editingCommentId, setEditingCommentId] = useState(null);
   // For controlling 3-dot dropdown menus on comments
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
-
-  // For inline editing
-  const [editingCommentId, setEditingCommentId] = useState(null);
-  const [editingText, setEditingText] = useState("");
 
   useEffect(() => {
     const storedProfileImage = localStorage.getItem("profileImage");
@@ -52,17 +61,15 @@ const Comment = ({ post, postId, closeComments }) => {
     if (storedUsername) {
       setCurrentUser(storedUsername);
     }
-
     fetchComments();
 
-    // Close dropdown if clicked outside
+    // Close 3-dot dropdown if clicked outside
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setActiveDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -71,7 +78,12 @@ const Comment = ({ post, postId, closeComments }) => {
   // --- Fetch Comments ---
   const fetchComments = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       setComments(data);
     } catch (error) {
@@ -79,24 +91,60 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
-  // --- Add Comment ---
-  const handleAddComment = async () => {
+  // --- Submit New or Edited Comment ---
+  const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
+    const token = localStorage.getItem("token");
 
-    try {
-      // Send "author" as currentUser
-      const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: newComment, author: currentUser }),
-      });
-
-      if (res.ok) {
-        setNewComment("");
-        fetchComments(); // Refresh comments list
+    if (editingCommentId) {
+      // Update existing comment
+      try {
+        const res = await fetch(
+          `http://localhost:3001/api/posts/${postId}/comments/${editingCommentId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ text: newComment, currentUser }),
+          }
+        );
+        if (res.ok) {
+          setEditingCommentId(null);
+          setNewComment("");
+          fetchComments();
+        } else {
+          console.error("Failed to update comment.");
+        }
+      } catch (error) {
+        console.error("Error updating comment:", error);
       }
-    } catch (error) {
-      console.error("Error adding comment:", error);
+    } else {
+      // Create a new comment
+      try {
+        const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
+        const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            text: newComment,
+            author: currentUser,
+            profileImage: storedProfile,
+          }),
+        });
+        if (res.ok) {
+          setNewComment("");
+          fetchComments();
+        } else {
+          console.error("Failed to add comment.");
+        }
+      } catch (error) {
+        console.error("Error adding comment:", error);
+      }
     }
   };
 
@@ -105,49 +153,25 @@ const Comment = ({ post, postId, closeComments }) => {
     setActiveDropdown(activeDropdown === commentId ? null : commentId);
   };
 
-  // --- Handle Edit (enter edit mode) ---
+  // --- Handle Edit: load comment into the main input box ---
   const handleEditComment = (comment) => {
     setEditingCommentId(comment._id);
-    setEditingText(comment.text);
-    setActiveDropdown(null); // close the dropdown
-  };
-
-  // --- Save edited comment to server ---
-  const handleSaveEdit = async (commentId) => {
-    try {
-      const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments/${commentId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: editingText, currentUser }), // pass the current user for ownership check
-      });
-
-      if (res.ok) {
-        setEditingCommentId(null);
-        setEditingText("");
-        fetchComments();
-      } else {
-        console.error("Failed to update comment.");
-      }
-    } catch (error) {
-      console.error("Error updating comment:", error);
-    }
-  };
-
-  // --- Cancel edit mode ---
-  const handleCancelEdit = () => {
-    setEditingCommentId(null);
-    setEditingText("");
+    setNewComment(comment.text);
+    setActiveDropdown(null);
   };
 
   // --- Delete comment ---
   const handleDeleteComment = async (commentId) => {
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments/${commentId}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentUser }), // pass current user for ownership check
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentUser }),
       });
-
       if (res.ok) {
         setActiveDropdown(null);
         fetchComments();
@@ -161,16 +185,19 @@ const Comment = ({ post, postId, closeComments }) => {
 
   // --- Report comment ---
   const handleReportComment = async (commentId) => {
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(
         `http://localhost:3001/api/posts/${postId}/comments/${commentId}/report`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ currentUser }),
         }
       );
-
       if (res.ok) {
         setActiveDropdown(null);
         alert("Comment reported successfully!");
@@ -182,10 +209,17 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
+  // Submit comment on Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSubmitComment();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-      <div className="bg-white w-full max-w-2xl h-[400px] overflow-hidden rounded-lg relative flex flex-col">
-        {/* Close button */}
+      <div className="bg-white w-full max-w-2xl rounded-lg relative flex flex-col">
+        {/* Close Button */}
         <button
           onClick={closeComments}
           className="absolute top-3 right-3 text-gray-600 hover:text-black font-bold text-lg"
@@ -193,11 +227,15 @@ const Comment = ({ post, postId, closeComments }) => {
           ✕
         </button>
 
-        {/* Post section */}
+        {/* Post Section */}
         <div className="p-4 border-b border-gray-300">
           <div className="flex items-center space-x-2 mb-2">
             <img
-              src={profileImage}
+              src={
+                post.profileImage && post.profileImage !== "default-avatar.png"
+                  ? `http://localhost:3001/uploads/${post.profileImage}`
+                  : "default-avatar.png"
+              }
               alt="User Avatar"
               className="w-10 h-10 rounded-full"
             />
@@ -206,7 +244,6 @@ const Comment = ({ post, postId, closeComments }) => {
               <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
             </div>
           </div>
-          {/* Post content & hashtags */}
           <p>{post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim()}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {getUniqueHashtags(extractHashtags(post.content)).map((tag, idx) => (
@@ -215,14 +252,19 @@ const Comment = ({ post, postId, closeComments }) => {
               </span>
             ))}
           </div>
+          {post.image && (
+            <div className="mt-2 flex">
+              <img
+                src={`http://localhost:3001/uploads/${post.image}`}
+                alt="Post"
+                className="max-w-full h-auto object-contain rounded-lg"
+              />
+            </div>
+          )}
         </div>
 
-        {/* Comments Section */}
-        {/** 
-          We REMOVED "flex items-center justify-center" here so the comments align at the start. 
-          Instead, only the "no comments" state is centered below.
-        */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Comments List */}
+        <div className="p-4">
           {comments.length > 0 ? (
             <div className="w-full space-y-3">
               {comments.map((comment) => {
@@ -233,61 +275,25 @@ const Comment = ({ post, postId, closeComments }) => {
                 return (
                   <div key={comment._id} className="bg-gray-100 p-3 rounded-md relative">
                     <div className="flex items-center space-x-2 mb-1">
+                      {/* Show the commenter's profile image, not the post's image */}
                       <img
-                        src={profileImage}
+                        src={getImageUrl(comment.profileImage)}
                         alt="User Avatar"
-                        className="w-8 h-8 rounded-full"
+                        className="w-10 h-10 rounded-full"
                       />
-                      <span className="text-sm font-semibold">
-                        {comment.author || "User"}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {formatDate(comment.createdAt)}
-                      </span>
+                      <span className="text-sm font-semibold">{comment.author || "User"}</span>
+                      <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
                     </div>
-
-                    {/* If editing this comment, show input; otherwise, show text */}
-                    {editingCommentId === comment._id ? (
-                      <div>
-                        <input
-                          className="w-full border p-1 rounded"
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
-                        />
-                        <div className="mt-1 space-x-2">
-                          <button
-                            onClick={() => handleSaveEdit(comment._id)}
-                            className="px-3 py-1 bg-[#161F36] text-white rounded"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="px-3 py-1 bg-gray-400 text-white rounded"
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                    <p className="text-sm">{textWithoutTags}</p>
+                    {hashtags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {hashtags.map((tag, idx) => (
+                          <span key={idx} className="text-blue-500 text-sm cursor-pointer">
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                    ) : (
-                      <>
-                        <p className="text-sm">{textWithoutTags}</p>
-                        {hashtags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {hashtags.map((tag, idx) => (
-                              <span
-                                key={idx}
-                                className="text-blue-500 text-sm cursor-pointer"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </>
                     )}
-
-                    {/* Three-dot menu */}
                     <div className="absolute top-3 right-3" ref={dropdownRef}>
                       <img
                         src={dotIcon}
@@ -328,11 +334,8 @@ const Comment = ({ post, postId, closeComments }) => {
               })}
             </div>
           ) : (
-            // Center only the "No comments yet" message
             <div className="flex flex-col items-center mt-4">
-              <p className="text-gray-500 mt-14">
-                No comments yet. Be the first to comment!
-              </p>
+              <p className="text-gray-500 mt-14">No comments yet. Be the first to comment!</p>
               <img src={hand} alt="Hand" className="w-10 h-10 mt-2" />
             </div>
           )}
@@ -341,20 +344,17 @@ const Comment = ({ post, postId, closeComments }) => {
         {/* Comment Input Box */}
         <div className="p-3 border-t border-gray-300">
           <div className="flex items-center space-x-2">
-            <img
-              src={profileImage}
-              alt="User Avatar"
-              className="w-8 h-8 rounded-full"
-            />
+            <img src={profileImage} alt="User Avatar" className="w-8 h-8 rounded-full" />
             <input
               type="text"
               placeholder="Write a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
+              onKeyPress={handleKeyPress}
               className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none"
             />
             <button
-              onClick={handleAddComment}
+              onClick={handleSubmitComment}
               className="bg-[#161F36] text-white px-4 py-1 rounded-full text-sm"
             >
               <img src={sendIcon} alt="Send" className="w-4 h-4 inline-block" />
