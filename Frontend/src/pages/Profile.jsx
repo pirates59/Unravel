@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import uploadDefault from '../assets/upload.jpg';
@@ -7,6 +7,14 @@ function Profile() {
   const [image, setImage] = useState(uploadDefault);
   const [file, setFile] = useState(null);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  // Redirect to login if no token exists
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -18,13 +26,18 @@ function Profile() {
   };
 
   const handleUpload = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found. Please log in.");
+      navigate("/login");
+      return;
+    }
     const formData = new FormData();
-    formData.append("email", localStorage.getItem("email"));
-    
+    // Do not append email; the backend will use the token's payload.
     if (file) {
       formData.append("profileImage", file);
     } else {
-      // If no new file is selected, use the default image
+      // If no file is selected, use the default image
       const response = await fetch(uploadDefault);
       const blob = await response.blob();
       formData.append("profileImage", blob, "upload.jpg");
@@ -33,11 +46,11 @@ function Profile() {
     try {
       const res = await axios.post("http://localhost:3001/update-profile", formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${token}`,
+          // Let axios set the Content-Type automatically for FormData
         },
       });
       if (res.data.success) {
-        // Update session with new profile image if changed
         localStorage.setItem("profileImage", res.data.user.profileImage);
         navigate("/recent");
       }

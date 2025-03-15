@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
-import redLike from "../assets/redLike.png"; // red version for liked state
+import redLike from "../assets/redLike.png";
 import comment from "../assets/comment.png";
 import Swal from "sweetalert2";
 import Comment from "../components/Comment";
 
+// Helper functions
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
   return text.match(regex) || [];
@@ -28,7 +29,6 @@ function formatDate(date) {
   const diff = now - postDate;
   const diffMinutes = Math.floor(diff / (1000 * 60));
   const diffHours = Math.floor(diff / (1000 * 60 * 60));
-
   if (diffHours < 24) {
     if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
@@ -42,23 +42,22 @@ const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [currentUser, setCurrentUser] = useState("");
-  const [profileImage, setProfileImage] = useState("default-avatar.png");
-  // Store like info as an object: { [postId]: { count, liked } }
   const [likes, setLikes] = useState({});
-  const dropdownRef = useRef(null);
   const [openCommentId, setOpenCommentId] = useState(null);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
+    const token = localStorage.getItem("token");
+    if (!storedUsername || !token) {
+      navigate("/login");
+    } else {
       setCurrentUser(storedUsername);
-    }
-    const storedProfileImage = localStorage.getItem("profileImage");
-    if (storedProfileImage) {
-      setProfileImage(`http://localhost:3001/uploads/${storedProfileImage}`);
     }
     fetchPosts();
 
+    // Close dropdown if user clicks outside
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setActiveDropdown(null);
@@ -66,16 +65,25 @@ const Feed = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [navigate]);
 
-  // --- Fetch Posts and initialize likes from the backend ---
   const fetchPosts = async () => {
+    const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:3001/api/posts");
+      const res = await fetch("http://localhost:3001/api/posts", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
-      // Filter posts to only show those for the logged-in user
-      const userPosts = data.filter((post) => post.author === localStorage.getItem("username"));
+      // Filter posts so that only those authored by the logged-in user are shown
+      const userPosts = data.filter(
+        (post) => post.author === localStorage.getItem("username")
+      );
       setPosts(userPosts);
+
+      // Initialize like state for each post
       const initialLikes = {};
       userPosts.forEach((post) => {
         const count = post.likes ? post.likes.length : 0;
@@ -88,15 +96,17 @@ const Feed = () => {
     }
   };
 
-  // --- Toggle dropdown for options ---
   const toggleDropdown = (postId) => {
     setActiveDropdown(activeDropdown === postId ? null : postId);
   };
 
-  // --- Delete a post ---
   const handleDelete = async (postId) => {
+    const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:3001/api/posts/${postId}`, { method: "DELETE" });
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) {
         fetchPosts();
       } else {
@@ -115,7 +125,7 @@ const Feed = () => {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!"
+      confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
         handleDelete(postId);
@@ -124,21 +134,23 @@ const Feed = () => {
     });
   };
 
-  // --- Toggle comment section ---
   const toggleComments = (postId) => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
 
-  // --- Handle like toggle with persistence ---
   const handleLike = async (postId) => {
+    const token = localStorage.getItem("token");
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ currentUser }),
       });
       if (res.ok) {
-        const updatedLike = await res.json(); // returns { count, liked }
+        const updatedLike = await res.json();
         setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
       } else {
         console.error("Failed to update like");
@@ -150,6 +162,7 @@ const Feed = () => {
 
   return (
     <div>
+      {/* Navigation */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
           <NavLink to="/recent">
@@ -171,7 +184,11 @@ const Feed = () => {
               <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
                 <div className="flex items-center space-x-3">
                   <img
-                    src={profileImage}
+                    src={
+                      post.profileImage && post.profileImage !== "default-avatar.png"
+                        ? `http://localhost:3001/uploads/${post.profileImage}`
+                        : "default-avatar.png"
+                    }
                     alt="User Avatar"
                     className="w-10 h-10 rounded-full mr-3"
                   />
@@ -180,7 +197,7 @@ const Feed = () => {
                     <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                   </div>
                 </div>
-                <p className="mt-2">{cleanedContent}</p>
+                {cleanedContent && <p className="mt-2">{cleanedContent}</p>}
                 {uniqueHashtags.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {uniqueHashtags.map((tag, index) => (
@@ -190,7 +207,19 @@ const Feed = () => {
                     ))}
                   </div>
                 )}
+                {post.image && (
+                  <div className="mt-2 flex">
+                    <img
+                      src={`http://localhost:3001/uploads/${post.image}`}
+                      alt="Post"
+                      className="max-w-full h-auto object-contain rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* Like & Comment Info */}
                 <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
+                  {/* Like */}
                   <img
                     src={postLike.liked ? redLike : like}
                     alt="Like"
@@ -204,6 +233,8 @@ const Feed = () => {
                         : `${postLike.count} likes`
                       : "Like"}
                   </p>
+
+                  {/* Comment */}
                   <img
                     src={comment}
                     alt="Comment"
@@ -211,18 +242,20 @@ const Feed = () => {
                     onClick={() => toggleComments(post._id)}
                   />
                   <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
-                    Comment
+                    {post.commentCount > 0
+                      ? post.commentCount === 1
+                        ? "1 comment"
+                        : `${post.commentCount} comments`
+                      : "Comment"}
                   </p>
                 </div>
 
+                {/* Comment Section */}
                 {openCommentId === post._id && (
-                  <Comment
-                    post={post}
-                    postId={post._id}
-                    closeComments={() => setOpenCommentId(null)}
-                  />
+                  <Comment post={post} postId={post._id} closeComments={() => setOpenCommentId(null)} />
                 )}
 
+                {/* Edit/Delete dropdown */}
                 <div className="absolute top-4 right-4">
                   <img
                     src={dotIcon}
@@ -231,7 +264,10 @@ const Feed = () => {
                     onClick={() => toggleDropdown(post._id)}
                   />
                   {activeDropdown === post._id && (
-                    <div ref={dropdownRef} className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10">
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10"
+                    >
                       <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
                         <button
                           onClick={() => setActiveDropdown(null)}

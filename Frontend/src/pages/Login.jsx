@@ -17,30 +17,30 @@ function Login() {
     setErrorMessage("");
     try {
       const result = await axios.post("http://localhost:3001/login", { email, password });
+      
       if (result.data.success) {
-        const user = result.data.user;
+        const { user, token } = result.data;
         const username = user ? user.name : email.split("@")[0];
         const role = user ? user.role : "user";
-        // Save session info
+
+        // ✅ Save session details
+        localStorage.setItem("token", token); // ✅ Save the token
         localStorage.setItem("username", username);
         localStorage.setItem("role", role);
         localStorage.setItem("email", user.email);
         localStorage.setItem("profileImage", user.profileImage || "upload.png");
 
-        // Redirect based on role and first login status
+        // ✅ Redirect based on role and first login status
         if (role === "admin") {
           navigate("/Users");
         } else {
-          if (user.isFirstLogin) {
-            navigate("/profile");
-          } else {
-            navigate("/recent");
-          }
+          user.isFirstLogin ? navigate("/profile") : navigate("/recent");
         }
       } else {
         setErrorMessage(result.data.message);
       }
     } catch (err) {
+      console.error("Login error", err);
       setErrorMessage("An error occurred while processing your request.");
     }
   };

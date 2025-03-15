@@ -1,28 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import like from "../assets/like.png";
-import comment from "../assets/comment.png";
+import redLike from "../assets/redLike.png";
+import commentIcon from "../assets/comment.png";
 import Comment from "../components/Comment";
-import dotIcon from "../assets/dot.png";
-import redLike from "../assets/redLike.png"; // red version for liked state
 
-
-
+// Helper functions
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
   return text.match(regex) || [];
 }
 
 function getUniqueHashtags(hashtags) {
-  const uniqueHashtags = [];
-  for (let i = hashtags.length - 1; i >= 0; i--) {
-    if (!uniqueHashtags.includes(hashtags[i])) {
-      uniqueHashtags.unshift(hashtags[i]);
-    }
-  }
-  return uniqueHashtags;
+  const unique = [];
+  hashtags.forEach((tag) => {
+    if (!unique.includes(tag)) unique.push(tag);
+  });
+  return unique;
 }
-
 
 function formatDate(date) {
   const postDate = new Date(date);
@@ -30,7 +25,6 @@ function formatDate(date) {
   const diff = now - postDate;
   const diffMinutes = Math.floor(diff / (1000 * 60));
   const diffHours = Math.floor(diff / (1000 * 60 * 60));
-
   if (diffHours < 24) {
     if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
@@ -40,84 +34,98 @@ function formatDate(date) {
   }
 }
 
-
-// Build a full image URL if the user uploaded a custom image
-const getImageUrl = (profileImage) => {
-  if (!profileImage || profileImage === "default-avatar.png") {
-    return "/default-avatar.png";
-  }
-  if (profileImage.startsWith("http")) {
-    return profileImage;
-  }
-  return `http://localhost:3001/uploads/${profileImage}`;
-};
-
 const Recent = () => {
   const [posts, setPosts] = useState([]);
-   const [activeDropdown, setActiveDropdown] = useState(null);
   const [currentUser, setCurrentUser] = useState("");
-  const [likes, setLikes] = useState({}); // state for like count & status per post
-    const dropdownRef = useRef(null);
-    const [openCommentId, setOpenCommentId] = useState(null);
+  const [likes, setLikes] = useState({});
+  const [openCommentId, setOpenCommentId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
+    const token = localStorage.getItem("token");
+    if (!storedUsername || !token) {
+      navigate("/login");
+    } else {
       setCurrentUser(storedUsername);
     }
     fetchPosts();
-  }, []);
+  }, [navigate]);
 
   const fetchPosts = async () => {
+    const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:3001/api/posts");
+      const res = await fetch("http://localhost:3001/api/posts", {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
       const data = await res.json();
-      // Filter out the current user's posts
+
+      // Check if the API returned an error instead of an array
+      if (data.error) {
+        console.error("API Error:", data.error);
+        return;
+      }
+      if (!Array.isArray(data)) {
+        console.error("Data is not an array:", data);
+        return;
+      }
+
+      // Filter posts to exclude those by the logged-in user
       const otherPosts = data.filter(
         (post) => post.author !== localStorage.getItem("username")
       );
       setPosts(otherPosts);
+
+      // Initialize likes for these posts
+      const initialLikes = {};
+      otherPosts.forEach((post) => {
+        const count = post.likes ? post.likes.length : 0;
+        const liked = post.likes && post.likes.includes(localStorage.getItem("username"));
+        initialLikes[post._id] = { count, liked };
+      });
+      setLikes(initialLikes);
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
   };
 
-    // --- Toggle dropdown for options ---
-    const toggleDropdown = (postId) => {
-      setActiveDropdown(activeDropdown === postId ? null : postId);
-    };
- 
- // --- Toggle comment section ---
- const toggleComments = (postId) => {
-  setOpenCommentId(openCommentId === postId ? null : postId);
-};
+  const toggleComments = (postId) => {
+    setOpenCommentId(openCommentId === postId ? null : postId);
+  };
 
- // --- Handle like toggle ---
- const handleLike = (postId) => {
-  setLikes((prevLikes) => {
-    const postLike = prevLikes[postId] || { count: 0, liked: false };
-    if (postLike.liked) {
-      // Unlike: decrease count and set liked to false
-      return { ...prevLikes, [postId]: { count: postLike.count - 1, liked: false } };
-    } else {
-      // Like: increase count and set liked to true
-      return { ...prevLikes, [postId]: { count: postLike.count + 1, liked: true } };
+  const handleLike = async (postId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentUser }),
+      });
+      if (res.ok) {
+        const updatedLike = await res.json();
+        setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
+      } else {
+        console.error("Failed to update like");
+      }
+    } catch (error) {
+      console.error("Error updating like:", error);
     }
-  });
-};
+  };
 
   return (
     <div>
-      {/* Header with Recent, Feed, and Topic */}
+      {/* Navigation and header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
-          <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">
-            Recent
-          </button>
+          <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">Recent</button>
           <NavLink to="/feed">
-            <button className="border border-[#EC993D] px-6 py-2 rounded-xl">
-              Feed
-            </button>
+            <button className="border border-[#EC993D] px-6 py-2 rounded-xl">Feed</button>
           </NavLink>
         </div>
         <div className="mr-[255px]">
@@ -126,18 +134,22 @@ const Recent = () => {
       </div>
 
       <div className="flex gap-6">
-        {/* Posts Section */}
         <div className="flex-1 space-y-4">
           {posts.map((post) => {
             const hashtags = extractHashtags(post.content);
             const uniqueHashtags = getUniqueHashtags(hashtags);
             const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
             const postLike = likes[post._id] || { count: 0, liked: false };
+
             return (
-              <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md">
+              <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
                 <div className="flex items-center space-x-3">
                   <img
-                    src={getImageUrl(post.profileImage)}
+                    src={
+                      post.profileImage
+                        ? `http://localhost:3001/uploads/${post.profileImage}`
+                        : "/default-avatar.png"
+                    }
                     alt="User Avatar"
                     className="w-10 h-10 rounded-full"
                   />
@@ -146,7 +158,7 @@ const Recent = () => {
                     <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                   </div>
                 </div>
-                <p className="mt-2">{cleanedContent}</p>
+                {cleanedContent && <p className="mt-2">{cleanedContent}</p>}
                 {uniqueHashtags.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {uniqueHashtags.map((tag, index) => (
@@ -154,6 +166,15 @@ const Recent = () => {
                         {tag}
                       </p>
                     ))}
+                  </div>
+                )}
+                {post.image && (
+                  <div className="mt-2 flex">
+                    <img
+                      src={`http://localhost:3001/uploads/${post.image}`}
+                      alt="Post"
+                      className="max-w-full h-auto object-contain rounded-lg"
+                    />
                   </div>
                 )}
                 <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
@@ -171,56 +192,28 @@ const Recent = () => {
                       : "Like"}
                   </p>
                   <img
-                    src={comment}
+                    src={commentIcon}
                     alt="Comment"
                     className="w-5 h-5 cursor-pointer"
                     onClick={() => toggleComments(post._id)}
                   />
                   <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
-                    Comment
+                    {post.commentCount > 0
+                      ? post.commentCount === 1
+                        ? "1 comment"
+                        : `${post.commentCount} comments`
+                      : "Comment"}
                   </p>
                 </div>
 
                 {openCommentId === post._id && (
-                  <Comment
-                    post={post}
-                    postId={post._id}
-                    closeComments={() => setOpenCommentId(null)}
-                  />
+                  <Comment post={post} postId={post._id} closeComments={() => setOpenCommentId(null)} />
                 )}
-
-                <div className="absolute top-4 right-4">
-                  <img
-                    src={dotIcon}
-                    alt="Options"
-                    className="w-6 h-6 cursor-pointer"
-                    onClick={() => toggleDropdown(post._id)}
-                  />
-                  {activeDropdown === post._id && (
-                    <div ref={dropdownRef} className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10">
-                      <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
-                        <button
-                          onClick={() => setActiveDropdown(null)}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Edit
-                        </button>
-                      </NavLink>
-                      <button
-                        onClick={() => confirmDelete(post._id)}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
             );
           })}
         </div>
-     
- 
+
         {/* Topics Section */}
         <div className="w-1/4 mb-12">
           <div className="bg-gray-300 p-4 rounded-lg shadow-md">
@@ -249,10 +242,7 @@ const Recent = () => {
                 "Schizophrenia",
                 "Paranoia",
               ].map((topic, index) => (
-                <button
-                  key={index}
-                  className="bg-white px-3 py-2 rounded-lg text-sm"
-                >
+                <button key={index} className="bg-white px-3 py-2 rounded-lg text-sm">
                   {topic}
                 </button>
               ))}
