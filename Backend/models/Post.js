@@ -9,13 +9,12 @@ const PostSchema = new Schema({
   },
   content: {
     type: String,
-    required: false, // allow posts that are image-only
+    required: false,
   },
   profileImage: {
     type: String,
     default: "default-avatar.png",
   },
-  // Field to store the uploaded image filename (if any)
   image: {
     type: String,
     default: null,
