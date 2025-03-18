@@ -43,12 +43,9 @@ const getImageUrl = (profileImage) => {
 const Comment = ({ post, postId, closeComments }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  // Current user's profile image (for the input box)
   const [profileImage, setProfileImage] = useState("default-avatar.png");
   const [currentUser, setCurrentUser] = useState("");
-  // For editing comment functionality
   const [editingCommentId, setEditingCommentId] = useState(null);
-  // For controlling 3-dot dropdown menus on comments
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
 
@@ -62,8 +59,6 @@ const Comment = ({ post, postId, closeComments }) => {
       setCurrentUser(storedUsername);
     }
     fetchComments();
-
-    // Close 3-dot dropdown if clicked outside
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setActiveDropdown(null);
@@ -75,7 +70,6 @@ const Comment = ({ post, postId, closeComments }) => {
     };
   }, []);
 
-  // --- Fetch Comments ---
   const fetchComments = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -91,7 +85,6 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
-  // --- Submit New or Edited Comment ---
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
     const token = localStorage.getItem("token");
@@ -121,7 +114,7 @@ const Comment = ({ post, postId, closeComments }) => {
         console.error("Error updating comment:", error);
       }
     } else {
-      // Create a new comment
+      // Create a new comment (include currentUser so backend can create notification properly)
       try {
         const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
         const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
@@ -134,6 +127,7 @@ const Comment = ({ post, postId, closeComments }) => {
             text: newComment,
             author: currentUser,
             profileImage: storedProfile,
+            currentUser: currentUser,  // Added to fix the server error
           }),
         });
         if (res.ok) {
@@ -148,19 +142,16 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
-  // --- Toggle the 3-dot dropdown for a specific comment ---
   const toggleDropdown = (commentId) => {
     setActiveDropdown(activeDropdown === commentId ? null : commentId);
   };
 
-  // --- Handle Edit: load comment into the main input box ---
   const handleEditComment = (comment) => {
     setEditingCommentId(comment._id);
     setNewComment(comment.text);
     setActiveDropdown(null);
   };
 
-  // --- Delete comment ---
   const handleDeleteComment = async (commentId) => {
     const token = localStorage.getItem("token");
     try {
@@ -183,7 +174,6 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
-  // --- Report comment ---
   const handleReportComment = async (commentId) => {
     const token = localStorage.getItem("token");
     try {
@@ -209,7 +199,6 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
-  // Submit comment on Enter key press
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSubmitComment();
@@ -219,15 +208,12 @@ const Comment = ({ post, postId, closeComments }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
       <div className="bg-white w-full max-w-2xl rounded-lg relative flex flex-col">
-        {/* Close Button */}
         <button
           onClick={closeComments}
           className="absolute top-3 right-3 text-gray-600 hover:text-black font-bold text-lg"
         >
           ✕
         </button>
-
-        {/* Post Section */}
         <div className="p-4 border-b border-gray-300">
           <div className="flex items-center space-x-2 mb-2">
             <img
@@ -262,8 +248,6 @@ const Comment = ({ post, postId, closeComments }) => {
             </div>
           )}
         </div>
-
-        {/* Comments List */}
         <div className="p-4">
           {comments.length > 0 ? (
             <div className="w-full space-y-3">
@@ -275,7 +259,6 @@ const Comment = ({ post, postId, closeComments }) => {
                 return (
                   <div key={comment._id} className="bg-gray-100 p-3 rounded-md relative">
                     <div className="flex items-center space-x-2 mb-1">
-                      {/* Show the commenter's profile image, not the post's image */}
                       <img
                         src={getImageUrl(comment.profileImage)}
                         alt="User Avatar"
@@ -340,8 +323,6 @@ const Comment = ({ post, postId, closeComments }) => {
             </div>
           )}
         </div>
-
-        {/* Comment Input Box */}
         <div className="p-3 border-t border-gray-300">
           <div className="flex items-center space-x-2">
             <img src={profileImage} alt="User Avatar" className="w-8 h-8 rounded-full" />
