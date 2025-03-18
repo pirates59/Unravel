@@ -116,8 +116,6 @@ exports.getComments = async (req, res) => {
   }
 };
 
-
-
 // Update comment
 exports.updateComment = async (req, res) => {
   const { postId, commentId } = req.params;
@@ -158,17 +156,14 @@ exports.deleteComment = async (req, res) => {
     res.status(500).json({ error: "Failed to delete comment." });
   }
 };
-// controllers/postController.js
 
-// controllers/postController.js
+// Like a post
 exports.likePost = async (req, res) => {
   const { postId } = req.params;
-  // Destructure and allow for undefined values
   let { currentUser, author: actorName, profileImage: actorProfileImage } = req.body;
   if (!currentUser) {
     return res.status(400).json({ error: "currentUser is required." });
   }
-  // Fallback to default values if not provided
   actorName = actorName || currentUser;
   actorProfileImage = actorProfileImage || "default-avatar.png";
   
@@ -190,7 +185,6 @@ exports.likePost = async (req, res) => {
         });
         await newNotification.save();
 
-        // Emit realtime notification to the recipient’s room
         if (global.io) {
           global.io.to(post.author).emit("notification", newNotification);
         }
@@ -206,6 +200,17 @@ exports.likePost = async (req, res) => {
   }
 };
 
+// Get a single post by id
+exports.getPostById = async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 exports.addComment = async (req, res) => {
   const { postId } = req.params;
@@ -222,7 +227,6 @@ exports.addComment = async (req, res) => {
     });
     await newComment.save();
 
-    // Create notification if the commenter is not the post owner
     const post = await Post.findById(postId);
     if (post && post.author !== currentUser) {
       const newNotification = new Notification({
@@ -235,7 +239,6 @@ exports.addComment = async (req, res) => {
       });
       await newNotification.save();
 
-      // Emit realtime notification to the recipient’s room
       if (global.io) {
         global.io.to(post.author).emit("notification", newNotification);
       }
@@ -265,3 +268,4 @@ exports.reportComment = async (req, res) => {
     res.status(500).json({ error: "Failed to report comment." });
   }
 };
+
