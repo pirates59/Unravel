@@ -1,3 +1,4 @@
+// Recent.jsx
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import like from "../assets/like.png";
@@ -63,7 +64,6 @@ const Recent = () => {
       });
       const data = await res.json();
 
-      // Check if the API returned an error instead of an array
       if (data.error) {
         console.error("API Error:", data.error);
         return;
@@ -73,13 +73,11 @@ const Recent = () => {
         return;
       }
 
-      // Filter posts to exclude those by the logged-in user
       const otherPosts = data.filter(
         (post) => post.author !== localStorage.getItem("username")
       );
       setPosts(otherPosts);
 
-      // Initialize likes for these posts
       const initialLikes = {};
       otherPosts.forEach((post) => {
         const count = post.likes ? post.likes.length : 0;
@@ -96,38 +94,35 @@ const Recent = () => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
 
- // Inside Feed.jsx
-const handleLike = async (postId) => {
-  const token = localStorage.getItem("token");
-  const currentUser = localStorage.getItem("username");
-  // Get the stored profile image (or default)
-  const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
-  
-  try {
-    const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
-      method: "POST", // or "PUT" if your API expects that
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      // Send currentUser, actor (same as currentUser), and profileImage in the request
-      body: JSON.stringify({
-        currentUser,
-        author: currentUser,          // actor's name
-        profileImage: storedProfile,  // actor's profile image
-      }),
-    });
-    if (res.ok) {
-      const updatedLike = await res.json();
-      setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
-    } else {
-      console.error("Failed to update like");
+  // Handle like in the Recent feed
+  const handleLike = async (postId) => {
+    const token = localStorage.getItem("token");
+    const currentUser = localStorage.getItem("username");
+    const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
+    
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentUser,
+          author: currentUser,
+          profileImage: storedProfile,
+        }),
+      });
+      if (res.ok) {
+        const updatedLike = await res.json();
+        setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
+      } else {
+        console.error("Failed to update like");
+      }
+    } catch (error) {
+      console.error("Error updating like:", error);
     }
-  } catch (error) {
-    console.error("Error updating like:", error);
-  }
-};
-
+  };
 
   return (
     <div>
@@ -219,13 +214,13 @@ const handleLike = async (postId) => {
 
                 {openCommentId === post._id && (
                   <Comment
-                  post={post}
-                  postId={post._id}
-                  closeComments={() => {
-                    setOpenCommentId(null);
-                    fetchPosts();
-                  }}
-                />
+                    post={post}
+                    postId={post._id}
+                    closeComments={() => {
+                      setOpenCommentId(null);
+                      fetchPosts();
+                    }}
+                  />
                 )}
               </div>
             );
