@@ -138,27 +138,38 @@ const Feed = () => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
 
-  const handleLike = async (postId) => {
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentUser }),
-      });
-      if (res.ok) {
-        const updatedLike = await res.json();
-        setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
-      } else {
-        console.error("Failed to update like");
-      }
-    } catch (error) {
-      console.error("Error updating like:", error);
+  // Inside Feed.jsx
+const handleLike = async (postId) => {
+  const token = localStorage.getItem("token");
+  const currentUser = localStorage.getItem("username");
+  // Get the stored profile image (or default)
+  const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
+  
+  try {
+    const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+      method: "POST", // or "PUT" if your API expects that
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      // Send currentUser, actor (same as currentUser), and profileImage in the request
+      body: JSON.stringify({
+        currentUser,
+        author: currentUser,          // actor's name
+        profileImage: storedProfile,  // actor's profile image
+      }),
+    });
+    if (res.ok) {
+      const updatedLike = await res.json();
+      setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
+    } else {
+      console.error("Failed to update like");
     }
-  };
+  } catch (error) {
+    console.error("Error updating like:", error);
+  }
+};
+
 
   return (
     <div>
@@ -172,7 +183,7 @@ const Feed = () => {
         </div>
       </div>
 
-      <div className="flex gap-6 w-[1028px]">
+      <div className="flex gap-6 w-[890px]">
         <div className="flex-1 space-y-4">
           {posts.map((post) => {
             const hashtags = extractHashtags(post.content);
@@ -234,7 +245,7 @@ const Feed = () => {
                       : "Like"}
                   </p>
 
-                  {/* Comment */}
+                  {/* Comment changes */}
                   <img
                     src={comment}
                     alt="Comment"
@@ -250,10 +261,16 @@ const Feed = () => {
                   </p>
                 </div>
 
-                {/* Comment Section */}
                 {openCommentId === post._id && (
-                  <Comment post={post} postId={post._id} closeComments={() => setOpenCommentId(null)} />
-                )}
+  <Comment
+    post={post}
+    postId={post._id}
+    closeComments={() => {
+      setOpenCommentId(null);
+      fetchPosts();
+    }}
+  />
+)}
 
                 {/* Edit/Delete dropdown */}
                 <div className="absolute top-4 right-4">
