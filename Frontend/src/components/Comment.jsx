@@ -1,7 +1,11 @@
+// Comment.jsx
 import React, { useState, useEffect, useRef } from "react";
 import sendIcon from "../assets/send.png";
 import hand from "../assets/hand.png";
 import dotIcon from "../assets/dot.png";
+import like from "../assets/like.png";
+import redLike from "../assets/redLike.png";
+import commentIcon from "../assets/comment.png";
 
 // Hashtag helpers (optional)
 function extractHashtags(text) {
@@ -48,6 +52,10 @@ const Comment = ({ post, postId, closeComments }) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
+  
+  // New states for like count in the Comment overlay
+  const [postLikes, setPostLikes] = useState(post.likes ? post.likes.length : 0);
+  const [liked, setLiked] = useState(post.likes && post.likes.includes(localStorage.getItem("username")));
 
   useEffect(() => {
     const storedProfileImage = localStorage.getItem("profileImage");
@@ -85,6 +93,36 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
+  // New like handler for the overlay
+  const handleLike = async () => {
+    const token = localStorage.getItem("token");
+    const currentUserLocal = localStorage.getItem("username");
+    const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentUser: currentUserLocal,
+          author: currentUserLocal,
+          profileImage: storedProfile,
+        }),
+      });
+      if (res.ok) {
+        const updatedLike = await res.json();
+        setPostLikes(updatedLike.count);
+        setLiked(updatedLike.liked);
+      } else {
+        console.error("Failed to update like");
+      }
+    } catch (error) {
+      console.error("Error updating like:", error);
+    }
+  };
+
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
     const token = localStorage.getItem("token");
@@ -114,7 +152,7 @@ const Comment = ({ post, postId, closeComments }) => {
         console.error("Error updating comment:", error);
       }
     } else {
-      // Create a new comment (include currentUser so backend can create notification properly)
+      // Create a new comment
       try {
         const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
         const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
@@ -127,7 +165,7 @@ const Comment = ({ post, postId, closeComments }) => {
             text: newComment,
             author: currentUser,
             profileImage: storedProfile,
-            currentUser: currentUser,  // Added to fix the server error
+            currentUser: currentUser,
           }),
         });
         if (res.ok) {
@@ -247,6 +285,34 @@ const Comment = ({ post, postId, closeComments }) => {
               />
             </div>
           )}
+          {/* New Like and Comment icons row */}
+          <div className="flex items-center gap-3 text-gray-500 text-sm mt-2">
+            <img
+              src={liked ? redLike : like}
+              alt="Like"
+              className="w-5 h-5 cursor-pointer"
+              onClick={handleLike}
+            />
+            <p onClick={handleLike} className="cursor-pointer">
+              {postLikes > 0
+                ? postLikes === 1
+                  ? "1 like"
+                  : `${postLikes} likes`
+                : "Like"}
+            </p>
+            <img
+              src={commentIcon}
+              alt="Comment"
+              className="w-5 h-5 cursor-pointer"
+            />
+            <p className="cursor-pointer">
+              {comments.length > 0
+                ? comments.length === 1
+                  ? "1 comment"
+                  : `${comments.length} comments`
+                : "Comment"}
+            </p>
+          </div>
         </div>
         <div className="p-4">
           {comments.length > 0 ? (
