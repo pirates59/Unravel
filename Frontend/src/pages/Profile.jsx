@@ -1,3 +1,4 @@
+// Profile.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -33,7 +34,6 @@ function Profile() {
       return;
     }
     const formData = new FormData();
-    // Do not append email; the backend will use the token's payload.
     if (file) {
       formData.append("profileImage", file);
     } else {
@@ -47,7 +47,6 @@ function Profile() {
       const res = await axios.post("http://localhost:3001/update-profile", formData, {
         headers: {
           "Authorization": `Bearer ${token}`,
-          // Let axios set the Content-Type automatically for FormData
         },
       });
       if (res.data.success) {
