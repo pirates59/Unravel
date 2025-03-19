@@ -1,12 +1,10 @@
-/*****************************************************
- * models/Signup.js
- *****************************************************/
+// models/Signup.js
 const mongoose = require("mongoose");
 
 const SignupSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // hashed
+  password: { type: String, required: true }, // hashed password
   otp: String,
   otpExpires: Date,
   role: { type: String, enum: ["admin", "user"], default: "user" },
