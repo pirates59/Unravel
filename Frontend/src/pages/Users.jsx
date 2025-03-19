@@ -1,69 +1,162 @@
+// src/Users.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import swal from "sweetalert";
+import dotIcon from "../assets/dot.png";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
-
-  // Replace with real token from your auth flow
-  const token = localStorage.getItem("token"); 
+  const [dropdownUserId, setDropdownUserId] = useState(null);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // Fetch users on component mount
+    fetchUsers();
+  }, [token]);
+
+  const fetchUsers = () => {
     axios
       .get("http://localhost:3001/api/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setUsers(response.data); // This should be an array of user objects
+        setUsers(response.data);
       })
       .catch((error) => {
         console.error("Error fetching users:", error);
       });
-  }, [token]);
+  };
+
+  const handleDelete = (userId) => {
+    swal({
+      title: "Are you sure?",
+      text: "Do you want to delete this user?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        axios
+          .delete(`http://localhost:3001/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then(() => {
+            swal("User deleted successfully.", { icon: "success" });
+            setUsers(users.filter((user) => user._id !== userId));
+          })
+          .catch((error) => {
+            console.error("Error deleting user:", error);
+            swal("Error deleting user", { icon: "error" });
+          });
+      }
+    });
+  };
+
+  const handleFreeze = (userId) => {
+    swal({
+      title: "Are you sure?",
+      text: "Do you want to freeze this user?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willFreeze) => {
+      if (willFreeze) {
+        axios
+          .put(
+            `http://localhost:3001/api/users/freeze/${userId}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+          .then((response) => {
+            swal("User has been frozen.", { icon: "success" });
+            setUsers(
+              users.map((user) =>
+                user._id === userId ? { ...user, isFrozen: true } : user
+              )
+            );
+          })
+          .catch((error) => {
+            console.error("Error freezing user:", error);
+            swal("Error freezing user", { icon: "error" });
+          });
+      }
+    });
+  };
+
+  const toggleDropdown = (userId) => {
+    setDropdownUserId(dropdownUserId === userId ? null : userId);
+  };
 
   return (
-    <div style={{ padding: "20px" }}>
-      
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          marginTop: "10px",
-        }}
-      >
-        <thead>
-          <tr style={{ backgroundColor: "#EC993D", color: "#fff" }}>
-            <th style={{ padding: "8px", textAlign: "left" }}>Image</th>
-            <th style={{ padding: "8px", textAlign: "left" }}>Email</th>
-            <th style={{ padding: "8px", textAlign: "left" }}>Password (Hashed)</th>
-            <th style={{ padding: "8px", textAlign: "left" }}>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr
-              key={user._id}
-              style={{ borderBottom: "1px solid #ccc" }}
-            >
-              <td style={{ padding: "8px" }}>
-                <img
-                  src={`http://localhost:3001/uploads/${user.profileImage}`}
-                  alt="Profile"
-                  style={{ width: "40px", height: "40px", borderRadius: "50%" }}
-                />
-              </td>
-              <td style={{ padding: "8px" }}>{user.email}</td>
-              <td style={{ padding: "8px" }}>{user.password}</td>
-              <td style={{ padding: "8px" }}>
-                {/* Live three dots in the Action column */}
-                <span style={{ cursor: "pointer", fontSize: "20px" }}>...</span>
-              </td>
+    <div className="p-6 w-full">
+      {/* Top bar with the 'Users' button */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex space-x-6">
+          <button className="bg-[#EC993D] px-6 py-2 text-white rounded-lg">
+            Users
+          </button>
+        </div>
+      </div>
+
+      {/* Table of users */}
+      <div className="overflow-x-auto relative">
+        <table className="w-full border-collapse">
+          <thead className="bg-white text-black border-[2px] border-gray-200">
+            <tr>
+              <th className="p-3 font-medium text-left">Image</th>
+              <th className="p-3 font-medium text-left">Email</th>
+              <th className="p-3 font-medium text-left">User</th>
+              <th className="p-3 font-medium text-left">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user._id} className="border-[1px] border-gray-200 relative">
+                <td className="p-3">
+                  <img
+                    src={`http://localhost:3001/uploads/${user.profileImage}`}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
+                </td>
+                <td className="p-3 text-[#6C757D]">{user.email}</td>
+                <td className="p-3 text-[#6C757D]">
+                  {user.name} {user.isFrozen && "(Frozen)"}
+                </td>
+                <td className="p-3 relative">
+                  <img
+                    src={dotIcon}
+                    alt="Options"
+                    className="w-4 h-4 ml-3 cursor-pointer"
+                    onClick={() => toggleDropdown(user._id)}
+                  />
+                  {dropdownUserId === user._id && (
+                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10">
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => {
+                          handleFreeze(user._id);
+                          setDropdownUserId(null);
+                        }}
+                      >
+                        Freeze
+                      </button>
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => {
+                          handleDelete(user._id);
+                          setDropdownUserId(null);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

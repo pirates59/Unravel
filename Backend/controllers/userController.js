@@ -1,9 +1,7 @@
-// controllers/userController.js
 const SignupModel = require("../models/Signup");
 
-// Update profile image
 exports.updateProfile = async (req, res) => {
-  const email = req.user.email;
+  const email = req.user.email; // comes from verifyToken middleware
   if (!req.file) {
     return res.status(400).json({ success: false, message: "No file uploaded." });
   }
@@ -23,13 +21,48 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Fetch users (only email, password, profileImage)
 exports.fetchUsers = async (req, res) => {
   try {
-    const users = await SignupModel.find({}, "email password profileImage");
+    // Only fetch users with role "user" and include necessary fields.
+    const users = await SignupModel.find(
+      { role: "user" },
+      "name email profileImage isFrozen"
+    );
     res.json(users);
   } catch (err) {
     console.error("Error fetching users:", err);
     res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const deletedUser = await SignupModel.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json({ message: "User deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ message: "Error deleting user." });
+  }
+};
+
+exports.freezeUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const updatedUser = await SignupModel.findByIdAndUpdate(
+      userId,
+      { isFrozen: true },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json({ message: "User frozen successfully.", user: updatedUser });
+  } catch (err) {
+    console.error("Error freezing user:", err);
+    res.status(500).json({ message: "Error freezing user." });
   }
 };
