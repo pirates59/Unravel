@@ -91,7 +91,7 @@ const UserSidebar = ({ children }) => {
   return (
     <div className="flex h-screen">
       <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
-        <div className="mb-4">
+        <div className="mb-10">
           <img
             src={userlogo}
             alt="Logo"
@@ -111,10 +111,12 @@ const UserSidebar = ({ children }) => {
               <span>Feed</span>
             </NavLink>
           </div>
+          <NavLink to="/room">
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={room} alt="Rooms" className="w-5 h-5" />
             <span>Rooms</span>
           </div>
+          </NavLink>
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={wellness} alt="Wellness Center" className="w-5 h-5" />
             <span>Wellness Center</span>
