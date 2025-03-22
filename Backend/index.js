@@ -32,6 +32,7 @@ app.use("/", require("./routes/infoRoutes"));
 app.use("/", require("./routes/serviceRoutes"));
 app.use("/", require("./routes/postRoutes"));
 app.use("/", require("./routes/notificationRoutes"));
+app.use("/", require("./routes/roomRoutes"));
 
 // Create HTTP server and attach Socket.IO
 const http = require("http");
@@ -46,6 +47,7 @@ const io = require("socket.io")(server, {
 
 // Expose io globally so controllers can emit events
 global.io = io;
+
 
 io.on("connection", (socket) => {
   socket.on("join", (userId) => {
