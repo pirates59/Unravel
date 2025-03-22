@@ -8,6 +8,7 @@ import Appointment from './pages/Appointment';
 import UserSidebar from "./components/UserSidebar";
 import Admin from './components/Admin';
 import AdminAppointment from './pages/AdminAppointment';
+import AdminRooms from './pages/AdminRooms';
 import Users from './pages/Users';
 import Recent from './pages/Recent';
 import Profile from './pages/Profile';
@@ -15,6 +16,8 @@ import Post from './pages/Post';
 import EditPost from './pages/EditPost';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
+import UserRoom from './pages/UserRoom';
+import Chat from "./pages/Chat";
 import Therapist from './components/Therapist';
 import Landing from './pages/Landing';
 import ServiceSelection from './pages/ServiceSelection';
@@ -49,6 +52,7 @@ function App() {
           <Route path="/landing" element={<Landing />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/therapist" element={<Therapist />} />
+          
           {/* Admin Protected Route */}
           <Route path="/admin" element={
             <ProtectedRoute role="admin">
@@ -60,6 +64,13 @@ function App() {
             <ProtectedRoute role="admin">
               <Admin>
                 <AdminAppointment />
+              </Admin>
+            </ProtectedRoute>
+          } />
+          <Route path="/AdminRooms" element={
+            <ProtectedRoute role="admin">
+              <Admin>
+                <AdminRooms />
               </Admin>
             </ProtectedRoute>
           } />
@@ -99,6 +110,21 @@ function App() {
               </UserSidebar>
             </ProtectedRoute>
           } />
+          <Route path="/room" element={
+            <ProtectedRoute role="user">
+              <UserSidebar>
+                <UserRoom />
+              </UserSidebar>
+            </ProtectedRoute>
+          } />
+           <Route path="/chat/:roomId" element={
+            <ProtectedRoute role="user">
+              <UserSidebar>
+                <Chat />
+              </UserSidebar>
+            </ProtectedRoute>
+          } />
+
           <Route path="/help" element={
             <ProtectedRoute role="user">
               <UserSidebar>
