@@ -59,8 +59,8 @@ const Recent = () => {
       const res = await fetch("http://localhost:3001/api/posts", {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
 
@@ -99,7 +99,7 @@ const Recent = () => {
     const token = localStorage.getItem("token");
     const currentUser = localStorage.getItem("username");
     const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
-    
+
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
         method: "POST",
@@ -125,7 +125,7 @@ const Recent = () => {
   };
 
   return (
-    <div>
+    <div className="">
       {/* Navigation and header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
@@ -134,13 +134,15 @@ const Recent = () => {
             <button className="border border-[#EC993D] px-6 py-2 rounded-xl">Feed</button>
           </NavLink>
         </div>
-        <div className="mr-[255px]">
+        <div className="mr-[270px]">
           <h2 className="text-lg font-semibold">Topic</h2>
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <div className="flex-1 space-y-4">
+      {/* Main container: posts + topics */}
+      <div className="flex gap-6 ">
+        {/* Posts Container - make it scrollable */}
+        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
           {posts.map((post) => {
             const hashtags = extractHashtags(post.content);
             const uniqueHashtags = getUniqueHashtags(hashtags);
@@ -227,9 +229,9 @@ const Recent = () => {
           })}
         </div>
 
-        {/* Topics Section */}
-        <div className="w-1/4 mb-12">
-          <div className="bg-gray-300 p-4 rounded-lg shadow-md">
+        {/* Topics Section - now matching posts container height and no scroll */}
+        <div className="w-[320px] h-[calc(90vh-140px)] sticky top-0 self-start overflow-hidden">
+          <div className="bg-gray-300 p-4 rounded-lg shadow-md h-full">
             <div className="grid grid-cols-2 gap-2">
               {[
                 "Relationships",

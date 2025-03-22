@@ -17,6 +17,7 @@ import EditPost from './pages/EditPost';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
 import UserRoom from './pages/UserRoom';
+import Chat from "./pages/Chat";
 import Therapist from './components/Therapist';
 import Landing from './pages/Landing';
 import ServiceSelection from './pages/ServiceSelection';
@@ -51,6 +52,7 @@ function App() {
           <Route path="/landing" element={<Landing />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/therapist" element={<Therapist />} />
+          
           {/* Admin Protected Route */}
           <Route path="/admin" element={
             <ProtectedRoute role="admin">
@@ -115,6 +117,14 @@ function App() {
               </UserSidebar>
             </ProtectedRoute>
           } />
+           <Route path="/chat/:roomId" element={
+            <ProtectedRoute role="user">
+              <UserSidebar>
+                <Chat />
+              </UserSidebar>
+            </ProtectedRoute>
+          } />
+
           <Route path="/help" element={
             <ProtectedRoute role="user">
               <UserSidebar>

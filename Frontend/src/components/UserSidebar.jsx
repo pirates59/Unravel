@@ -91,7 +91,7 @@ const UserSidebar = ({ children }) => {
   return (
     <div className="flex h-screen">
       <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
-        <div className="mb-4">
+        <div className="mb-10">
           <img
             src={userlogo}
             alt="Logo"
