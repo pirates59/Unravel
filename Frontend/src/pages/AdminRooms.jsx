@@ -2,7 +2,7 @@ import React from "react";
 import anxietyImg from "../assets/anxiety.png"; // Ensure this file exists
 import depressionImg from "../assets/anxiety.png"; // Replace with actual path
 import familyImg from "../assets/anxiety.png"; // Replace with actual path
-import PlusIcon from "../assets/pluss.png"; 
+import group from "../assets/group.png";
 
 const AdminRooms = () => {
   // Example static data; replace with actual or fetched data
@@ -54,15 +54,21 @@ const AdminRooms = () => {
         {rooms.map((room) => (
           <div
             key={room.id}
-            className="bg-white rounded-lg shadow p-4 flex flex-col"
+            className="bg-[#E5E7E9] rounded-lg shadow p-4 flex flex-col items-end "
           >
+               <h2 className="font-semibold text-[#EC993D] mb-2 ">{room.name}</h2>
             <img
               src={room.image}
               alt={room.name}
-              className="w-full h-40 object-cover rounded mb-2"
+              className="w-56 h-52 object-cover rounded mb-2"
             />
-            <h2 className="text-lg font-semibold mb-1">{room.name}</h2>
-            <div className="flex items-center justify-between mt-auto">
+         
+            <div className="flex items-center gap-2 justify-between mt-2">
+              <img
+                          src={group}
+                          alt="User Avatar"
+                          className="w-4 h-4 rounded-full"
+                        />
               <span className="text-gray-600 text-sm">{room.count}</span>
               <button
                 onClick={() => handleDelete(room.id)}
@@ -74,19 +80,7 @@ const AdminRooms = () => {
           </div>
         ))}
 
-        {/* Add new room card */}
-        <div
-          onClick={handleAddNewRoom}
-          className="bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
-        >
-          {/* If you don’t have an SVG, just use a “+” text or an inline SVG */}
-        
-          <img
-               src={PlusIcon}
-              alt=""
-              className="w-12 h-12 text-gray-400" />
-            
-        </div>
+       
       </div>
     </div>
   );
