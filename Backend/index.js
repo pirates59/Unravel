@@ -4,7 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
 require("./config/db"); // Connect to database
-
+const http = require("http");
 const app = express();
 
 // Middlewares
@@ -33,9 +33,10 @@ app.use("/", require("./routes/serviceRoutes"));
 app.use("/", require("./routes/postRoutes"));
 app.use("/", require("./routes/notificationRoutes"));
 app.use("/", require("./routes/roomRoutes"));
+app.use("/", require("./routes/messageRoutes"));
+app.use("/", require("./routes/therapistRoutes")); 
+app.use("/", require("./routes/reportRoutes"));
 
-// Create HTTP server and attach Socket.IO
-const http = require("http");
 const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
@@ -48,14 +49,26 @@ const io = require("socket.io")(server, {
 // Expose io globally so controllers can emit events
 global.io = io;
 
-
 io.on("connection", (socket) => {
+  // For notifications
   socket.on("join", (userId) => {
     socket.join(userId);
   });
-  socket.on("disconnect", () => {
-    // Handle disconnect if needed
+
+  // For chat room events
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
   });
+
+  socket.on("typing", ({ roomId, user }) => {
+    socket.to(roomId).emit("typing", { user });
+  });
+
+  socket.on("stopTyping", ({ roomId, user }) => {
+    // Optionally, emit a stopTyping event if needed.
+  });
+
+  socket.on("disconnect", () => {});
 });
 
 const PORT = process.env.PORT || 3001;
