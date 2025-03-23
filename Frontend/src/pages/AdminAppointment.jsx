@@ -42,7 +42,7 @@ const AdminAppointment = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
           <button className="bg-[#EC993D] px-6 py-2 text-white rounded-lg">
-            Appointment
+            Appointments
           </button>
         </div>
       </div>

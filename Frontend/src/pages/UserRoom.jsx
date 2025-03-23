@@ -1,8 +1,8 @@
+// src/components/UserRoom.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// Example images; replace with your own if you like
 import anxietyImg from "../assets/anxiety.png";
 import plusIcon from "../assets/pluss.png";
 import groupIcon from "../assets/group.png";
@@ -29,7 +29,6 @@ const UserRoom = () => {
     }
   };
 
-  // Create room
   const handleCreateRoom = async () => {
     try {
       const formData = new FormData();
@@ -37,7 +36,6 @@ const UserRoom = () => {
       if (roomImage) {
         formData.append("image", roomImage);
       }
-
       const res = await axios.post("http://localhost:3001/rooms", formData);
       setRooms([...rooms, res.data]);
       setShowModal(false);
@@ -50,7 +48,6 @@ const UserRoom = () => {
 
   return (
     <div className="p-4">
-      {/* Example "Back" button */}
       <button className="mb-4" onClick={() => window.history.back()}>
         <img src={leftarrow} alt="Back" className="w-6 h-6" />
       </button>
@@ -75,7 +72,6 @@ const UserRoom = () => {
                 className="w-56 h-52 object-cover rounded mb-3"
               />
             )}
-            {/* Bottom row: group icon + count + Enter */}
             <div className="w-full flex items-center justify-end gap-4">
               <div className="flex items-center gap-2">
                 <img
@@ -83,6 +79,7 @@ const UserRoom = () => {
                   alt="Group Icon"
                   className="w-4 h-4 rounded-full"
                 />
+                {/* Display the unique user count */}
                 <span className="text-gray-600 text-sm">{room.count || 0}</span>
               </div>
               <button
@@ -95,7 +92,6 @@ const UserRoom = () => {
           </div>
         ))}
 
-        {/* Card to create a new room */}
         <div
           onClick={() => setShowModal(true)}
           className="bg-gray-100 w-[283px] h-[320px] rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
@@ -109,7 +105,6 @@ const UserRoom = () => {
         </div>
       </div>
 
-      {/* Modal Overlay */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow max-w-sm w-full">

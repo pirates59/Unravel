@@ -8,6 +8,7 @@ import Appointment from './pages/Appointment';
 import UserSidebar from "./components/UserSidebar";
 import Admin from './components/Admin';
 import AdminAppointment from './pages/AdminAppointment';
+import AdminTherapist from './pages/AdminTherapist';
 import AdminRooms from './pages/AdminRooms';
 import Users from './pages/Users';
 import Recent from './pages/Recent';
@@ -17,6 +18,7 @@ import EditPost from './pages/EditPost';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
 import UserRoom from './pages/UserRoom';
+import Filtration from './pages/Filtration';
 import Chat from "./pages/Chat";
 import Therapist from './components/Therapist';
 import Landing from './pages/Landing';
@@ -74,10 +76,24 @@ function App() {
               </Admin>
             </ProtectedRoute>
           } />
+          <Route path="/AdminTherapist" element={
+            <ProtectedRoute role="admin">
+              <Admin>
+                <AdminTherapist />
+              </Admin>
+            </ProtectedRoute>
+          } />
 <Route path="/Users" element={
             <ProtectedRoute role="admin">
               <Admin>
                 <Users />
+              </Admin>
+            </ProtectedRoute>
+          } />
+          <Route path="/Filtration" element={
+            <ProtectedRoute role="admin">
+              <Admin>
+                <Filtration />
               </Admin>
             </ProtectedRoute>
           } />
@@ -110,7 +126,7 @@ function App() {
               </UserSidebar>
             </ProtectedRoute>
           } />
-          <Route path="/room" element={
+          <Route path="/rooms" element={
             <ProtectedRoute role="user">
               <UserSidebar>
                 <UserRoom />
@@ -124,6 +140,8 @@ function App() {
               </UserSidebar>
             </ProtectedRoute>
           } />
+            <Route path="*" element={<Navigate to="/rooms" replace />} />
+            
 
           <Route path="/help" element={
             <ProtectedRoute role="user">
