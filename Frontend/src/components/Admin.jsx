@@ -7,6 +7,7 @@ import room from "../assets/room.png";
 import setting from "../assets/setting.png";
 import filter from "../assets/filter.png";
 import therapist from "../assets/therapist.png";
+import center from "../assets/wellness.png";
 import logout from "../assets/logout.png";
 
 const Admin = ({ children }) => {
@@ -50,6 +51,12 @@ const Admin = ({ children }) => {
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={therapist} alt="Therapists" className="w-5 h-5" />
             <span>Therapists</span>
+          </div>
+          </NavLink>
+          <NavLink to="/AdminCenter">
+          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+            <img src={center} alt="Therapists" className="w-5 h-5" />
+            <span>Center</span>
           </div>
           </NavLink>
           <NavLink to="/Filtration">

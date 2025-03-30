@@ -117,10 +117,12 @@ const UserSidebar = ({ children }) => {
             <span>Rooms</span>
           </div>
           </NavLink>
+          <NavLink to="/wellness">
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={wellness} alt="Wellness Center" className="w-5 h-5" />
             <span>Wellness Center</span>
           </div>
+          </NavLink>
           <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
             <img src={help} alt="I Need Help" className="w-5 h-5" />
             <NavLink to="/help">

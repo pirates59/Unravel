@@ -10,11 +10,13 @@ import Admin from './components/Admin';
 import AdminAppointment from './pages/AdminAppointment';
 import AdminTherapist from './pages/AdminTherapist';
 import AdminRooms from './pages/AdminRooms';
+import AdminCenter from './pages/AdminCenter';
 import Users from './pages/Users';
 import Recent from './pages/Recent';
 import Profile from './pages/Profile';
 import Post from './pages/Post';
 import EditPost from './pages/EditPost';
+import Wellness from './pages/Wellness';
 import Feed from './pages/Feed';
 import Help from './pages/Help';
 import UserRoom from './pages/UserRoom';
@@ -76,6 +78,13 @@ function App() {
               </Admin>
             </ProtectedRoute>
           } />
+          <Route path="/AdminCenter" element={
+            <ProtectedRoute role="admin">
+              <Admin>
+                <AdminCenter />
+              </Admin>
+            </ProtectedRoute>
+          } />
           <Route path="/AdminTherapist" element={
             <ProtectedRoute role="admin">
               <Admin>
@@ -130,6 +139,13 @@ function App() {
             <ProtectedRoute role="user">
               <UserSidebar>
                 <UserRoom />
+              </UserSidebar>
+            </ProtectedRoute>
+          } />
+           <Route path="/wellness" element={
+            <ProtectedRoute role="user">
+              <UserSidebar>
+                <Wellness />
               </UserSidebar>
             </ProtectedRoute>
           } />
