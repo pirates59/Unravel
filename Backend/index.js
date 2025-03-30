@@ -33,6 +33,7 @@ app.use("/", require("./routes/serviceRoutes"));
 app.use("/", require("./routes/postRoutes"));
 app.use("/", require("./routes/notificationRoutes"));
 app.use("/", require("./routes/roomRoutes"));
+app.use("/", require("./routes/centerRoutes"));
 app.use("/", require("./routes/messageRoutes"));
 app.use("/", require("./routes/therapistRoutes")); 
 app.use("/", require("./routes/reportRoutes"));
