@@ -1,3 +1,4 @@
+// routes/centers.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -12,7 +13,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Create a new center
+// Create a new center (room)
+// Admin creates a room with a name (e.g., "Relationship", "Family") and an image.
 router.post("/centers", upload.single("image"), async (req, res) => {
   try {
     const { name } = req.body;
@@ -29,7 +31,7 @@ router.post("/centers", upload.single("image"), async (req, res) => {
   }
 });
 
-// Get all centers
+// Get all centers (rooms)
 router.get("/centers", async (req, res) => {
   try {
     const centers = await Center.find();

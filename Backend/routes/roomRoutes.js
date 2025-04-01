@@ -1,4 +1,3 @@
-// routes/roomRoutes.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -30,14 +29,14 @@ router.post("/rooms", upload.single("image"), async (req, res) => {
   }
 });
 
-// Get all rooms with unique user count
+// Get all rooms with unique user count based on unique senderName
 router.get("/rooms", async (req, res) => {
   try {
     const rooms = await Room.find();
     const roomsWithCount = await Promise.all(
       rooms.map(async (room) => {
-        // Get distinct senderIds from messages for this room
-        const uniqueUsers = await Message.distinct("senderId", { room: room._id });
+        // Get distinct senderNames from messages for this room
+        const uniqueUsers = await Message.distinct("senderName", { room: room._id });
         return { ...room.toObject(), count: uniqueUsers.length };
       })
     );
