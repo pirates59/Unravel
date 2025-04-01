@@ -69,10 +69,7 @@ const Admin = ({ children }) => {
 
         {/* Logout Button */}
         <div className="mt-auto flex flex-col space-y-6">
-                <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-                  <img src={setting} alt="Settings" className="w-5 h-5" />
-                  <span>Settings</span>
-                </div>
+                
                 <div
                   onClick={handleLogout}
                   className="flex items-center space-x-3 cursor-pointer hover:opacity-80"

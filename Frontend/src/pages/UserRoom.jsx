@@ -1,4 +1,3 @@
-// src/components/UserRoom.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +12,7 @@ const UserRoom = () => {
   const [showModal, setShowModal] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [roomImage, setRoomImage] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
 
@@ -30,17 +30,28 @@ const UserRoom = () => {
   };
 
   const handleCreateRoom = async () => {
+    // Validate inputs
+    const newErrors = {};
+    if (!roomName.trim()) {
+      newErrors.roomName = "*Required";
+    }
+    if (!roomImage) {
+      newErrors.roomImage = "*Required";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append("name", roomName);
-      if (roomImage) {
-        formData.append("image", roomImage);
-      }
+      formData.append("image", roomImage);
       const res = await axios.post("http://localhost:3001/rooms", formData);
       setRooms([...rooms, res.data]);
       setShowModal(false);
       setRoomName("");
       setRoomImage(null);
+      setErrors({});
     } catch (error) {
       console.error("Error creating room:", error);
     }
@@ -79,7 +90,6 @@ const UserRoom = () => {
                   alt="Group Icon"
                   className="w-4 h-4 rounded-full"
                 />
-                {/* Display the unique user count */}
                 <span className="text-gray-600 text-sm">{room.count || 0}</span>
               </div>
               <button
@@ -93,7 +103,10 @@ const UserRoom = () => {
         ))}
 
         <div
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setShowModal(true);
+            setErrors({});
+          }}
           className="bg-gray-100 w-[283px] h-[320px] rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
         >
           <img
@@ -114,22 +127,41 @@ const UserRoom = () => {
               <input
                 type="text"
                 value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
+                onChange={(e) => {
+                  setRoomName(e.target.value);
+                  if (e.target.value.trim()) {
+                    setErrors((prev) => ({ ...prev, roomName: "" }));
+                  }
+                }}
                 className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
                 placeholder="Enter room name"
               />
+              {errors.roomName && (
+                <span className="text-red-500 text-sm">{errors.roomName}</span>
+              )}
             </label>
             <label className="block mb-3">
               <span className="text-gray-700">Room Image:</span>
               <input
                 type="file"
-                onChange={(e) => setRoomImage(e.target.files[0])}
+                onChange={(e) => {
+                  setRoomImage(e.target.files[0]);
+                  if (e.target.files[0]) {
+                    setErrors((prev) => ({ ...prev, roomImage: "" }));
+                  }
+                }}
                 className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
               />
+              {errors.roomImage && (
+                <span className="text-red-500 text-sm">{errors.roomImage}</span>
+              )}
             </label>
             <div className="flex justify-end">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setErrors({});
+                }}
                 className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
               >
                 Cancel

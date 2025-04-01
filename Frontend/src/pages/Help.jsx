@@ -30,42 +30,43 @@ const Help = () => {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className=" flex flex-col h-[87%] ">
       {/* Back Button */}
       <button className="mb-[30px] self-start">
         <img src={leftarrow} alt="Back" className="w-6 h-6" />
       </button>
 
-      {/* Main Content Card */}
-      <div className="bg-[#EC993D] p-10 rounded-xl text-center w-[80%] h-[440px] shadow-lg flex flex-col items-center">
-        {/* Siren and Heading */}
-        <div className="flex flex-col items-center mb-4">
-          <img src={siren} alt="Siren" className="w-12 h-12 mb-2" />
-          <div className="text-2xl text-white font-bold">Are you in Crisis?</div>
+       {/* Main Content Card */}
+       <div className="bg-gray-100 p-4 rounded-lg text-center shadow-md w-[80%] h-[95%]">
+      
+        <div className="flex flex-col items-center mb-6">
+          <img src={siren} alt="Siren" className="w-16 h-16 mb-3" />
+          <h2 className="text-3xl font-bold text-gray-800">Are you in Crisis?</h2>
         </div>
 
-        <p className="text-white mb-6 font-semibold">
-          If you or someone you know is in a crisis and potentially at risk of
-          self-harm or suicide, it is important to seek professional help immediately.
+        <p className="text-gray-700 mb-8 text-lg">
+          If you or someone you know is in a crisis and potentially at risk of self-harm or suicide, 
+          <br />
+          it is important to seek <span className="font-semibold">Professional Help.</span>
         </p>
 
         {/* Buttons */}
         <button
-          className="bg-red-600 text-white px-6 py-2 rounded-md text-lg w-[50%] mb-4"
+          className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-lg transition-colors duration-200 w-[500px] mb-4"
           onClick={handleEmergencyClick}
         >
           Emergency Now
         </button>
         
-        <NavLink to="/service"> 
-        <button className="bg-green-600 text-white px-6 py-2 rounded-md text-lg w-[100%] mr-[330px]">
-          Helpline
-        </button>
+        <NavLink to="/service">
+          <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-lg transition-colors duration-200 w-[500px]">
+            Helpline
+          </button>
         </NavLink>
       </div>
 
-      {/* Overlay (Modal) for Emergency Now */}
-      {showEmergencyOverlay && (
+    {/* Overlay (Modal) for Emergency Now */}
+    {showEmergencyOverlay && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white w-[240px] p-4 rounded-md shadow-lg flex flex-col items-center">
             {/* Phone Number + Copy + Call in one row */}
@@ -98,3 +99,4 @@ const Help = () => {
 };
 
 export default Help;
+

@@ -1,5 +1,4 @@
-// src/components/ReportedComments.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 import dotIcon from "../assets/dot.png";
@@ -8,10 +7,23 @@ const Filtration = () => {
   const [reportedComments, setReportedComments] = useState([]);
   const [dropdownUserId, setDropdownUserId] = useState(null);
   const token = localStorage.getItem("token");
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     fetchReportedComments();
   }, [token]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownUserId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchReportedComments = async () => {
     try {
@@ -56,7 +68,7 @@ const Filtration = () => {
   const handleDeleteUser = async (userId) => {
     swal({
       title: "Are you sure?",
-      text: "Do you want to delete this user? This will remove all their details.",
+      text: "Do you want to delete this user?",
       icon: "warning",
       buttons: true,
       dangerMode: true,
@@ -86,7 +98,7 @@ const Filtration = () => {
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto relative">
+      <div className="relative">
         <table className="w-full border-collapse">
           <thead className="bg-white text-black border-[2px] border-gray-200">
             <tr>
@@ -109,15 +121,13 @@ const Filtration = () => {
                   />
                 </td>
                 <td className="p-3 text-[#6C757D]">{item.user.email}</td>
-                <td className="p-3  text-gray-600">
+                <td className="p-3 text-gray-600">
                   {item.user.name} {item.user.isFrozen ? "(Frozen)" : ""}
                 </td>
-                <td className="p-3  text-gray-600">{item.commentContent}</td>
+                <td className="p-3 text-gray-600">{item.commentContent}</td>
                 <td className="p-3 text-gray-600">
-  {new Date(item.createdAt).toISOString().replace("T", " ").slice(0, 19)}
-</td>
-
-
+                  {new Date(item.createdAt).toISOString().replace("T", " ").slice(0, 19)}
+                </td>
                 <td className="p-3 relative">
                   <img
                     src={dotIcon}
@@ -126,7 +136,10 @@ const Filtration = () => {
                     onClick={() => toggleDropdown(item.user._id)}
                   />
                   {dropdownUserId === item.user._id && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10">
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10"
+                    >
                       <button
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                         onClick={() => {
