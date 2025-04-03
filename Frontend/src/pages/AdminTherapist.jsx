@@ -1,20 +1,50 @@
-// src/components/AdminTherapist.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import plusIcon from "../assets/pluss.png";
+import swal from "sweetalert";
 
 const AdminTherapist = () => {
   const [therapists, setTherapists] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
-  // Form fields for creating a new therapist
+  // Form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [specialization, setSpecialization] = useState("");
-  const [daysAvailable, setDaysAvailable] = useState(""); // can store comma-separated
+  const [daysAvailable, setDaysAvailable] = useState([]); // multiple selection via toggles
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [imageFile, setImageFile] = useState(null);
+
+  // Error states for validations
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    specialization: "",
+    daysAvailable: "",
+    startTime: "",
+    endTime: "",
+    image: "",
+  });
+
+  // Time options for dropdown (adjust as needed)
+  const timeOptions = [
+    "9:00 a.m.",
+    "10:00 a.m.",
+    "11:00 a.m.",
+    "12:00 p.m.",
+    "1:00 p.m.",
+    "2:00 p.m.",
+    "3:00 p.m.",
+    "4:00 p.m.",
+    "5:00 p.m.",
+  ];
+
+  // Days displayed as toggle circles (Sunday to Friday)
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  // Specialization options
+  const specializationOptions = ["Individual Therapy", "Couple Therapy"];
 
   // Fetch therapists on mount
   useEffect(() => {
@@ -30,52 +60,154 @@ const AdminTherapist = () => {
     }
   };
 
+  const validateForm = () => {
+    let valid = true;
+    let newErrors = {
+      name: "",
+      email: "",
+      specialization: "",
+      daysAvailable: "",
+      startTime: "",
+      endTime: "",
+      image: "",
+    };
+
+    // Validate name: required and not purely numeric
+    if (!name.trim()) {
+      newErrors.name = "*Required";
+      valid = false;
+    } else if (!isNaN(name)) {
+      newErrors.name = "Name cannot be numeric";
+      valid = false;
+    }
+
+    // Validate email: required and must contain "@"
+    if (!email.trim()) {
+      newErrors.email = "*Required";
+      valid = false;
+    } else if (!email.includes("@")) {
+      newErrors.email = "Email must contain '@'";
+      valid = false;
+    }
+
+    // Validate specialization: must be selected
+    if (!specialization.trim()) {
+      newErrors.specialization = "*Required";
+      valid = false;
+    }
+
+    // Validate daysAvailable: must select at least one day
+    if (!daysAvailable.length) {
+      newErrors.daysAvailable = "*Required";
+      valid = false;
+    }
+
+    // Validate startTime
+    if (!startTime.trim()) {
+      newErrors.startTime = "*Required";
+      valid = false;
+    }
+
+    // Validate endTime
+    if (!endTime.trim()) {
+      newErrors.endTime = "*Required";
+      valid = false;
+    }
+
+    // Validate image: required field
+    if (!imageFile) {
+      newErrors.image = "*Required";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleCreateTherapist = async () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("email", email);
       formData.append("specialization", specialization);
-      formData.append("daysAvailable", daysAvailable); 
+      // Convert daysAvailable array to JSON string (adjust if your backend uses a different format)
+      formData.append("daysAvailable", JSON.stringify(daysAvailable));
       formData.append("startTime", startTime);
       formData.append("endTime", endTime);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+      formData.append("image", imageFile);
 
       const res = await axios.post("http://localhost:3001/therapists", formData);
       // Add newly created therapist to the list
       setTherapists((prev) => [...prev, res.data]);
-      // Close modal and reset form
+
+      // Close modal and reset form + errors
       setShowModal(false);
       setName("");
       setEmail("");
       setSpecialization("");
-      setDaysAvailable("");
+      setDaysAvailable([]);
       setStartTime("");
       setEndTime("");
       setImageFile(null);
+      setErrors({
+        name: "",
+        email: "",
+        specialization: "",
+        daysAvailable: "",
+        startTime: "",
+        endTime: "",
+        image: "",
+      });
     } catch (error) {
       console.error("Error creating therapist:", error);
     }
   };
 
-  const handleDeleteTherapist = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3001/therapists/${id}`);
-      setTherapists((prev) => prev.filter((t) => t._id !== id));
-    } catch (error) {
-      console.error("Error deleting therapist:", error);
+  // Updated delete function with SweetAlert confirmation for deleting a therapist
+  const handleDeleteTherapist = (id) => {
+    swal({
+      title: "Delete Therapist",
+      text: "Are you sure you want to delete this therapist?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        axios
+          .delete(`http://localhost:3001/therapists/${id}`)
+          .then(() => {
+            swal("Deleted!", "The therapist has been deleted.", { icon: "success" });
+            setTherapists((prev) => prev.filter((t) => t._id !== id));
+          })
+          .catch((error) => {
+            console.error("Error deleting therapist:", error);
+            swal("Error", "Unable to delete the therapist.", { icon: "error" });
+          });
+      }
+    });
+  };
+
+  // Toggle day selection in daysAvailable
+  const handleDayToggle = (day) => {
+    if (daysAvailable.includes(day)) {
+      // If day is already selected, remove it
+      setDaysAvailable(daysAvailable.filter((d) => d !== day));
+    } else {
+      // Otherwise, add it
+      setDaysAvailable([...daysAvailable, day]);
     }
   };
 
   return (
     <div className="p-6 w-full">
-      {/* Top bar with the 'Appointment' button */}
+      {/* Top bar */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
           <button className="bg-[#EC993D] px-6 py-2 text-white rounded-lg">
-           Therapists
+            Therapists
           </button>
         </div>
       </div>
@@ -99,18 +231,18 @@ const AdminTherapist = () => {
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
-            <h2 className="text-lg font-semibold text-gray-700">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">
               {therapist.name}
             </h2>
-            <p className="text-sm text-gray-500">{therapist.specialization}</p>
-            <p className="text-sm text-gray-500">{therapist.email}</p>
+            <p className="text-sm text-gray-700 mb-1">{therapist.specialization}</p>
+            <p className="text-sm text-gray-700 mb-1">{therapist.email}</p>
 
             {/* Days/time display */}
-            <p className="text-sm text-gray-600 mt-2">
-              {therapist.daysAvailable && therapist.daysAvailable.join(", ")}{" "}
+            <p className="text-sm text-gray-700 ">
+              {therapist.daysAvailable &&
+                JSON.parse(therapist.daysAvailable).join(", ")}{" "}
               {therapist.startTime && therapist.endTime && (
                 <>
-                 
                   {therapist.startTime} to {therapist.endTime}
                 </>
               )}
@@ -125,9 +257,7 @@ const AdminTherapist = () => {
           </div>
         ))}
 
-        {/* Plus icon card */}
-        {/* You can conditionally show this only if therapists.length === 0, 
-            but typically you'd keep it so admin can add more anytime */}
+        {/* Plus icon card (for adding new therapist) */}
         <div
           onClick={() => setShowModal(true)}
           className="bg-gray-100 w-full h-[320px] rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
@@ -149,74 +279,119 @@ const AdminTherapist = () => {
 
             {/* Name */}
             <label className="block mb-2">
-              <span className="text-gray-700">Name:</span>
+              <span>Name:</span>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+                className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
+              {errors.name && (
+                <small className="text-red-500">{errors.name}</small>
+              )}
             </label>
 
             {/* Email */}
             <label className="block mb-2">
-              <span className="text-gray-700">Email:</span>
+              <span>Email:</span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+                className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
+              {errors.email && (
+                <small className="text-red-500">{errors.email}</small>
+              )}
             </label>
 
-            {/* Specialization */}
+            {/* Specialization (Dropdown) */}
             <label className="block mb-2">
-              <span className="text-gray-700">Specialization:</span>
-              <input
-                type="text"
+              <span>Specialization:</span>
+              <select
                 value={specialization}
                 onChange={(e) => setSpecialization(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
-              />
+                className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="">Select Specialization</option>
+                {specializationOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              {errors.specialization && (
+                <small className="text-red-500">{errors.specialization}</small>
+              )}
             </label>
 
-            {/* Days Available */}
+            {/* Days Available (Circle Toggles) */}
             <label className="block mb-2">
-              <span className="text-gray-700">Days Available:</span>
-              <input
-                type="text"
-                value={daysAvailable}
-                onChange={(e) => setDaysAvailable(e.target.value)}
-                placeholder="e.g. Sun, Mon"
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
-              />
-              <small className="text-gray-500">
-                Enter days separated by commas
-              </small>
+              <span>Days Available:</span>
+              <div className="flex space-x-2 mt-2">
+                {dayLabels.map((day) => {
+                  const isSelected = daysAvailable.includes(day);
+                  return (
+                    <div
+                      key={day}
+                      onClick={() => handleDayToggle(day)}
+                      className={`cursor-pointer w-12 h-12 rounded-full flex items-center justify-center 
+                        ${
+                          isSelected
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-black"
+                        }`}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
+              {errors.daysAvailable && (
+                <small className="text-red-500 block">
+                  {errors.daysAvailable}
+                </small>
+              )}
             </label>
 
-            {/* Start Time */}
+            {/* Start Time (Dropdown) */}
             <label className="block mb-2">
-              <span className="text-gray-700">Start Time:</span>
-              <input
-                type="text"
+              <span>Start time:</span>
+              <select
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                placeholder="e.g. 10:00 am"
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
-              />
+                className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="">Select start time</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+              {errors.startTime && (
+                <small className="text-red-500">{errors.startTime}</small>
+              )}
             </label>
 
-            {/* End Time */}
+            {/* End Time (Dropdown) */}
             <label className="block mb-2">
-              <span className="text-gray-700">End Time:</span>
-              <input
-                type="text"
+              <span>End time:</span>
+              <select
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                placeholder="e.g. 1:00 pm"
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
-              />
+                className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="">Select end time</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+              {errors.endTime && (
+                <small className="text-red-500">{errors.endTime}</small>
+              )}
             </label>
 
             {/* Image */}
@@ -225,8 +400,11 @@ const AdminTherapist = () => {
               <input
                 type="file"
                 onChange={(e) => setImageFile(e.target.files[0])}
-                className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+                className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
+              {errors.image && (
+                <small className="text-red-500">{errors.image}</small>
+              )}
             </label>
 
             {/* Buttons */}

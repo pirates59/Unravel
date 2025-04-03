@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import groupIcon from "../assets/group.png";
-import leftarrow from "../assets/leftarrow.png";
 import swal from "sweetalert";
 import { useNavigate } from "react-router-dom";
 
@@ -87,7 +86,7 @@ const AdminRooms = () => {
               </div>
               <button
                 onClick={() => handleDelete(room._id)}
-                className="bg-[#EC993D] text-white px-4 py-1 rounded hover:bg-[#d48432]"
+                className="bg-red-500 text-white px-4 py-1 rounded  hover:bg-red-600"
               >
                 Delete
               </button>

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import plusIcon from "../assets/pluss.png";
 import { useNavigate } from "react-router-dom";
+import swal from "sweetalert";
 
 const AdminCenter = () => {
   const [centers, setCenters] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [centerName, setCenterName] = useState("");
   const [centerImage, setCenterImage] = useState(null);
-  const navigate = useNavigate();
 
   // Fetch centers from API
   const fetchCenters = async () => {
@@ -41,6 +41,31 @@ const AdminCenter = () => {
     }
   };
 
+  // Delete a center after confirmation using SweetAlert
+  const handleDelete = (centerId) => {
+    swal({
+      title: "Delete Center",
+      text: "Are you sure you want to delete this center?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willDelete) => {
+      if (willDelete) {
+        axios
+          .delete(`http://localhost:3001/centers/${centerId}`)
+          .then(() => {
+            swal("Deleted!", "The center has been deleted.", { icon: "success" });
+            // Update the centers list by filtering out the deleted center
+            setCenters(centers.filter((center) => center._id !== centerId));
+          })
+          .catch((error) => {
+            console.error("Error deleting center:", error);
+            swal("Error", "Unable to delete the center.", { icon: "error" });
+          });
+      }
+    });
+  };
+
   return (
     <div className="p-6 w-full">
       {/* Top bar */}
@@ -71,8 +96,11 @@ const AdminCenter = () => {
               className="w-56 h-52 object-cover rounded mb-3"
             />
             <div className="flex items-center gap-4 justify-end w-full">
-              <button className="bg-[#EC993D] text-white px-4 py-1 rounded hover:bg-[#d48432]">
-                Enter
+              <button
+                onClick={() => handleDelete(center._id)}
+                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+              >
+                Delete
               </button>
             </div>
           </div>
