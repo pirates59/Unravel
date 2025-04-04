@@ -1,2 +1,4 @@
 *.psd filter=lfs diff=lfs merge=lfs -text
 *.pkl filter=lfs diff=lfs merge=lfs -text
+Backend/recommendation_model.pkl filter=lfs diff=lfs merge=lfs -text
+Backend/recommendation_model.pkl filter=lfs diff=lfs merge=lfs -text
