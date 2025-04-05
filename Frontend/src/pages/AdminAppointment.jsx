@@ -46,7 +46,7 @@ const AdminAppointment = () => {
           </button>
         </div>
       </div>
-      <div className="overflow-x-auto relative">
+      <div className=" relative">
         <table className="w-full border-collapse">
           <thead className="bg-white text-black border-[2px] border-gray-200">
             <tr>

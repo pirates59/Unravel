@@ -192,7 +192,7 @@ const handleLike = async (postId) => {
             const postLike = likes[post._id] || { count: 0, liked: false };
 
             return (
-              <div key={post._id} className="bg-gray-300 p-4 rounded-lg shadow-md relative">
+              <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
                 <div className="flex items-center space-x-3">
                   <img
                     src={

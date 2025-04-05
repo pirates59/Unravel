@@ -1,4 +1,3 @@
-// src/components/Chat.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
@@ -18,22 +17,12 @@ const Chat = () => {
   const [roomImage, setRoomImage] = useState("");
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
-  const [hasLeft, setHasLeft] = useState(false);
+  const [hasLeft, setHasLeft] = useState(localStorage.getItem("hasLeft") === "true");
   const [typingUsers, setTypingUsers] = useState([]);
-  // Reference for the messages container to track scroll position.
   const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Determine if user is near bottom
-  const isUserAtBottom = () => {
-    if (!containerRef.current) return true;
-    const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
-    // Consider within 50px of bottom as "at bottom"
-    return scrollTop + clientHeight >= scrollHeight - 50;
-  };
-
-  // Get logged-in user details from localStorage
   const currentUser = {
     id: localStorage.getItem("userId") || localStorage.getItem("username"),
     name: localStorage.getItem("username"),
@@ -42,14 +31,12 @@ const Chat = () => {
       : "http://localhost:3001/uploads/default.png",
   };
 
-  // Function to create a new socket connection
   const createSocketConnection = () => {
     if (!socketRef.current) {
       socketRef.current = io(socketServerUrl, {
         transports: ["websocket"],
       });
 
-      // Listen for connection errors
       socketRef.current.on("connect_error", (err) => {
         console.error("Socket connection error:", err);
       });
@@ -68,11 +55,6 @@ const Chat = () => {
             }
             return prev;
           });
-          setTimeout(() => {
-            setTypingUsers((prev) =>
-              prev.filter((name) => name !== data.user.name)
-            );
-          }, 2000);
         }
       });
 
@@ -85,7 +67,6 @@ const Chat = () => {
   };
 
   useEffect(() => {
-    // Fetch room details
     axios.get("http://localhost:3001/rooms").then((res) => {
       const room = res.data.find((r) => r._id === roomId);
       if (room) {
@@ -96,16 +77,14 @@ const Chat = () => {
       }
     });
 
-    // Fetch previous messages
     axios
       .get(`http://localhost:3001/rooms/${roomId}/messages`)
       .then((res) => setMessages(res.data))
       .catch((err) => console.error("Error fetching messages:", err));
 
-    // Create socket connection if user has not left
-    if (!hasLeft) {
+   
       createSocketConnection();
-    }
+   
 
     return () => {
       if (socketRef.current) {
@@ -113,19 +92,18 @@ const Chat = () => {
         socketRef.current = null;
       }
     };
-  }, [roomId, hasLeft, currentUser]);
+  }, [roomId, hasLeft]);
 
-  // Auto-scroll effect: only trigger when new messages arrive AND user is at bottom
   useEffect(() => {
     if (isUserAtBottom()) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Handler for user scrolling manually
-  const handleScroll = () => {
-    // We could extend this to store the scroll state if needed
-    // For now, the auto-scroll condition is checked in the useEffect above
+  const isUserAtBottom = () => {
+    if (!containerRef.current) return true;
+    const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
+    return scrollTop + clientHeight >= scrollHeight - 50;
   };
 
   const sendMessage = async () => {
@@ -159,31 +137,59 @@ const Chat = () => {
         showCancelButton: true,
         confirmButtonText: "Yes, leave",
         cancelButtonText: "Cancel",
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
           setHasLeft(true);
+          localStorage.setItem("hasLeft", "true");
+
           if (socketRef.current) {
-            socketRef.current.disconnect();
-            socketRef.current = null;
+            socketRef.current.emit("leaveRoom", roomId, currentUser);
           }
-          // Add a system leave message
-          const leaveMessage = {
+
+          // Immediately update the UI with the system message
+          const systemLeaveMessage = {
             senderId: "SYSTEM",
-            text: "You left the chat",
+            senderName: "System",
+            text: `${currentUser.name} left the chat.`,
             createdAt: new Date(),
+            system: true,
+            
           };
-          setMessages((prev) => [...prev, leaveMessage]);
+          setMessages((prev) => [...prev, systemLeaveMessage]);
+
+          // Save the system message in the database
+          await axios.post(`http://localhost:3001/rooms/${roomId}/messages`, {
+            senderId: "SYSTEM",
+            senderName: "System",
+            text: `${currentUser.name} left the chat.`,
+            system: true,
+          });
         }
       });
     } else {
       setHasLeft(false);
+      localStorage.setItem("hasLeft", "false");
+
       createSocketConnection();
-      const joinMessage = {
+      socketRef.current.emit("joinRoom", roomId, currentUser);
+
+      // Immediately update the UI with the system message
+      const systemJoinMessage = {
         senderId: "SYSTEM",
-        text: "You rejoined the chat",
+        senderName: "System",
+        text: `${currentUser.name} joined the chat.`,
         createdAt: new Date(),
+        system: true,
       };
-      setMessages((prev) => [...prev, joinMessage]);
+      setMessages((prev) => [...prev, systemJoinMessage]);
+
+      // Save the system message in the database
+      axios.post(`http://localhost:3001/rooms/${roomId}/messages`, {
+        senderId: "SYSTEM",
+        senderName: "System",
+        text: `${currentUser.name} joined the chat.`,
+        system: true,
+      });
     }
   };
 
@@ -201,18 +207,14 @@ const Chat = () => {
       {/* Top Bar */}
       <div className="flex h-[70px] items-center justify-between bg-[#D9D9D9] px-6 py-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full overflow-hidden">
-              <img
-                src={roomImage}
-                alt="Room"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <h1 className="text-xl font-semibold">
-              {roomName || "Chat Room"}
-            </h1>
+          <div className="w-9 h-9 rounded-full overflow-hidden">
+            <img
+              src={roomImage}
+              alt="Room"
+              className="w-full h-full object-cover"
+            />
           </div>
+          <h1 className="text-xl font-semibold">{roomName || "Chat Room"}</h1>
         </div>
         <div className="flex gap-3 items-center">
           <button onClick={() => navigate("/rooms")}>
@@ -228,24 +230,13 @@ const Chat = () => {
       </div>
 
       {/* Chat Messages */}
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-6 space-y-4"
-      >
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((msg, index) => {
-          // System messages (e.g., leave/join) are centered
           if (msg.senderId === "SYSTEM") {
             return (
-              <div key={index} className="w-full text-center">
-                <div className="inline-block bg-gray-300 text-gray-700 italic px-4 py-2 rounded">
+              <div key={index} className=" flex flex-col items-center">
+                <div className="inline-block bg-gray-300 text-gray-700 px-4 py-2 rounded text-center w-[1170px]">
                   {msg.text}
-                  <div className="text-xs mt-1">
-                    {new Date(msg.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
                 </div>
               </div>
             );
@@ -255,9 +246,7 @@ const Chat = () => {
           return (
             <div
               key={index}
-              className={`flex ${
-                isCurrentUser ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
             >
               {!isCurrentUser && (
                 <div className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden">

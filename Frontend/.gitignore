@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 
+Backend/recommendation_model.pkl
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

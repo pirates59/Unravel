@@ -1,5 +1,4 @@
-// src/Users.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 import dotIcon from "../assets/dot.png";
@@ -8,10 +7,24 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [dropdownUserId, setDropdownUserId] = useState(null);
   const token = localStorage.getItem("token");
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     fetchUsers();
   }, [token]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check if click is outside the dropdown container
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownUserId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchUsers = () => {
     axios
@@ -66,7 +79,7 @@ const Users = () => {
             {},
             { headers: { Authorization: `Bearer ${token}` } }
           )
-          .then((response) => {
+          .then(() => {
             swal("User has been frozen.", { icon: "success" });
             setUsers(
               users.map((user) =>
@@ -98,7 +111,7 @@ const Users = () => {
       </div>
 
       {/* Table of users */}
-      <div className="overflow-x-auto relative">
+      <div className="relative">
         <table className="w-full border-collapse">
           <thead className="bg-white text-black border-[2px] border-gray-200">
             <tr>
@@ -130,7 +143,10 @@ const Users = () => {
                     onClick={() => toggleDropdown(user._id)}
                   />
                   {dropdownUserId === user._id && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10">
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10"
+                    >
                       <button
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                         onClick={() => {
