@@ -8,11 +8,12 @@ const Message = require("../models/Message");
 // Configure Multer storage for room images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// Create a new room
+// Create a new room (new rooms start with no active chat, so count is 0)
 router.post("/rooms", upload.single("image"), async (req, res) => {
   try {
     const { name } = req.body;
@@ -29,14 +30,14 @@ router.post("/rooms", upload.single("image"), async (req, res) => {
   }
 });
 
-// Get all rooms with unique user count based on unique senderName
+// Get all rooms with unique user count based on distinct senderEmail from messages
 router.get("/rooms", async (req, res) => {
   try {
     const rooms = await Room.find();
     const roomsWithCount = await Promise.all(
       rooms.map(async (room) => {
-        // Get distinct senderNames from messages for this room
-        const uniqueUsers = await Message.distinct("senderName", { room: room._id });
+        // Count distinct senderEmail values in messages for this room
+        const uniqueUsers = await Message.distinct("senderEmail", { room: room._id });
         return { ...room.toObject(), count: uniqueUsers.length };
       })
     );
