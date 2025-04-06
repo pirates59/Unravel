@@ -20,14 +20,22 @@ router.get("/rooms/:roomId/messages", async (req, res) => {
 router.post("/rooms/:roomId/messages", async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { senderId, senderName, senderImage, text } = req.body;
+    // Destructure senderEmail along with the other fields
+    const { senderId, senderName, senderEmail, senderImage, text } = req.body;
     // Ensure room exists
     const room = await Room.findById(roomId);
     if (!room) {
       return res.status(404).json({ error: "Room not found" });
     }
-    // Create and save the user's message
-    const userMessage = new Message({ room: roomId, senderId, senderName, senderImage, text });
+    // Create and save the user's message, including the senderEmail field.
+    const userMessage = new Message({
+      room: roomId,
+      senderId,
+      senderName,
+      senderEmail,
+      senderImage,
+      text,
+    });
     await userMessage.save();
 
     // Broadcast the message to clients in the room via Socket.IO
