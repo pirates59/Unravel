@@ -10,6 +10,7 @@ const SignupSchema = new mongoose.Schema({
   role: { type: String, enum: ["admin", "user"], default: "user" },
   profileImage: { type: String, default: "upload.png" },
   isFirstLogin: { type: Boolean, default: true },
+  isFrozen: { type: Boolean, default: false }, // Field to indicate frozen status
 });
 
 const SignupModel = mongoose.model("Signup", SignupSchema);
