@@ -1,7 +1,22 @@
+// controllers/userController.js
 const SignupModel = require("../models/Signup");
 
+exports.fetchUsers = async (req, res) => {
+  try {
+    // Fetch users with role "user" and only include necessary fields.
+    const users = await SignupModel.find(
+      { role: "user" },
+      "name email profileImage isFrozen"
+    );
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Failed to fetch users." });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
-  const email = req.user.email; // comes from verifyToken middleware
+  const email = req.user.email; // provided by verifyToken middleware
   if (!req.file) {
     return res.status(400).json({ success: false, message: "No file uploaded." });
   }
@@ -21,34 +36,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.fetchUsers = async (req, res) => {
-  try {
-    // Only fetch users with role "user" and include necessary fields.
-    const users = await SignupModel.find(
-      { role: "user" },
-      "name email profileImage isFrozen"
-    );
-    res.json(users);
-  } catch (err) {
-    console.error("Error fetching users:", err);
-    res.status(500).json({ message: "Failed to fetch users" });
-  }
-};
-
-exports.deleteUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const deletedUser = await SignupModel.findByIdAndDelete(userId);
-    if (!deletedUser) {
-      return res.status(404).json({ message: "User not found." });
-    }
-    res.json({ message: "User deleted successfully." });
-  } catch (err) {
-    console.error("Error deleting user:", err);
-    res.status(500).json({ message: "Error deleting user." });
-  }
-};
-
 exports.freezeUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -64,5 +51,19 @@ exports.freezeUser = async (req, res) => {
   } catch (err) {
     console.error("Error freezing user:", err);
     res.status(500).json({ message: "Error freezing user." });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const deletedUser = await SignupModel.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json({ message: "User deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ message: "Error deleting user." });
   }
 };

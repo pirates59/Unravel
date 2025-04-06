@@ -1,4 +1,4 @@
-// Comment Schema (models/Comment.js)
+// models/Comment.js
 const mongoose = require("mongoose");
 
 const CommentSchema = new mongoose.Schema({
@@ -8,7 +8,6 @@ const CommentSchema = new mongoose.Schema({
     required: true,
   },
   author: {
-    // This will store the username (or user ID) of the commenter
     type: String,
     required: true,
   },
@@ -16,7 +15,6 @@ const CommentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // Add profileImage to store the commenter's profile picture
   profileImage: {
     type: String,
     default: "default-avatar.png",
@@ -24,6 +22,9 @@ const CommentSchema = new mongoose.Schema({
   reported: {
     type: Boolean,
     default: false,
+  },
+  reportedAt: {
+    type: Date,
   },
   createdAt: {
     type: Date,

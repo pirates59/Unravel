@@ -256,11 +256,16 @@ exports.reportComment = async (req, res) => {
   const { currentUser } = req.body;
   try {
     const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ error: "Comment not found." });
+    if (!comment)
+      return res.status(404).json({ error: "Comment not found." });
     if (comment.author === currentUser) {
-      return res.status(400).json({ error: "You cannot report your own comment." });
+      return res
+        .status(400)
+        .json({ error: "You cannot report your own comment." });
     }
     comment.reported = true;
+    // Set reportedAt to the current time (if you need the timestamp later)
+    comment.reportedAt = new Date();
     await comment.save();
     res.json({ message: "Comment reported successfully." });
   } catch (error) {
@@ -268,4 +273,5 @@ exports.reportComment = async (req, res) => {
     res.status(500).json({ error: "Failed to report comment." });
   }
 };
+
 
