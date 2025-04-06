@@ -30,9 +30,9 @@ const Help = () => {
   };
 
   return (
-    <div className=" flex flex-col h-[87%] ">
-      {/* Back Button */}
-      <button className="mb-[30px] self-start">
+   
+      <div className="p-4 flex flex-col h-[90%]">
+      <button className="mb-[30px]" onClick={() => window.history.back()}>
         <img src={leftarrow} alt="Back" className="w-6 h-6" />
       </button>
 
@@ -52,7 +52,7 @@ const Help = () => {
 
         {/* Buttons */}
         <button
-          className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-lg transition-colors duration-200 w-[500px] mb-4"
+          className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-lg transition-colors duration-200 w-[500px] mb-4 mt-6"
           onClick={handleEmergencyClick}
         >
           Emergency Now

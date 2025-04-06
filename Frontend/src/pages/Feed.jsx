@@ -4,6 +4,7 @@ import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
 import comment from "../assets/comment.png";
+import NoPost from "../assets/NoPost.png"; // adjust the path as needed
 import Swal from "sweetalert2";
 import Comment from "../components/Comment";
 
@@ -77,7 +78,7 @@ const Feed = () => {
         },
       });
       const data = await res.json();
-      // Filter posts so that only those authored by the logged-in user are shown
+      // Only show posts authored by the logged-in user
       const userPosts = data.filter(
         (post) => post.author === localStorage.getItem("username")
       );
@@ -138,38 +139,34 @@ const Feed = () => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
 
-  // Inside Feed.jsx
-const handleLike = async (postId) => {
-  const token = localStorage.getItem("token");
-  const currentUser = localStorage.getItem("username");
-  // Get the stored profile image (or default)
-  const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
-  
-  try {
-    const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
-      method: "POST", // or "PUT" if your API expects that
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      // Send currentUser, actor (same as currentUser), and profileImage in the request
-      body: JSON.stringify({
-        currentUser,
-        author: currentUser,          // actor's name
-        profileImage: storedProfile,  // actor's profile image
-      }),
-    });
-    if (res.ok) {
-      const updatedLike = await res.json();
-      setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
-    } else {
-      console.error("Failed to update like");
+  const handleLike = async (postId) => {
+    const token = localStorage.getItem("token");
+    const currentUser = localStorage.getItem("username");
+    const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
+    
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentUser,
+          author: currentUser,
+          profileImage: storedProfile,
+        }),
+      });
+      if (res.ok) {
+        const updatedLike = await res.json();
+        setLikes((prevLikes) => ({ ...prevLikes, [postId]: updatedLike }));
+      } else {
+        console.error("Failed to update like");
+      }
+    } catch (error) {
+      console.error("Error updating like:", error);
     }
-  } catch (error) {
-    console.error("Error updating like:", error);
-  }
-};
-
+  };
 
   return (
     <div>
@@ -185,126 +182,132 @@ const handleLike = async (postId) => {
 
       <div className="flex gap-6 w-[890px]">
         <div className="flex-1 space-y-4">
-          {posts.map((post) => {
-            const hashtags = extractHashtags(post.content);
-            const uniqueHashtags = getUniqueHashtags(hashtags);
-            const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
-            const postLike = likes[post._id] || { count: 0, liked: false };
+          {posts.length === 0 ? (
+            <div className="flex flex-col justify-center items-center mt-[120px] ml-[320px]">
 
-            return (
-              <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={
-                      post.profileImage && post.profileImage !== "default-avatar.png"
-                        ? `http://localhost:3001/uploads/${post.profileImage}`
-                        : "default-avatar.png"
-                    }
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-full mr-3"
-                  />
-                  <div>
-                    <p className="font-semibold">{post.author}</p>
-                    <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
-                  </div>
-                </div>
-                {cleanedContent && <p className="mt-2">{cleanedContent}</p>}
-                {uniqueHashtags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {uniqueHashtags.map((tag, index) => (
-                      <p key={index} className="text-blue-500 text-sm cursor-pointer">
-                        {tag}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                {post.image && (
-                  <div className="mt-2 flex">
+            <img src={NoPost} alt="No posts available" className="w-[180px] h-[180px]" />
+              <p className="mt-4 mr-8 text-gray-700 font-medium">No posts available</p>
+            </div>
+          ) : (
+            posts.map((post) => {
+              const hashtags = extractHashtags(post.content);
+              const uniqueHashtags = getUniqueHashtags(hashtags);
+              const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
+              const postLike = likes[post._id] || { count: 0, liked: false };
+
+              return (
+                <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
+                  <div className="flex items-center space-x-3">
                     <img
-                      src={`http://localhost:3001/uploads/${post.image}`}
-                      alt="Post"
-                      className="max-w-full h-auto object-contain rounded-lg"
+                      src={
+                        post.profileImage && post.profileImage !== "default-avatar.png"
+                          ? `http://localhost:3001/uploads/${post.profileImage}`
+                          : "default-avatar.png"
+                      }
+                      alt="User Avatar"
+                      className="w-10 h-10 rounded-full mr-3"
                     />
+                    <div>
+                      <p className="font-semibold">{post.author}</p>
+                      <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
+                    </div>
                   </div>
-                )}
-
-                {/* Like & Comment Info */}
-                <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
-                  {/* Like */}
-                  <img
-                    src={postLike.liked ? redLike : like}
-                    alt="Like"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={() => handleLike(post._id)}
-                  />
-                  <p onClick={() => handleLike(post._id)} className="cursor-pointer">
-                    {postLike.count > 0
-                      ? postLike.count === 1
-                        ? "1 like"
-                        : `${postLike.count} likes`
-                      : "Like"}
-                  </p>
-
-                  {/* Comment changes */}
-                  <img
-                    src={comment}
-                    alt="Comment"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={() => toggleComments(post._id)}
-                  />
-                  <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
-                    {post.commentCount > 0
-                      ? post.commentCount === 1
-                        ? "1 comment"
-                        : `${post.commentCount} comments`
-                      : "Comment"}
-                  </p>
-                </div>
-
-                {openCommentId === post._id && (
-  <Comment
-    post={post}
-    postId={post._id}
-    closeComments={() => {
-      setOpenCommentId(null);
-      fetchPosts();
-    }}
-  />
-)}
-
-                {/* Edit/Delete dropdown */}
-                <div className="absolute top-4 right-4">
-                  <img
-                    src={dotIcon}
-                    alt="Options"
-                    className="w-6 h-6 cursor-pointer"
-                    onClick={() => toggleDropdown(post._id)}
-                  />
-                  {activeDropdown === post._id && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10"
-                    >
-                      <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
-                        <button
-                          onClick={() => setActiveDropdown(null)}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Edit
-                        </button>
-                      </NavLink>
-                      <button
-                        onClick={() => confirmDelete(post._id)}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Delete
-                      </button>
+                  {cleanedContent && <p className="mt-2">{cleanedContent}</p>}
+                  {uniqueHashtags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {uniqueHashtags.map((tag, index) => (
+                        <p key={index} className="text-blue-500 text-sm cursor-pointer">
+                          {tag}
+                        </p>
+                      ))}
                     </div>
                   )}
+                  {post.image && (
+                    <div className="mt-2 flex">
+                      <img
+                        src={`http://localhost:3001/uploads/${post.image}`}
+                        alt="Post"
+                        className="max-w-full h-auto object-contain rounded-lg"
+                      />
+                    </div>
+                  )}
+                  {/* Like & Comment Info */}
+                  <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
+                    <img
+                      src={postLike.liked ? redLike : like}
+                      alt="Like"
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => handleLike(post._id)}
+                    />
+                    <p onClick={() => handleLike(post._id)} className="cursor-pointer">
+                      {postLike.count > 0
+                        ? postLike.count === 1
+                          ? "1 like"
+                          : `${postLike.count} likes`
+                        : "Like"}
+                    </p>
+                    <img
+                      src={comment}
+                      alt="Comment"
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => toggleComments(post._id)}
+                    />
+                    <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
+                      {post.commentCount > 0
+                        ? post.commentCount === 1
+                          ? "1 comment"
+                          : `${post.commentCount} comments`
+                        : "Comment"}
+                    </p>
+                  </div>
+                  {openCommentId === post._id && (
+                    <Comment
+                    post={post}
+                    postId={post._id}
+                    likeData={postLike}
+                    syncLikes={(updatedLike) =>
+                      setLikes((prev) => ({ ...prev, [post._id]: updatedLike }))
+                    }
+                    closeComments={() => {
+                      setOpenCommentId(null);
+                      fetchPosts();
+                    }}
+                  />
+                  )}
+                  {/* Edit/Delete dropdown */}
+                  <div className="absolute top-4 right-4">
+                    <img
+                      src={dotIcon}
+                      alt="Options"
+                      className="w-6 h-6 cursor-pointer"
+                      onClick={() => toggleDropdown(post._id)}
+                    />
+                    {activeDropdown === post._id && (
+                      <div
+                        ref={dropdownRef}
+                        className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10"
+                      >
+                        <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
+                          <button
+                            onClick={() => setActiveDropdown(null)}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Edit
+                          </button>
+                        </NavLink>
+                        <button
+                          onClick={() => confirmDelete(post._id)}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </div>

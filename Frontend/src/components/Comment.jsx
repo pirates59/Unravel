@@ -44,7 +44,7 @@ const getImageUrl = (profileImage) => {
   return `http://localhost:3001/uploads/${profileImage}`;
 };
 
-const Comment = ({ post, postId, closeComments }) => {
+const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [profileImage, setProfileImage] = useState("default-avatar.png");
@@ -53,9 +53,16 @@ const Comment = ({ post, postId, closeComments }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
   
-  // New states for like count in the Comment overlay
-  const [postLikes, setPostLikes] = useState(post.likes ? post.likes.length : 0);
-  const [liked, setLiked] = useState(post.likes && post.likes.includes(localStorage.getItem("username")));
+  const [postLikes, setPostLikes] = useState(likeData ? likeData.count : 0);
+  const [liked, setLiked] = useState(likeData ? likeData.liked : false);
+
+
+  useEffect(() => {
+    if (likeData) {
+      setPostLikes(likeData.count);
+      setLiked(likeData.liked);
+    }
+  }, [likeData]);
 
   useEffect(() => {
     const storedProfileImage = localStorage.getItem("profileImage");
@@ -93,7 +100,7 @@ const Comment = ({ post, postId, closeComments }) => {
     }
   };
 
-  // New like handler for the overlay
+  // Updated like handler in Comment
   const handleLike = async () => {
     const token = localStorage.getItem("token");
     const currentUserLocal = localStorage.getItem("username");
@@ -115,6 +122,10 @@ const Comment = ({ post, postId, closeComments }) => {
         const updatedLike = await res.json();
         setPostLikes(updatedLike.count);
         setLiked(updatedLike.liked);
+        // Propagate the updated like info back to the parent (Feed/Recent)
+        if (syncLikes) {
+          syncLikes(updatedLike);
+        }
       } else {
         console.error("Failed to update like");
       }
