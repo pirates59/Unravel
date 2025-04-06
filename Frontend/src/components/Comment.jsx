@@ -1,4 +1,3 @@
-// Comment.jsx
 import React, { useState, useEffect, useRef } from "react";
 import sendIcon from "../assets/send.png";
 import hand from "../assets/hand.png";
@@ -26,10 +25,14 @@ function formatDate(date) {
 
   if (diffHours < 24) {
     if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-    if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+    if (diffMinutes > 0)
+      return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
     return "Just now";
   } else {
-    return postDate.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return postDate.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
   }
 }
 
@@ -52,10 +55,9 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
-  
+
   const [postLikes, setPostLikes] = useState(likeData ? likeData.count : 0);
   const [liked, setLiked] = useState(likeData ? likeData.liked : false);
-
 
   useEffect(() => {
     if (likeData) {
@@ -100,7 +102,6 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
-  // Updated like handler in Comment
   const handleLike = async () => {
     const token = localStorage.getItem("token");
     const currentUserLocal = localStorage.getItem("username");
@@ -122,7 +123,6 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
         const updatedLike = await res.json();
         setPostLikes(updatedLike.count);
         setLiked(updatedLike.liked);
-        // Propagate the updated like info back to the parent (Feed/Recent)
         if (syncLikes) {
           syncLikes(updatedLike);
         }
@@ -139,7 +139,6 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     const token = localStorage.getItem("token");
 
     if (editingCommentId) {
-      // Update existing comment
       try {
         const res = await fetch(
           `http://localhost:3001/api/posts/${postId}/comments/${editingCommentId}`,
@@ -163,7 +162,6 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
         console.error("Error updating comment:", error);
       }
     } else {
-      // Create a new comment
       try {
         const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
         const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
@@ -239,7 +237,8 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
       );
       if (res.ok) {
         setActiveDropdown(null);
-        alert("Comment reported successfully!");
+        fetchComments();
+       
       } else {
         console.error("Failed to report comment.");
       }
@@ -296,7 +295,6 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
               />
             </div>
           )}
-          {/* New Like and Comment icons row */}
           <div className="flex items-center gap-3 text-gray-500 text-sm mt-2">
             <img
               src={liked ? redLike : like}
@@ -341,8 +339,13 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
                         alt="User Avatar"
                         className="w-10 h-10 rounded-full"
                       />
-                      <span className="text-sm font-semibold">{comment.author || "User"}</span>
-                      <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
+                      <span className="text-sm font-semibold">
+                        {comment.author || "User"}
+                      </span>
+                      {/* Display "Reported" in red if the comment is reported */}
+                      <span className="text-xs" style={{ color: comment.reported ? "red" : "inherit" }}>
+                        {comment.reported ? "Reported" : formatDate(comment.createdAt)}
+                      </span>
                     </div>
                     <p className="text-sm">{textWithoutTags}</p>
                     {hashtags.length > 0 && (

@@ -88,6 +88,30 @@ const Filtration = () => {
     });
   };
 
+  const handleReleaseComment = async (commentId) => {
+    swal({
+      title: "Are you sure?",
+      text: "Do you want to release this reported comment?",
+      icon: "warning",
+      buttons: true,
+    }).then(async (willRelease) => {
+      if (willRelease) {
+        try {
+          await axios.put(
+            `http://localhost:3001/api/reported-comments/release/${commentId}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          swal("Comment has been released.", { icon: "success" });
+          fetchReportedComments();
+        } catch (error) {
+          console.error("Error releasing comment:", error);
+          swal("Error releasing comment", { icon: "error" });
+        }
+      }
+    });
+  };
+
   return (
     <div className="p-6 w-full">
       {/* Top bar with the 'Filtration' button */}
@@ -106,7 +130,7 @@ const Filtration = () => {
               <th className="p-3 font-medium text-left">Email</th>
               <th className="p-3 font-medium text-left">User</th>
               <th className="p-3 font-medium text-left">Content</th>
-              <th className="p-3 font-medium text-left">Date and Time</th>
+              <th className="p-3 font-medium text-left">Date</th>
               <th className="p-3 font-medium text-left">Action</th>
             </tr>
           </thead>
@@ -126,7 +150,11 @@ const Filtration = () => {
                 </td>
                 <td className="p-3 text-gray-600">{item.commentContent}</td>
                 <td className="p-3 text-gray-600">
-                  {new Date(item.createdAt).toISOString().replace("T", " ").slice(0, 19)}
+                  {item.reported ? (
+                    <span style={{ color: "red" }}>Reported</span>
+                  ) : (
+                    new Date(item.createdAt).toISOString().slice(0, 10)
+                  )}
                 </td>
                 <td className="p-3 relative">
                   <img
@@ -157,6 +185,15 @@ const Filtration = () => {
                         }}
                       >
                         Delete
+                      </button>
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => {
+                          handleReleaseComment(item._id);
+                          setDropdownUserId(null);
+                        }}
+                      >
+                        Release
                       </button>
                     </div>
                   )}
