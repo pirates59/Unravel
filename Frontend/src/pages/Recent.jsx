@@ -1,9 +1,9 @@
-// Recent.jsx
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
 import commentIcon from "../assets/comment.png";
+import NoPost from "../assets/NoPost.png"; // adjust the path as needed
 import Comment from "../components/Comment";
 
 function extractHashtags(text) {
@@ -41,7 +41,6 @@ const Recent = () => {
   const [openCommentId, setOpenCommentId] = useState(null);
   const navigate = useNavigate();
 
-  // When a topic is clicked, navigate to the Wellness page with the topic query parameter
   const handleTopicClick = (topic) => {
     navigate(`/wellness?topic=${encodeURIComponent(topic)}`);
   };
@@ -75,6 +74,7 @@ const Recent = () => {
         console.error("Data is not an array:", data);
         return;
       }
+      // Only show posts not authored by the logged-in user
       const otherPosts = data.filter(
         (post) => post.author !== localStorage.getItem("username")
       );
@@ -124,144 +124,155 @@ const Recent = () => {
   };
 
   return (
-    <div className="">
+    <div>
       {/* Navigation and header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
           <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">Recent</button>
           <NavLink to="/feed">
-            <button className="border border-[#EC993D] px-6 py-2 rounded-xl">Feed</button>
+            <button className="border border-[#EC993D] px-6 py-2 rounded-xl ">Feed</button>
           </NavLink>
         </div>
         <div className="mr-[270px]">
           <h2 className="text-lg font-semibold">Topic</h2>
         </div>
       </div>
-      {/* Main container: posts + topic boxes */}
-      <div className="flex gap-6 ">
+      <div className="flex gap-6">
         <div className="flex-1 space-y-4 overflow-y-auto pr-2">
-          {posts.map((post) => {
-            const hashtags = extractHashtags(post.content);
-            const uniqueHashtags = getUniqueHashtags(hashtags);
-            const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
-            const postLike = likes[post._id] || { count: 0, liked: false };
-            return (
-              <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={
-                      post.profileImage
-                        ? `http://localhost:3001/uploads/${post.profileImage}`
-                        : "/default-avatar.png"
-                    }
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div>
-                    <p className="font-semibold">{post.author}</p>
-                    <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
-                  </div>
-                </div>
-                {cleanedContent && <p className="mt-2">{cleanedContent}</p>}
-                {uniqueHashtags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {uniqueHashtags.map((tag, index) => (
-                      <p key={index} className="text-blue-500 text-sm cursor-pointer">
-                        {tag}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                {post.image && (
-                  <div className="mt-2 flex">
+          {posts.length === 0 ? (
+            <div className="flex flex-col justify-center items-center mt-[120px] ml-[45px]">
+              <img src={NoPost} alt="No posts available" className="w-[180px] h-[180px]  " />
+              <p className="mt-4 mr-8 text-gray-700 font-medium">No posts available</p>
+            </div>
+          ) : (
+            posts.map((post) => {
+              const hashtags = extractHashtags(post.content);
+              const uniqueHashtags = getUniqueHashtags(hashtags);
+              const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
+              const postLike = likes[post._id] || { count: 0, liked: false };
+              return (
+                <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
+                  <div className="flex items-center space-x-3">
                     <img
-                      src={`http://localhost:3001/uploads/${post.image}`}
-                      alt="Post"
-                      className="max-w-full h-auto object-contain rounded-lg"
+                      src={
+                        post.profileImage
+                          ? `http://localhost:3001/uploads/${post.profileImage}`
+                          : "/default-avatar.png"
+                      }
+                      alt="User Avatar"
+                      className="w-10 h-10 rounded-full"
                     />
+                    <div>
+                      <p className="font-semibold">{post.author}</p>
+                      <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
+                    </div>
                   </div>
-                )}
-                <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
-                  <img
-                    src={postLike.liked ? redLike : like}
-                    alt="Like"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={() => handleLike(post._id)}
-                  />
-                  <p onClick={() => handleLike(post._id)} className="cursor-pointer">
-                    {postLike.count > 0
-                      ? postLike.count === 1
-                        ? "1 like"
-                        : `${postLike.count} likes`
-                      : "Like"}
-                  </p>
-                  <img
-                    src={commentIcon}
-                    alt="Comment"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={() => toggleComments(post._id)}
-                  />
-                  <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
-                    {post.commentCount > 0
-                      ? post.commentCount === 1
-                        ? "1 comment"
-                        : `${post.commentCount} comments`
-                      : "Comment"}
-                  </p>
-                </div>
-                {openCommentId === post._id && (
-                  <Comment
+                  {cleanedContent && <p className="mt-2">{cleanedContent}</p>}
+                  {uniqueHashtags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {uniqueHashtags.map((tag, index) => (
+                        <p key={index} className="text-blue-500 text-sm cursor-pointer">
+                          {tag}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {post.image && (
+                    <div className="mt-2 flex">
+                      <img
+                        src={`http://localhost:3001/uploads/${post.image}`}
+                        alt="Post"
+                        className="max-w-full h-auto object-contain rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
+                    <img
+                      src={postLike.liked ? redLike : like}
+                      alt="Like"
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => handleLike(post._id)}
+                    />
+                    <p onClick={() => handleLike(post._id)} className="cursor-pointer">
+                      {postLike.count > 0
+                        ? postLike.count === 1
+                          ? "1 like"
+                          : `${postLike.count} likes`
+                        : "Like"}
+                    </p>
+                    <img
+                      src={commentIcon}
+                      alt="Comment"
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => toggleComments(post._id)}
+                    />
+                    <p onClick={() => toggleComments(post._id)} className="cursor-pointer">
+                      {post.commentCount > 0
+                        ? post.commentCount === 1
+                          ? "1 comment"
+                          : `${post.commentCount} comments`
+                        : "Comment"}
+                    </p>
+                  </div>
+                  {openCommentId === post._id && (
+                    <Comment
                     post={post}
                     postId={post._id}
+                    likeData={postLike}
+                    syncLikes={(updatedLike) =>
+                      setLikes((prev) => ({ ...prev, [post._id]: updatedLike }))
+                    }
                     closeComments={() => {
                       setOpenCommentId(null);
                       fetchPosts();
                     }}
                   />
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
-        {/* Topic Boxes created by admin */}
+        {/* Topic Boxes */}
         <div className="w-[320px] h-[calc(90vh-140px)] sticky top-0 self-start overflow-hidden">
-          <div className="bg-gray-100 p-4 rounded-lg shadow-md h-full">
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                "Relationships",
-                "Family",
-                "Self Harm",
-                "Friends",
-                "Hopes",
-                "Bullying",
-                "Health",
-                "Work",
-                "Music",
-                "Parenting",
-                "LGBTQ+",
-                "Religion",
-                "Education",
-                "Pregnancy",
-                "Mental Health",
-                "Positive",
-                "Meditation",
-                "Self care",
-                "OCD",
-                "Psychosis",
-                "Schizophrenia",
-                "Paranoia",
-              ].map((topic, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleTopicClick(topic)}
-                  className="bg-white px-3 py-2 rounded-lg text-sm"
-                >
-                  {topic}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+  <div className="bg-gray-100 p-4 rounded-lg shadow-md h-full">
+    <div className="grid grid-cols-2 gap-2">
+      {[
+        "Relationships",
+        "Family",
+        "Self Harm",
+        "Friends",
+        "Hopes",
+        "Bullying",
+        "Health",
+        "Work",
+        "Music",
+        "Parenting",
+        "LGBTQ+",
+        "Religion",
+        "Education",
+        "Pregnancy",
+        "Mental Health",
+        "Positive",
+        "Meditation",
+        "Self care",
+        "OCD",
+        "Psychosis",
+        "Schizophrenia",
+        "Paranoia",
+      ].map((topic, index) => (
+        <button
+          key={index}
+          onClick={() => handleTopicClick(topic)}
+          className="bg-white px-3 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+        >
+          {topic}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   );

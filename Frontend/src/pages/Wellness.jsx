@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import leftarrow from "../assets/leftarrow.png";
 import anxietyImg from "../assets/anxiety.png";
+import NoVideo from "../assets/NoVideo.png";
 
 const Wellness = () => {
   const location = useLocation();
@@ -145,7 +146,9 @@ const Wellness = () => {
               })}
             </div>
           ) : (
+           
             <p>No videos found for this topic.</p>
+           
           )}
         </>
       ) : (
@@ -187,7 +190,11 @@ const Wellness = () => {
               ))}
             </div>
           ) : (
-            <p>No rooms available.</p>
+            <div className="flex flex-col justify-center items-center mt-[100px] ">
+            
+            <img src={NoVideo} alt="No posts available" className="w-[180px] h-[180px]" />
+            <p className= " ml-4 text-gray-700 font-medium">No rooms available</p>
+            </div>
           )}
         </>
       )}

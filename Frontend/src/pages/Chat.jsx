@@ -17,36 +17,35 @@ const Chat = () => {
   const [roomImage, setRoomImage] = useState("");
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
-  const [hasLeft, setHasLeft] = useState(localStorage.getItem("hasLeft") === "true");
+  // isJoined tracks whether the user has explicitly joined this room
+  const [isJoined, setIsJoined] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
+  // Current user information must include an email.
   const currentUser = {
     id: localStorage.getItem("userId") || localStorage.getItem("username"),
     name: localStorage.getItem("username"),
+    email: localStorage.getItem("email") || "default@example.com",
     image: localStorage.getItem("profileImage")
       ? `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`
       : "http://localhost:3001/uploads/default.png",
   };
 
+  // Create the socket connection if needed.
   const createSocketConnection = () => {
     if (!socketRef.current) {
       socketRef.current = io(socketServerUrl, {
         transports: ["websocket"],
       });
-
       socketRef.current.on("connect_error", (err) => {
         console.error("Socket connection error:", err);
       });
-
-      socketRef.current.emit("joinRoom", roomId, currentUser);
-
       socketRef.current.on("newMessage", (message) => {
         setMessages((prev) => [...prev, message]);
       });
-
       socketRef.current.on("typing", (data) => {
         if (data.user.id !== currentUser.id) {
           setTypingUsers((prev) => {
@@ -57,7 +56,6 @@ const Chat = () => {
           });
         }
       });
-
       socketRef.current.on("stopTyping", (data) => {
         setTypingUsers((prev) =>
           prev.filter((name) => name !== data.user.name)
@@ -66,6 +64,7 @@ const Chat = () => {
     }
   };
 
+  // On mount, fetch room details, messages, and check if user is marked as joined.
   useEffect(() => {
     axios.get("http://localhost:3001/rooms").then((res) => {
       const room = res.data.find((r) => r._id === roomId);
@@ -82,17 +81,22 @@ const Chat = () => {
       .then((res) => setMessages(res.data))
       .catch((err) => console.error("Error fetching messages:", err));
 
-   
+    // Check localStorage to see if the user was joined in this room.
+    const storedJoin = localStorage.getItem(`chat_joined_${roomId}`);
+    if (storedJoin === "true") {
+      setIsJoined(true);
       createSocketConnection();
-   
+      socketRef.current.emit("joinRoom", roomId, currentUser);
+    }
 
+    // On unmount, disconnect the socket only if the user did NOT leave intentionally.
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
-  }, [roomId, hasLeft]);
+  }, [roomId]);
 
   useEffect(() => {
     if (isUserAtBottom()) {
@@ -107,11 +111,12 @@ const Chat = () => {
   };
 
   const sendMessage = async () => {
-    if (hasLeft || !text.trim()) return;
+    if (!isJoined || !text.trim()) return;
     try {
       const messageData = {
         senderId: currentUser.id,
         senderName: currentUser.name,
+        senderEmail: currentUser.email,
         senderImage: currentUser.image,
         text,
       };
@@ -128,8 +133,10 @@ const Chat = () => {
     }
   };
 
-  const handleLeaveOrJoin = () => {
-    if (!hasLeft) {
+  // Toggling join/leave chat explicitly.
+  const handleJoinOrLeave = () => {
+    if (isJoined) {
+      // When user clicks Leave Chat, update state and localStorage.
       Swal.fire({
         title: "Leave Chat Room?",
         text: "Do you want to leave the chat room? You won't be able to send messages until you rejoin.",
@@ -139,41 +146,28 @@ const Chat = () => {
         cancelButtonText: "Cancel",
       }).then(async (result) => {
         if (result.isConfirmed) {
-          setHasLeft(true);
-          localStorage.setItem("hasLeft", "true");
-
+          setIsJoined(false);
+          localStorage.setItem(`chat_joined_${roomId}`, "false");
           if (socketRef.current) {
             socketRef.current.emit("leaveRoom", roomId, currentUser);
           }
-
-          // Immediately update the UI with the system message
           const systemLeaveMessage = {
             senderId: "SYSTEM",
             senderName: "System",
             text: `${currentUser.name} left the chat.`,
             createdAt: new Date(),
             system: true,
-            
           };
           setMessages((prev) => [...prev, systemLeaveMessage]);
-
-          // Save the system message in the database
-          await axios.post(`http://localhost:3001/rooms/${roomId}/messages`, {
-            senderId: "SYSTEM",
-            senderName: "System",
-            text: `${currentUser.name} left the chat.`,
-            system: true,
-          });
+          await axios.post(`http://localhost:3001/rooms/${roomId}/messages`, systemLeaveMessage);
         }
       });
     } else {
-      setHasLeft(false);
-      localStorage.setItem("hasLeft", "false");
-
+      // When user explicitly clicks Join Chat.
       createSocketConnection();
       socketRef.current.emit("joinRoom", roomId, currentUser);
-
-      // Immediately update the UI with the system message
+      setIsJoined(true);
+      localStorage.setItem(`chat_joined_${roomId}`, "true");
       const systemJoinMessage = {
         senderId: "SYSTEM",
         senderName: "System",
@@ -182,14 +176,7 @@ const Chat = () => {
         system: true,
       };
       setMessages((prev) => [...prev, systemJoinMessage]);
-
-      // Save the system message in the database
-      axios.post(`http://localhost:3001/rooms/${roomId}/messages`, {
-        senderId: "SYSTEM",
-        senderName: "System",
-        text: `${currentUser.name} joined the chat.`,
-        system: true,
-      });
+      axios.post(`http://localhost:3001/rooms/${roomId}/messages`, systemJoinMessage);
     }
   };
 
@@ -217,14 +204,16 @@ const Chat = () => {
           <h1 className="text-xl font-semibold">{roomName || "Chat Room"}</h1>
         </div>
         <div className="flex gap-3 items-center">
+          {/* Back button (leaveIcon) navigates back without altering join state */}
           <button onClick={() => navigate("/rooms")}>
             <img src={leaveIcon} alt="Back" className="w-9 h-9" />
           </button>
+          {/* Toggle join/leave explicitly */}
           <button
-            onClick={handleLeaveOrJoin}
+            onClick={handleJoinOrLeave}
             className="bg-[#EC993D] text-white px-6 py-2 rounded-md text-sm font-medium"
           >
-            {hasLeft ? "Join Chat" : "Leave Chat"}
+            {isJoined ? "Leave Chat" : "Join Chat"}
           </button>
         </div>
       </div>
@@ -234,14 +223,13 @@ const Chat = () => {
         {messages.map((msg, index) => {
           if (msg.senderId === "SYSTEM") {
             return (
-              <div key={index} className=" flex flex-col items-center">
+              <div key={index} className="flex flex-col items-center">
                 <div className="inline-block bg-gray-300 text-gray-700 px-4 py-2 rounded text-center w-[1170px]">
                   {msg.text}
                 </div>
               </div>
             );
           }
-
           const isCurrentUser = msg.senderId === currentUser.id;
           return (
             <div
@@ -312,12 +300,12 @@ const Chat = () => {
             onKeyDown={(e) => {
               if (e.key === "Enter") sendMessage();
             }}
-            disabled={hasLeft}
+            disabled={!isJoined}
           />
           <button
             onClick={sendMessage}
             className="bg-[#7879F1] text-white px-4 py-2 rounded-md text-sm font-medium"
-            disabled={hasLeft}
+            disabled={!isJoined}
           >
             <img src={sendIcon} alt="Send" className="w-6 h-6" />
           </button>
