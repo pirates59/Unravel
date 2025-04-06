@@ -28,47 +28,51 @@ const Admin = ({ children }) => {
         </div>
 
         {/* Menu Items */}
-        <nav className="flex flex-col space-y-6">
-          <NavLink to="/Users">
-            <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-              <img src={users} alt="Users" className="w-5 h-5" />
-              <span>Users</span>
-            </div>
-          </NavLink>
-          <NavLink to="/AdminAppointment">
-            <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-              <img src={appointment} alt="Appointment" className="w-5 h-5" />
-              <span>Appointment</span>
-            </div>
-          </NavLink>
-          <NavLink to="/AdminRooms">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-            <img src={room} alt="Rooms" className="w-5 h-5" />
-            <span>Rooms</span>
-          </div>
-          </NavLink>
-          <NavLink to="/AdminTherapist">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-            <img src={therapist} alt="Therapists" className="w-5 h-5" />
-            <span>Therapists</span>
-          </div>
-          </NavLink>
-          <NavLink to="/AdminCenter">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-            <img src={center} alt="Therapists" className="w-5 h-5" />
-            <span>Center</span>
-          </div>
-          </NavLink>
-          <NavLink to="/Filtration">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-            <img src={filter} alt="Filtration" className="w-5 h-5" />
-            <span>Filtration</span>
-          </div>
-          </NavLink>
+        <nav className="flex flex-col space-y-3">
+           <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+                      <img src={users} alt="Write Post" className="w-5 h-5" />
+                      <NavLink to="/Users" className="flex-1">
+                        Users
+                      </NavLink>
+                    </div>
+
+                     <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+                                <img src={appointment} alt="Feed" className="w-5 h-5" />
+                                <NavLink to="/AdminAppointment" className="flex-1">
+                                  Appointments
+                                </NavLink>
+                              </div>
+                              <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+                                <img src={room} alt="Feed" className="w-5 h-5" />
+                                <NavLink to="/AdminRooms" className="flex-1">
+                                Rooms
+                                </NavLink>
+                              </div>
+                              <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+                                <img src={therapist} alt="Feed" className="w-5 h-5" />
+                                <NavLink to="/AdminTherapist" className="flex-1">
+                                Therapists
+                                </NavLink>
+                              </div>
+
+                              <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+                                <img src={center} alt="Feed" className="w-5 h-5" />
+                                <NavLink to="/AdminCenter" className="flex-1">
+                                Center
+                                </NavLink>
+                              </div>
+         
+                              <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+                                <img src={filter} alt="Feed" className="w-5 h-5" />
+                                <NavLink to="/Filtration" className="flex-1">
+                                Filtration
+                                </NavLink>
+                              </div>
+        
         </nav>
 
         {/* Logout Button */}
-        <div className="mt-auto flex flex-col space-y-6">
+        <div className="mt-auto flex flex-col">
                 
                 <div
                   onClick={handleLogout}

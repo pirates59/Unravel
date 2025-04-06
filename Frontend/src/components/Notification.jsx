@@ -31,9 +31,7 @@ const Notification = ({
   const combinedNotifications = [
     ...realtimeNotifications,
     ...fetchedNotifications,
-  ].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  );
+  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const handleNotificationClick = async (notification) => {
     try {
@@ -74,21 +72,24 @@ const Notification = ({
     <div className="absolute right-4 top-10 w-[500px] bg-white border border-neutral-300 rounded-md z-20 overflow-y-auto max-h-[50vh]">
       <div className="flex justify-between items-center px-4 py-3">
         <h2 className="text-xl">Notifications</h2>
-        <button className="text-sm text-blue-600" onClick={async () => {
-          try {
-            await axios.put(
-              `${apiBaseUrl}/api/notification`,
-              {},
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (clearRealtime) clearRealtime();
-            setFetchedNotifications(
-              fetchedNotifications.map((n) => ({ ...n, state: true }))
-            );
-          } catch (err) {
-            console.error("Error marking all as read:", err);
-          }
-        }}>
+        <button
+          className="text-sm text-blue-600"
+          onClick={async () => {
+            try {
+              await axios.put(
+                `${apiBaseUrl}/api/notification`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (clearRealtime) clearRealtime();
+              setFetchedNotifications(
+                fetchedNotifications.map((n) => ({ ...n, state: true }))
+              );
+            } catch (err) {
+              console.error("Error marking all as read:", err);
+            }
+          }}
+        >
           Mark all as read
         </button>
       </div>
@@ -102,7 +103,9 @@ const Notification = ({
         combinedNotifications.map((notification) => (
           <div
             key={notification._id}
-            className={`flex items-center gap-3 px-4 py-3 border-b border-neutral-300 ${notification.state ? "bg-white" : "bg-purple-100 cursor-pointer"}`}
+            className={`flex items-center gap-3 px-4 py-3 border-b border-neutral-300 ${
+              notification.state ? "bg-white" : "bg-purple-100 cursor-pointer"
+            }`}
             onClick={() => handleNotificationClick(notification)}
           >
             <img
@@ -113,7 +116,9 @@ const Notification = ({
             <div className="flex flex-col">
               <span className="text-sm">
                 <strong>{notification.actorName}</strong>{" "}
-                {notification.type === "like" ? "liked your post" : "commented on your post"}
+                {notification.type === "like"
+                  ? "liked your post"
+                  : "commented on your post"}
               </span>
               <span className="text-xs text-gray-500">
                 {formatDate(notification.createdAt)}
@@ -124,7 +129,10 @@ const Notification = ({
       )}
       {combinedNotifications.filter((n) => !n.state).length > 0 && (
         <div className="text-center py-2 text-sm text-gray-700">
-          {combinedNotifications.filter((n) => !n.state).length} unread {combinedNotifications.filter((n) => !n.state).length === 1 ? "notification" : "notifications"}
+          {combinedNotifications.filter((n) => !n.state).length} unread{" "}
+          {combinedNotifications.filter((n) => !n.state).length === 1
+            ? "notification"
+            : "notifications"}
         </div>
       )}
     </div>

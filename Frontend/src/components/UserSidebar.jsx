@@ -18,7 +18,7 @@ import notificationIcon from "../assets/notification.png";
 import Notification from "../components/Notification";
 import Comment from "../components/Comment";
 
-const UserSidebar = ({ children }) => {
+const UserSidebar = ({ children, openChangePassword }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -31,15 +31,25 @@ const UserSidebar = ({ children }) => {
     ? `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`
     : upload;
 
+  // State for notifications
   const [showNotification, setShowNotification] = useState(false);
   const [socketNotifications, setSocketNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationOverlayPost, setNotificationOverlayPost] = useState(null);
   const [showNotificationOverlay, setShowNotificationOverlay] = useState(false);
 
+  // State for user dropdown (for change password)
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+
   const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
   const token = localStorage.getItem("token");
+
+  // Refs for click outside detection
+  const notifRef = useRef(null);
+  const userDropdownRef = useRef(null);
+  const notificationIconRef = useRef(null);
+  const userImageRef = useRef(null);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -76,6 +86,30 @@ const UserSidebar = ({ children }) => {
     }
   }, [showNotification]);
 
+  // Close notification and user dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showNotification &&
+        notifRef.current &&
+        !notifRef.current.contains(e.target) &&
+        !notificationIconRef.current.contains(e.target)
+      ) {
+        setShowNotification(false);
+      }
+      if (
+        showUserDropdown &&
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(e.target) &&
+        !userImageRef.current.contains(e.target)
+      ) {
+        setShowUserDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotification, showUserDropdown]);
+
   const openNotificationOverlay = async (postId) => {
     try {
       const res = await axios.get(`${apiBaseUrl}/api/posts/${postId}`, {
@@ -88,6 +122,8 @@ const UserSidebar = ({ children }) => {
     }
   };
 
+  
+
   return (
     <div className="flex h-screen">
       <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
@@ -98,56 +134,58 @@ const UserSidebar = ({ children }) => {
             className="w-[300px] h-[70px] ml-[-14px] mt-[-14px]"
           />
         </div>
-        <nav className="flex flex-col space-y-6">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+        <nav className="flex flex-col space-y-3">
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
             <img src={plus} alt="Write Post" className="w-5 h-5" />
-            <NavLink to="/post">
-              <span>Write Post</span>
+            <NavLink to="/post" className="flex-1">
+              Write Post
             </NavLink>
           </div>
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
             <img src={feed} alt="Feed" className="w-5 h-5" />
-            <NavLink to="/feed">
-              <span>Feed</span>
+            <NavLink to="/feed" className="flex-1">
+              Feed
             </NavLink>
           </div>
           <NavLink to="/room">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-            <img src={room} alt="Rooms" className="w-5 h-5" />
-            <span>Rooms</span>
-          </div>
+            <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+              <img src={room} alt="Rooms" className="w-5 h-5" />
+              <span>Rooms</span>
+            </div>
           </NavLink>
           <NavLink to="/wellness">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
-            <img src={wellness} alt="Wellness Center" className="w-5 h-5" />
-            <span>Wellness Center</span>
-          </div>
+            <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
+              <img src={wellness} alt="Wellness Center" className="w-5 h-5" />
+              <span>Wellness Center</span>
+            </div>
           </NavLink>
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
             <img src={help} alt="I Need Help" className="w-5 h-5" />
-            <NavLink to="/help">
-              <span>I Need Help</span>
+            <NavLink to="/help" className="flex-1">
+              I Need Help
             </NavLink>
           </div>
         </nav>
-        <div className="mt-auto flex flex-col space-y-6">
-          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80">
+        <div className="mt-auto flex flex-col space-y-3">
+          <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
             <img src={setting} alt="Settings" className="w-5 h-5" />
             <span>Settings</span>
           </div>
           <div
             onClick={handleLogout}
-            className="flex items-center space-x-3 cursor-pointer hover:opacity-80"
+            className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300"
           >
             <img src={logout} alt="Logout" className="w-5 h-5" />
             <span>Logout</span>
           </div>
         </div>
       </div>
+
       <div className="flex-1 flex flex-col">
         <div className="flex justify-end items-center p-4 bg-white relative">
           <div className="relative">
             <img
+              ref={notificationIconRef}
               src={notificationIcon}
               alt="Notification"
               className="w-6 h-6 cursor-pointer"
@@ -159,28 +197,34 @@ const UserSidebar = ({ children }) => {
               </span>
             )}
             {showNotification && (
-              <Notification
-                token={token}
-                apiBaseUrl={apiBaseUrl}
-                realtimeNotifications={socketNotifications}
-                clearRealtime={() => {
-                  setSocketNotifications([]);
-                  setUnreadCount(0);
-                }}
-                onNotificationClick={openNotificationOverlay}
-              />
+              <div ref={notifRef}>
+                <Notification
+                  token={token}
+                  apiBaseUrl={apiBaseUrl}
+                  realtimeNotifications={socketNotifications}
+                  clearRealtime={() => {
+                    setSocketNotifications([]);
+                    setUnreadCount(0);
+                  }}
+                  onNotificationClick={openNotificationOverlay}
+                />
+              </div>
             )}
           </div>
-          <div className="cursor-pointer w-8 h-8 rounded-full ml-4">
+          <div className="relative ml-4">
             <img
+              ref={userImageRef}
               src={profileImage}
               alt="User Avatar"
-              className="w-8 h-8 rounded-full"
+              className="w-8 h-8 rounded-full cursor-pointer"
+              onClick={() => setShowUserDropdown((prev) => !prev)}
             />
+            
           </div>
         </div>
         <div className="flex-1 p-6 overflow-y-auto">{children}</div>
       </div>
+
       {showNotificationOverlay && notificationOverlayPost && (
         <Comment
           post={notificationOverlayPost}
