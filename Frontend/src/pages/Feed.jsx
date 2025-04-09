@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import leftarrow from "../assets/leftarrow.png";
 import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
-import comment from "../assets/comment.png";
-import NoPost from "../assets/NoPost.png"; // adjust the path as needed
+import commentIcon from "../assets/comment.png";
+import NoPost from "../assets/NoPost.png";
 import Swal from "sweetalert2";
 import Comment from "../components/Comment";
 
@@ -15,13 +16,11 @@ function extractHashtags(text) {
 }
 
 function getUniqueHashtags(hashtags) {
-  const uniqueHashtags = [];
-  for (let i = hashtags.length - 1; i >= 0; i--) {
-    if (!uniqueHashtags.includes(hashtags[i])) {
-      uniqueHashtags.unshift(hashtags[i]);
-    }
-  }
-  return uniqueHashtags;
+  const unique = [];
+  hashtags.forEach((tag) => {
+    if (!unique.includes(tag)) unique.push(tag);
+  });
+  return unique;
 }
 
 function formatDate(date) {
@@ -43,6 +42,7 @@ const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [currentUser, setCurrentUser] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
   const [likes, setLikes] = useState({});
   const [openCommentId, setOpenCommentId] = useState(null);
   const dropdownRef = useRef(null);
@@ -50,11 +50,13 @@ const Feed = () => {
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
+    const storedUserId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
     if (!storedUsername || !token) {
       navigate("/login");
     } else {
       setCurrentUser(storedUsername);
+      setCurrentUserId(storedUserId);
     }
     fetchPosts();
 
@@ -78,16 +80,16 @@ const Feed = () => {
         },
       });
       const data = await res.json();
-      // Only show posts authored by the logged-in user
+      // Only show posts authored by the logged-in user for Feed
       const userPosts = data.filter(
-        (post) => post.author === localStorage.getItem("username")
+        (post) => String(post.authorId) === localStorage.getItem("userId")
       );
       setPosts(userPosts);
-
       // Initialize like state for each post
       const initialLikes = {};
       userPosts.forEach((post) => {
         const count = post.likes ? post.likes.length : 0;
+        // Use currentUser from localStorage instead of post.likes.includes(currentUser) for consistency
         const liked = post.likes && post.likes.includes(localStorage.getItem("username"));
         initialLikes[post._id] = { count, liked };
       });
@@ -141,9 +143,7 @@ const Feed = () => {
 
   const handleLike = async (postId) => {
     const token = localStorage.getItem("token");
-    const currentUser = localStorage.getItem("username");
     const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
-    
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
         method: "POST",
@@ -152,8 +152,7 @@ const Feed = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          currentUser,
-          author: currentUser,
+          currentUser: localStorage.getItem("username"),
           profileImage: storedProfile,
         }),
       });
@@ -184,8 +183,7 @@ const Feed = () => {
         <div className="flex-1 space-y-4">
           {posts.length === 0 ? (
             <div className="flex flex-col justify-center items-center mt-[120px] ml-[320px]">
-
-            <img src={NoPost} alt="No posts available" className="w-[180px] h-[180px]" />
+              <img src={NoPost} alt="No posts available" className="w-[180px] h-[180px]" />
               <p className="mt-4 mr-8 text-gray-700 font-medium">No posts available</p>
             </div>
           ) : (
@@ -195,20 +193,30 @@ const Feed = () => {
               const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
               const postLike = likes[post._id] || { count: 0, liked: false };
 
+              // Override author and profile image if the logged-in user is the post author
+              const displayAuthor =
+                String(post.authorId) === localStorage.getItem("userId")
+                  ? localStorage.getItem("username")
+                  : post.author;
+              const displayProfileImage =
+                String(post.authorId) === localStorage.getItem("userId")
+                  ? (localStorage.getItem("profileImage")?.startsWith("http")
+                      ? localStorage.getItem("profileImage")
+                      : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`)
+                  : post.profileImage && post.profileImage !== "default-avatar.png"
+                    ? `http://localhost:3001/uploads/${post.profileImage}`
+                    : "/default-avatar.png";
+
               return (
                 <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={
-                        post.profileImage && post.profileImage !== "default-avatar.png"
-                          ? `http://localhost:3001/uploads/${post.profileImage}`
-                          : "default-avatar.png"
-                      }
+                      src={displayProfileImage}
                       alt="User Avatar"
                       className="w-10 h-10 rounded-full mr-3"
                     />
                     <div>
-                      <p className="font-semibold">{post.author}</p>
+                      <p className="font-semibold">{displayAuthor}</p>
                       <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                     </div>
                   </div>
@@ -231,7 +239,6 @@ const Feed = () => {
                       />
                     </div>
                   )}
-                  {/* Like & Comment Info */}
                   <div className="flex items-center gap-3 text-gray-500 text-sm mt-4">
                     <img
                       src={postLike.liked ? redLike : like}
@@ -247,7 +254,7 @@ const Feed = () => {
                         : "Like"}
                     </p>
                     <img
-                      src={comment}
+                      src={commentIcon}
                       alt="Comment"
                       className="w-5 h-5 cursor-pointer"
                       onClick={() => toggleComments(post._id)}
@@ -262,17 +269,17 @@ const Feed = () => {
                   </div>
                   {openCommentId === post._id && (
                     <Comment
-                    post={post}
-                    postId={post._id}
-                    likeData={postLike}
-                    syncLikes={(updatedLike) =>
-                      setLikes((prev) => ({ ...prev, [post._id]: updatedLike }))
-                    }
-                    closeComments={() => {
-                      setOpenCommentId(null);
-                      fetchPosts();
-                    }}
-                  />
+                      post={post}
+                      postId={post._id}
+                      likeData={postLike}
+                      syncLikes={(updatedLike) =>
+                        setLikes((prev) => ({ ...prev, [post._id]: updatedLike }))
+                      }
+                      closeComments={() => {
+                        setOpenCommentId(null);
+                        fetchPosts();
+                      }}
+                    />
                   )}
                   {/* Edit/Delete dropdown */}
                   <div className="absolute top-4 right-4">
@@ -283,10 +290,7 @@ const Feed = () => {
                       onClick={() => toggleDropdown(post._id)}
                     />
                     {activeDropdown === post._id && (
-                      <div
-                        ref={dropdownRef}
-                        className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10"
-                      >
+                      <div ref={dropdownRef} className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10">
                         <NavLink to="/editpost" state={{ postId: post._id, content: post.content }}>
                           <button
                             onClick={() => setActiveDropdown(null)}

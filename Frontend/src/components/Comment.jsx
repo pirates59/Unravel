@@ -1,3 +1,4 @@
+// components/Comment.js
 import React, { useState, useEffect, useRef } from "react";
 import sendIcon from "../assets/send.png";
 import hand from "../assets/hand.png";
@@ -6,7 +7,7 @@ import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
 import commentIcon from "../assets/comment.png";
 
-// Hashtag helpers (optional)
+// Hashtag helpers
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
   return text.match(regex) || [];
@@ -36,7 +37,7 @@ function formatDate(date) {
   }
 }
 
-// Helper to build full image URL for user profile images
+// Helper to build full image URL
 const getImageUrl = (profileImage) => {
   if (!profileImage || profileImage === "default-avatar.png") {
     return "default-avatar.png";
@@ -50,7 +51,6 @@ const getImageUrl = (profileImage) => {
 const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  const [profileImage, setProfileImage] = useState("default-avatar.png");
   const [currentUser, setCurrentUser] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -67,15 +67,12 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
   }, [likeData]);
 
   useEffect(() => {
-    const storedProfileImage = localStorage.getItem("profileImage");
-    if (storedProfileImage) {
-      setProfileImage(`http://localhost:3001/uploads/${storedProfileImage}`);
-    }
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setCurrentUser(storedUsername);
     }
     fetchComments();
+
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setActiveDropdown(null);
@@ -91,9 +88,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:3001/api/posts/${postId}/comments`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setComments(data);
@@ -238,7 +233,6 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
       if (res.ok) {
         setActiveDropdown(null);
         fetchComments();
-       
       } else {
         console.error("Failed to report comment.");
       }
@@ -253,6 +247,20 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
+  // Determine display values for the post author (same logic as Feed)
+  const displayPostAuthor =
+    String(post.authorId) === localStorage.getItem("userId")
+      ? localStorage.getItem("username")
+      : post.author;
+  const displayPostProfileImage =
+    String(post.authorId) === localStorage.getItem("userId")
+      ? (localStorage.getItem("profileImage")?.startsWith("http")
+          ? localStorage.getItem("profileImage")
+          : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`)
+      : post.profileImage && post.profileImage !== "default-avatar.png"
+      ? `http://localhost:3001/uploads/${post.profileImage}`
+      : "default-avatar.png";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
       <div className="bg-white w-full max-w-2xl rounded-lg relative flex flex-col">
@@ -265,16 +273,12 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
         <div className="p-4 border-b border-gray-300">
           <div className="flex items-center space-x-2 mb-2">
             <img
-              src={
-                post.profileImage && post.profileImage !== "default-avatar.png"
-                  ? `http://localhost:3001/uploads/${post.profileImage}`
-                  : "default-avatar.png"
-              }
+              src={displayPostProfileImage}
               alt="User Avatar"
               className="w-10 h-10 rounded-full"
             />
             <div>
-              <p className="font-semibold">{post.author}</p>
+              <p className="font-semibold">{displayPostAuthor}</p>
               <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
             </div>
           </div>
@@ -309,11 +313,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
                   : `${postLikes} likes`
                 : "Like"}
             </p>
-            <img
-              src={commentIcon}
-              alt="Comment"
-              className="w-5 h-5 cursor-pointer"
-            />
+            <img src={commentIcon} alt="Comment" className="w-5 h-5 cursor-pointer" />
             <p className="cursor-pointer">
               {comments.length > 0
                 ? comments.length === 1
@@ -327,7 +327,21 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
           {comments.length > 0 ? (
             <div className="w-full space-y-3">
               {comments.map((comment) => {
-                const isOwner = comment.author === currentUser;
+                // Use the new authorId property to decide if the comment is by the logged-in user.
+                const displayCommentAuthor =
+  comment.authorId && String(comment.authorId) === localStorage.getItem("userId")
+    ? localStorage.getItem("username")
+    : comment.author;
+
+const displayCommentProfileImage =
+  comment.authorId && String(comment.authorId) === localStorage.getItem("userId")
+    ? (localStorage.getItem("profileImage")?.startsWith("http")
+        ? localStorage.getItem("profileImage")
+        : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`)
+    : comment.profileImage && comment.profileImage !== "default-avatar.png"
+      ? `http://localhost:3001/uploads/${comment.profileImage}`
+      : "default-avatar.png";
+
                 const hashtags = getUniqueHashtags(extractHashtags(comment.text));
                 const textWithoutTags = comment.text.replace(/#[a-zA-Z0-9_]+/g, "").trim();
 
@@ -335,14 +349,11 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
                   <div key={comment._id} className="bg-gray-100 p-3 rounded-md relative">
                     <div className="flex items-center space-x-2 mb-1">
                       <img
-                        src={getImageUrl(comment.profileImage)}
+                        src={displayCommentProfileImage}
                         alt="User Avatar"
                         className="w-10 h-10 rounded-full"
                       />
-                      <span className="text-sm font-semibold">
-                        {comment.author || "User"}
-                      </span>
-                      {/* Display "Reported" in red if the comment is reported */}
+                      <span className="text-sm font-semibold">{displayCommentAuthor}</span>
                       <span className="text-xs" style={{ color: comment.reported ? "red" : "inherit" }}>
                         {comment.reported ? "Reported" : formatDate(comment.createdAt)}
                       </span>
@@ -366,7 +377,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
                       />
                       {activeDropdown === comment._id && (
                         <div className="absolute right-0 mt-2 w-32 bg-white rounded shadow-lg z-10">
-                          {isOwner ? (
+                          {comment.authorId && String(comment.authorId) === localStorage.getItem("userId") ? (
                             <>
                               <button
                                 onClick={() => handleEditComment(comment)}
@@ -405,7 +416,15 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
         </div>
         <div className="p-3 border-t border-gray-300">
           <div className="flex items-center space-x-2">
-            <img src={profileImage} alt="User Avatar" className="w-8 h-8 rounded-full" />
+            <img
+              src={
+                localStorage.getItem("profileImage")?.startsWith("http")
+                  ? localStorage.getItem("profileImage")
+                  : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`
+              }
+              alt="User Avatar"
+              className="w-8 h-8 rounded-full"
+            />
             <input
               type="text"
               placeholder="Write a comment..."

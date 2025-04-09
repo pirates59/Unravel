@@ -20,21 +20,23 @@ function Login() {
       
       if (result.data.success) {
         const { user, token } = result.data;
-        const username = user ? user.name : email.split("@")[0];
-        const role = user ? user.role : "user";
-
-        // ✅ Save session details
-        localStorage.setItem("token", token); // ✅ Save the token
-        localStorage.setItem("username", username);
-        localStorage.setItem("role", role);
+        
+        // Save session details in localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("username", user.name);
+        localStorage.setItem("role", user.role);
         localStorage.setItem("email", user.email);
         localStorage.setItem("profileImage", user.profileImage || "upload.png");
-
-        // ✅ Redirect based on role and first login status
-        if (role === "admin") {
+        localStorage.setItem("userId", user._id);
+        
+        // Redirect based on role and first‑login status
+        if (user.role === "admin") {
           navigate("/Users");
+        } else if (user.isFirstLogin) {
+          // Force first‑time users to reset password
+          navigate("/reset", { state: { email: user.email } });
         } else {
-          user.isFirstLogin ? navigate("/profile") : navigate("/recent");
+          navigate("/recent");
         }
       } else {
         setErrorMessage(result.data.message);
@@ -84,7 +86,9 @@ function Login() {
                 LOGIN
               </button>
               <NavLink to="/signup">
-                <button className="w-full bg-[#161F36] text-white py-2 rounded">REGISTER</button>
+                <button className="w-full bg-[#161F36] text-white py-2 rounded">
+                  REGISTER
+                </button>
               </NavLink>
             </form>
           </div>

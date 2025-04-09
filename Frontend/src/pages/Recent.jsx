@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
 import commentIcon from "../assets/comment.png";
-import NoPost from "../assets/NoPost.png"; // adjust the path as needed
+import NoPost from "../assets/NoPost.png";
+import Swal from "sweetalert2";
 import Comment from "../components/Comment";
 
+// Helper functions
 function extractHashtags(text) {
   const regex = /#[a-zA-Z0-9_]+/g;
   return text.match(regex) || [];
@@ -36,24 +39,33 @@ function formatDate(date) {
 
 const Recent = () => {
   const [posts, setPosts] = useState([]);
-  const [currentUser, setCurrentUser] = useState("");
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [likes, setLikes] = useState({});
   const [openCommentId, setOpenCommentId] = useState(null);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const handleTopicClick = (topic) => {
     navigate(`/wellness?topic=${encodeURIComponent(topic)}`);
   };
 
+  // Get the logged-in user details from localStorage and fetch all posts
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
+    const storedUserId = localStorage.getItem("userId");
     const token = localStorage.getItem("token");
-    if (!storedUsername || !token) {
+    if (!storedUserId || !token) {
       navigate("/login");
-    } else {
-      setCurrentUser(storedUsername);
     }
     fetchPosts();
+
+    // Close dropdown if user clicks outside
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [navigate]);
 
   const fetchPosts = async () => {
@@ -66,19 +78,13 @@ const Recent = () => {
         },
       });
       const data = await res.json();
-      if (data.error) {
-        console.error("API Error:", data.error);
-        return;
-      }
-      if (!Array.isArray(data)) {
-        console.error("Data is not an array:", data);
-        return;
-      }
-      // Only show posts not authored by the logged-in user
+      // Filter out posts authored by the logged-in user
       const otherPosts = data.filter(
-        (post) => post.author !== localStorage.getItem("username")
+        (post) => String(post.authorId) !== localStorage.getItem("userId")
       );
       setPosts(otherPosts);
+
+      // Initialize like state for each post
       const initialLikes = {};
       otherPosts.forEach((post) => {
         const count = post.likes ? post.likes.length : 0;
@@ -91,13 +97,50 @@ const Recent = () => {
     }
   };
 
+  const toggleDropdown = (postId) => {
+    setActiveDropdown(activeDropdown === postId ? null : postId);
+  };
+
+  const handleDelete = async (postId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`http://localhost:3001/api/posts/${postId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchPosts();
+      } else {
+        console.error("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  const confirmDelete = (postId) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to delete this post?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleDelete(postId);
+        Swal.fire("Deleted!", "Your post has been deleted.", "success");
+      }
+    });
+  };
+
   const toggleComments = (postId) => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
 
   const handleLike = async (postId) => {
     const token = localStorage.getItem("token");
-    const currentUser = localStorage.getItem("username");
     const storedProfile = localStorage.getItem("profileImage") || "default-avatar.png";
     try {
       const res = await fetch(`http://localhost:3001/api/posts/${postId}/like`, {
@@ -107,8 +150,7 @@ const Recent = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          currentUser,
-          author: currentUser,
+          currentUser: localStorage.getItem("username"),
           profileImage: storedProfile,
         }),
       });
@@ -125,23 +167,26 @@ const Recent = () => {
 
   return (
     <div>
-      {/* Navigation and header */}
+      {/* Navigation Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-6">
-          <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">Recent</button>
+          <NavLink to="/recent">
+            <button className="bg-[#EC993D] text-white px-6 py-2 rounded-xl">Recent</button>
+          </NavLink>
           <NavLink to="/feed">
-            <button className="border border-[#EC993D] px-6 py-2 rounded-xl ">Feed</button>
+            <button className="border border-[#EC993D] px-6 py-2 rounded-xl">Feed</button>
           </NavLink>
         </div>
         <div className="mr-[270px]">
           <h2 className="text-lg font-semibold">Topic</h2>
         </div>
       </div>
-      <div className="flex gap-6">
-        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
+
+      <div className="flex gap-6 w-full">
+        <div className="flex-1 space-y-4">
           {posts.length === 0 ? (
             <div className="flex flex-col justify-center items-center mt-[120px] ml-[45px]">
-              <img src={NoPost} alt="No posts available" className="w-[180px] h-[180px]  " />
+              <img src={NoPost} alt="No posts available" className="w-[180px] h-[180px]" />
               <p className="mt-4 mr-8 text-gray-700 font-medium">No posts available</p>
             </div>
           ) : (
@@ -150,20 +195,31 @@ const Recent = () => {
               const uniqueHashtags = getUniqueHashtags(hashtags);
               const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
               const postLike = likes[post._id] || { count: 0, liked: false };
+
+              // Use updated details if the post belongs to the logged-in user (should not happen in Recent)
+              const displayAuthor =
+                String(post.authorId) === localStorage.getItem("userId")
+                  ? localStorage.getItem("username")
+                  : post.author;
+              const displayProfileImage =
+                String(post.authorId) === localStorage.getItem("userId")
+                  ? (localStorage.getItem("profileImage")?.startsWith("http")
+                      ? localStorage.getItem("profileImage")
+                      : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`)
+                  : post.profileImage && post.profileImage !== "default-avatar.png"
+                    ? `http://localhost:3001/uploads/${post.profileImage}`
+                    : "/default-avatar.png";
+
               return (
                 <div key={post._id} className="bg-gray-100 p-4 rounded-lg shadow-md relative">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={
-                        post.profileImage
-                          ? `http://localhost:3001/uploads/${post.profileImage}`
-                          : "/default-avatar.png"
-                      }
+                      src={displayProfileImage}
                       alt="User Avatar"
-                      className="w-10 h-10 rounded-full"
+                      className="w-10 h-10 rounded-full mr-3"
                     />
                     <div>
-                      <p className="font-semibold">{post.author}</p>
+                      <p className="font-semibold">{displayAuthor}</p>
                       <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                     </div>
                   </div>
@@ -216,17 +272,17 @@ const Recent = () => {
                   </div>
                   {openCommentId === post._id && (
                     <Comment
-                    post={post}
-                    postId={post._id}
-                    likeData={postLike}
-                    syncLikes={(updatedLike) =>
-                      setLikes((prev) => ({ ...prev, [post._id]: updatedLike }))
-                    }
-                    closeComments={() => {
-                      setOpenCommentId(null);
-                      fetchPosts();
-                    }}
-                  />
+                      post={post}
+                      postId={post._id}
+                      likeData={postLike}
+                      syncLikes={(updatedLike) =>
+                        setLikes((prevLikes) => ({ ...prevLikes, [post._id]: updatedLike }))
+                      }
+                      closeComments={() => {
+                        setOpenCommentId(null);
+                        fetchPosts();
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -235,44 +291,43 @@ const Recent = () => {
         </div>
         {/* Topic Boxes */}
         <div className="w-[320px] h-[calc(90vh-140px)] sticky top-0 self-start overflow-hidden">
-  <div className="bg-gray-100 p-4 rounded-lg shadow-md h-full">
-    <div className="grid grid-cols-2 gap-2">
-      {[
-        "Relationships",
-        "Family",
-        "Self Harm",
-        "Friends",
-        "Hopes",
-        "Bullying",
-        "Health",
-        "Work",
-        "Music",
-        "Parenting",
-        "LGBTQ+",
-        "Religion",
-        "Education",
-        "Pregnancy",
-        "Mental Health",
-        "Positive",
-        "Meditation",
-        "Self care",
-        "OCD",
-        "Psychosis",
-        "Schizophrenia",
-        "Paranoia",
-      ].map((topic, index) => (
-        <button
-          key={index}
-          onClick={() => handleTopicClick(topic)}
-          className="bg-white px-3 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
-        >
-          {topic}
-        </button>
-      ))}
-    </div>
-  </div>
-</div>
-
+          <div className="bg-gray-100 p-4 rounded-lg shadow-md h-full">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "Relationships",
+                "Family",
+                "Self Harm",
+                "Friends",
+                "Hopes",
+                "Bullying",
+                "Health",
+                "Work",
+                "Music",
+                "Parenting",
+                "LGBTQ+",
+                "Religion",
+                "Education",
+                "Pregnancy",
+                "Mental Health",
+                "Positive",
+                "Meditation",
+                "Self care",
+                "OCD",
+                "Psychosis",
+                "Schizophrenia",
+                "Paranoia",
+              ].map((topic, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleTopicClick(topic)}
+                  className="bg-white px-3 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
