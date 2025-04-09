@@ -21,6 +21,7 @@ import Feed from './pages/Feed';
 import Help from './pages/Help';
 import UserRoom from './pages/UserRoom';
 import Filtration from './pages/Filtration';
+import Setting from './pages/Setting';
 import Chat from "./pages/Chat";
 import Therapist from './components/Therapist';
 import Landing from './pages/Landing';
@@ -163,6 +164,13 @@ function App() {
             <ProtectedRoute role="user">
               <UserSidebar>
                 <Help />
+              </UserSidebar>
+            </ProtectedRoute>
+          } />
+            <Route path="/setting" element={
+            <ProtectedRoute role="user">
+              <UserSidebar>
+                <Setting />
               </UserSidebar>
             </ProtectedRoute>
           } />

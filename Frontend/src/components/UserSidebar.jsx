@@ -169,7 +169,9 @@ const UserSidebar = ({ children, openChangePassword }) => {
         <div className="mt-auto flex flex-col space-y-3">
           <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
             <img src={setting} alt="Settings" className="w-5 h-5" />
-            <span>Settings</span>
+            <NavLink to="/setting" className="flex-1">
+            Settings
+            </NavLink>
           </div>
           <div
             onClick={handleLogout}

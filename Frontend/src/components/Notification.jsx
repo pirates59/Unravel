@@ -1,5 +1,5 @@
-// Notification.jsx
-import React, { useState, useEffect } from "react";
+// components/Notification.jsx
+import React from "react";
 import { format } from "date-fns";
 import axios from "axios";
 import notifyImg from "../assets/notify.png";
@@ -11,9 +11,9 @@ const Notification = ({
   apiBaseUrl,
   onNotificationClick,
 }) => {
-  const [fetchedNotifications, setFetchedNotifications] = useState([]);
+  const [fetchedNotifications, setFetchedNotifications] = React.useState([]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const res = await axios.get(`${apiBaseUrl}/api/notification`, {
@@ -64,7 +64,7 @@ const Notification = ({
     return `${apiBaseUrl}/uploads/${profileImage}`;
   };
 
-  const formatDate = (dateString) => {
+  const formatDateString = (dateString) => {
     return format(new Date(dateString), "MMMM dd, yyyy 'at' h:mmaaa");
   };
 
@@ -121,7 +121,7 @@ const Notification = ({
                   : "commented on your post"}
               </span>
               <span className="text-xs text-gray-500">
-                {formatDate(notification.createdAt)}
+                {formatDateString(notification.createdAt)}
               </span>
             </div>
           </div>

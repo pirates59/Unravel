@@ -1,7 +1,7 @@
-// models/Comment.js
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const CommentSchema = new mongoose.Schema({
+const CommentSchema = new Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Post",
@@ -9,6 +9,12 @@ const CommentSchema = new mongoose.Schema({
   },
   author: {
     type: String,
+    required: true,
+  },
+  // New authorId field to identify the comment owner
+  authorId: {
+    type: Schema.Types.ObjectId,
+    ref: "Signup",
     required: true,
   },
   text: {
