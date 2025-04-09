@@ -24,7 +24,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Login user
+// Example snippet from controllers/authController.js (loginUser)
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -46,6 +46,7 @@ exports.loginUser = async (req, res) => {
       message: "Login successful.",
       token,
       user: {
+        _id: user._id,         // NEW: send user id
         name: user.name,
         email: user.email,
         role: user.role,

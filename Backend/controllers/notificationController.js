@@ -1,19 +1,32 @@
 // controllers/notificationController.js
 const Notification = require("../models/Notification");
 
-// Get notifications for the logged-in user (using username instead of id)
 exports.getNotifications = async (req, res) => {
   try {
-    // Use req.user.username to match the notifications’ recipient
+    // Change query to use recipient as stored in the notification.
+    // (Alternatively, if you store recipient as an id, query by recipient id.)
     const userName = req.user.username;
-    const notifications = await Notification.find({ recipient: userName }).sort({ createdAt: -1 });
-    res.json({ notifications });
+    // Populate actorId to get the latest name and profile image from the Signup collection.
+    const notifications = await Notification.find({ recipient: userName })
+      .sort({ createdAt: -1 })
+      .populate("actorId", "name profileImage");
+    // If populated, override actorName and actorProfileImage with the current values.
+    const updatedNotifications = notifications.map((n) => {
+      if (n.actorId) {
+        return {
+          ...n.toObject(),
+          actorName: n.actorId.name,
+          actorProfileImage: n.actorId.profileImage,
+        };
+      }
+      return n;
+    });
+    res.json({ notifications: updatedNotifications });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Mark all notifications as read for the logged-in user (using username)
 exports.markAllAsRead = async (req, res) => {
   try {
     const userName = req.user.username;
@@ -24,7 +37,6 @@ exports.markAllAsRead = async (req, res) => {
   }
 };
 
-// Mark a single notification as read (by notification id)
 exports.markSingleAsRead = async (req, res) => {
   try {
     const notificationId = req.params.notificationId;

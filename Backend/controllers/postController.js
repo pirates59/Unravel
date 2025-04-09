@@ -6,18 +6,20 @@ const path = require("path");
 const fs = require("fs");
 const uploadDir = path.join(__dirname, "../uploads");
 
-// Create a post
+// Create Post
 exports.createPost = async (req, res) => {
   try {
-    const { author, content, profileImage } = req.body;
+    const { content } = req.body;
+    const user = req.user; // contains: id, username, email, etc.
     const imageFilename = req.file ? req.file.filename : null;
     if (!content && !imageFilename) {
       return res.status(400).json({ error: "Content or image is required" });
     }
     const newPost = new Post({
-      author: author || "Anonymous",
+      author: user.username,
+      authorId: user.id,
       content: content || "",
-      profileImage: profileImage || "default-avatar.png",
+      profileImage: req.body.profileImage || "default-avatar.png",
       image: imageFilename,
     });
     await newPost.save();
@@ -28,6 +30,89 @@ exports.createPost = async (req, res) => {
   }
 };
 
+// Like a post – include actorId in notification
+exports.likePost = async (req, res) => {
+  const { postId } = req.params;
+  let { currentUser, author: actorName, profileImage: actorProfileImage } = req.body;
+  if (!currentUser) {
+    return res.status(400).json({ error: "currentUser is required." });
+  }
+  actorName = actorName || currentUser;
+  actorProfileImage = actorProfileImage || "default-avatar.png";
+  
+  try {
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+
+    const index = post.likes.indexOf(currentUser);
+    if (index === -1) {
+      post.likes.push(currentUser);
+      if (post.authorId.toString() !== req.user.id) {
+        const newNotification = new Notification({
+          recipient: post.author,
+          actorId: req.user.id,
+          actor: currentUser,
+          actorName: actorName,
+          actorProfileImage: actorProfileImage,
+          type: "like",
+          postId: post._id.toString(),
+        });
+        await newNotification.save();
+
+        if (global.io) {
+          global.io.to(post.author).emit("notification", newNotification);
+        }
+      }
+    } else {
+      post.likes.splice(index, 1);
+    }
+    await post.save();
+    res.json({ count: post.likes.length, liked: post.likes.includes(currentUser) });
+  } catch (error) {
+    console.error("Error in likePost:", error);
+    res.status(500).json({ error: "Failed to update like." });
+  }
+};
+
+// Add comment – include actorId in both comment and notification
+exports.addComment = async (req, res) => {
+  const { postId } = req.params;
+  const { text, author, profileImage, currentUser } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: "Comment text is required." });
+  }
+  try {
+    const newComment = new Comment({
+      postId,
+      author: author || "Anonymous",
+      authorId: req.user.id,
+      text,
+      profileImage: profileImage || "default-avatar.png",
+    });
+    await newComment.save();
+
+    const post = await Post.findById(postId);
+    if (post && post.authorId.toString() !== req.user.id) {
+      const newNotification = new Notification({
+        recipient: post.author,
+        actorId: req.user.id,
+        actor: currentUser,
+        actorName: author,
+        actorProfileImage: profileImage,
+        type: "comment",
+        postId: post._id.toString(),
+      });
+      await newNotification.save();
+      if (global.io) {
+        global.io.to(post.author).emit("notification", newNotification);
+      }
+    }
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error("Error in addComment:", error);
+    res.status(500).json({ error: "Failed to add comment." });
+  }
+};
 // Get all posts with comment count
 exports.getPosts = async (req, res) => {
   try {
@@ -116,7 +201,9 @@ exports.getComments = async (req, res) => {
   }
 };
 
-// Update comment
+
+
+// Update comment – checking using authorId
 exports.updateComment = async (req, res) => {
   const { postId, commentId } = req.params;
   const { text, currentUser } = req.body;
@@ -126,7 +213,7 @@ exports.updateComment = async (req, res) => {
   try {
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ error: "Comment not found." });
-    if (comment.author !== currentUser) {
+    if (String(comment.authorId) !== req.user.id) {
       return res.status(403).json({ error: "You can only edit your own comments." });
     }
     comment.text = text;
@@ -139,14 +226,13 @@ exports.updateComment = async (req, res) => {
   }
 };
 
-// Delete comment
+// Delete comment – checking using authorId
 exports.deleteComment = async (req, res) => {
   const { postId, commentId } = req.params;
-  const { currentUser } = req.body;
   try {
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ error: "Comment not found." });
-    if (comment.author !== currentUser) {
+    if (String(comment.authorId) !== req.user.id) {
       return res.status(403).json({ error: "You can only delete your own comments." });
     }
     await comment.deleteOne();
@@ -157,100 +243,7 @@ exports.deleteComment = async (req, res) => {
   }
 };
 
-// Like a post
-exports.likePost = async (req, res) => {
-  const { postId } = req.params;
-  let { currentUser, author: actorName, profileImage: actorProfileImage } = req.body;
-  if (!currentUser) {
-    return res.status(400).json({ error: "currentUser is required." });
-  }
-  actorName = actorName || currentUser;
-  actorProfileImage = actorProfileImage || "default-avatar.png";
-  
-  try {
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ error: "Post not found." });
-
-    const index = post.likes.indexOf(currentUser);
-    if (index === -1) {
-      post.likes.push(currentUser);
-      if (post.author !== currentUser) {
-        const newNotification = new Notification({
-          recipient: post.author,
-          actor: currentUser,
-          actorName: actorName,
-          actorProfileImage: actorProfileImage,
-          type: "like",
-          postId: post._id.toString(),
-        });
-        await newNotification.save();
-
-        if (global.io) {
-          global.io.to(post.author).emit("notification", newNotification);
-        }
-      }
-    } else {
-      post.likes.splice(index, 1);
-    }
-    await post.save();
-    res.json({ count: post.likes.length, liked: post.likes.includes(currentUser) });
-  } catch (error) {
-    console.error("Error in likePost:", error);
-    res.status(500).json({ error: "Failed to update like." });
-  }
-};
-
-// Get a single post by id
-exports.getPostById = async (req, res) => {
-  const { postId } = req.params;
-  try {
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ error: "Post not found" });
-    res.json(post);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.addComment = async (req, res) => {
-  const { postId } = req.params;
-  const { text, author, profileImage, currentUser } = req.body;
-  if (!text) {
-    return res.status(400).json({ error: "Comment text is required." });
-  }
-  try {
-    const newComment = new Comment({
-      postId,
-      author: author || "Anonymous",
-      text,
-      profileImage: profileImage || "default-avatar.png",
-    });
-    await newComment.save();
-
-    const post = await Post.findById(postId);
-    if (post && post.author !== currentUser) {
-      const newNotification = new Notification({
-        recipient: post.author,
-        actor: currentUser,
-        actorName: author,
-        actorProfileImage: profileImage,
-        type: "comment",
-        postId: post._id.toString(),
-      });
-      await newNotification.save();
-
-      if (global.io) {
-        global.io.to(post.author).emit("notification", newNotification);
-      }
-    }
-    res.status(201).json(newComment);
-  } catch (error) {
-    console.error("Error in addComment:", error);
-    res.status(500).json({ error: "Failed to add comment." });
-  }
-};
-
-// Report a comment
+// Report comment remains the same
 exports.reportComment = async (req, res) => {
   const { postId, commentId } = req.params;
   const { currentUser } = req.body;
@@ -258,13 +251,10 @@ exports.reportComment = async (req, res) => {
     const comment = await Comment.findById(commentId);
     if (!comment)
       return res.status(404).json({ error: "Comment not found." });
-    if (comment.author === currentUser) {
-      return res
-        .status(400)
-        .json({ error: "You cannot report your own comment." });
+    if (String(comment.authorId) === req.user.id) {
+      return res.status(400).json({ error: "You cannot report your own comment." });
     }
     comment.reported = true;
-    // Set reportedAt to the current time (if you need the timestamp later)
     comment.reportedAt = new Date();
     await comment.save();
     res.json({ message: "Comment reported successfully." });
@@ -273,5 +263,3 @@ exports.reportComment = async (req, res) => {
     res.status(500).json({ error: "Failed to report comment." });
   }
 };
-
-
