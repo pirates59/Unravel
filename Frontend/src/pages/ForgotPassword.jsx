@@ -34,12 +34,11 @@ const ForgotPassword = () => {
 
   const handleOtpChange = (index, event) => {
     const { value } = event.target;
-    // Allow only a single digit (or empty)
     if (/^\d?$/.test(value)) {
       const otpArray = [...otp];
       otpArray[index] = value;
       setOtp(otpArray);
-      // Auto-focus next input if a digit was entered
+      // Move focus to next field if a digit was entered.
       if (value && index < inputRefs.length - 1) {
         inputRefs[index + 1].current.focus();
       }
@@ -48,20 +47,17 @@ const ForgotPassword = () => {
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
-    // Join the OTP array to form a 6-digit string
     const otpStr = otp.join("");
-    
-    // Validate that the OTP is exactly 6 digits
     if (otpStr.length !== 6) {
       setError("Please enter a valid 6-digit OTP.");
       return;
     }
-    
     try {
       setError("");
       const response = await axios.post("http://localhost:3001/verify-otp", { email, otp: otpStr });
       if (response.data.success) {
-        navigate("/reset", { state: { email } }); // Pass email in state for reset page
+        // Passing isTherapist: true for the doctor reset flow
+        navigate("/reset", { state: { email, isTherapist: true } });
       } else {
         setError(response.data.message || "Invalid OTP. Try again.");
       }
@@ -69,7 +65,6 @@ const ForgotPassword = () => {
       setError(err.response?.data?.message || "An error occurred. Try again.");
     }
   };
-  
 
   const handleBack = () => {
     if (showOtp) {
@@ -162,14 +157,12 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const email = location.state?.email;
+  // Get the flag to know if this is the therapist (doctor) reset flow.
+  const isTherapist = location.state?.isTherapist;
 
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  };
-
-  const handleConfirmPasswordChange = (e) => {
-    setConfirmPassword(e.target.value);
-  };
+  const handlePasswordChange = (e) => setPassword(e.target.value);
+  const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -178,10 +171,14 @@ const ResetPassword = () => {
       return;
     }
     try {
-      const email = location.state?.email;
       const response = await axios.post("http://localhost:3001/reset-password", { email, password });
       if (response.data.success) {
-        navigate("/login"); // Redirect to login after successful reset
+        // Redirect based on the flag passed from login/OTP flow.
+        if (isTherapist) {
+          navigate("/therapist");
+        } else {
+          navigate("/login");
+        }
       } else {
         setError(response.data.message || "Failed to reset password.");
       }

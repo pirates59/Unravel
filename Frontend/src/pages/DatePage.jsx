@@ -10,12 +10,54 @@ import user from "../assets/user.png";
 import close from "../assets/close.png";
 import appoint from "../assets/appoint.png";
 
+// Helper: Map JS day number to abbreviated day name.
+const dayMap = {
+  0: "Sun",
+  1: "Mon",
+  2: "Tue",
+  3: "Wed",
+  4: "Thu",
+  5: "Fri",
+  6: "Sat",
+};
+
+// Helper: Convert a time string (e.g. "9:00 AM") to minutes since midnight.
+const convertTimeStringToMinutes = (timeStr) => {
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+};
+
+// Helper: Given start and end time strings, generate one-hour slots.
+// (Adjust interval as needed.)
+const generateTimeSlots = (startTime, endTime) => {
+  const slots = [];
+  const startMinutes = convertTimeStringToMinutes(startTime);
+  const endMinutes = convertTimeStringToMinutes(endTime);
+  // Generate slots while a full one-hour slot can fit.
+  for (let minutes = startMinutes; minutes + 60 <= endMinutes; minutes += 60) {
+    // Convert back to a formatted time string (simple conversion)
+    let hrs = Math.floor(minutes / 60);
+    let mins = minutes % 60;
+    const modifier = hrs >= 12 ? "PM" : "AM";
+    hrs = hrs % 12;
+    if (hrs === 0) hrs = 12;
+    const formatted = `${hrs}:${mins.toString().padStart(2, "0")} ${modifier}`;
+    slots.push(formatted);
+  }
+  return slots;
+};
+
 const DatePage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
   const [bookedDates, setBookedDates] = useState({});
   const [showError, setShowError] = useState(false);
+  const [therapistInfo, setTherapistInfo] = useState(null);
+  const [timeSlots, setTimeSlots] = useState([]);
   const navigate = useNavigate();
 
   const months = [
@@ -32,8 +74,8 @@ const DatePage = () => {
     "November",
     "December",
   ];
-  const timeSlots = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM"];
 
+  // Fetch booked dates for the month.
   useEffect(() => {
     const fetchBookedDates = async () => {
       try {
@@ -52,11 +94,35 @@ const DatePage = () => {
     fetchBookedDates();
   }, [currentDate]);
 
+  // Retrieve stored booking info.
   useEffect(() => {
     const storedBooking = JSON.parse(localStorage.getItem("temporaryBooking"));
     if (storedBooking) {
       setSelectedDate(new Date(storedBooking.date));
       setSelectedTime(storedBooking.time);
+    }
+  }, []);
+
+  // Fetch therapist details from backend based on selected therapist name.
+  useEffect(() => {
+    const selectedTherapist = localStorage.getItem("selectedTherapist");
+    if (selectedTherapist) {
+      axios
+        .get("http://localhost:3001/therapists")
+        .then((res) => {
+          const info = res.data.find(
+            (doc) => doc.name === selectedTherapist
+          );
+          if (info) {
+            setTherapistInfo(info);
+            // Generate time slots dynamically from the therapist's working hours.
+            if (info.startTime && info.endTime) {
+              const slots = generateTimeSlots(info.startTime, info.endTime);
+              setTimeSlots(slots);
+            }
+          }
+        })
+        .catch((err) => console.error("Error fetching therapist info:", err));
     }
   }, []);
 
@@ -67,7 +133,8 @@ const DatePage = () => {
   };
 
   const handleDateChange = (date) => {
-    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    // Normalize to local date.
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
     setSelectedDate(localDate);
     setSelectedTime("");
     localStorage.setItem("temporaryBooking", JSON.stringify({ date: localDate.toISOString(), time: "" }));
@@ -75,10 +142,7 @@ const DatePage = () => {
 
   const handleTimeChange = (time) => {
     setSelectedTime(time);
-    localStorage.setItem(
-      "temporaryBooking",
-      JSON.stringify({ date: selectedDate.toISOString(), time })
-    );
+    localStorage.setItem("temporaryBooking", JSON.stringify({ date: selectedDate.toISOString(), time }));
   };
 
   const handleBooking = () => {
@@ -91,44 +155,55 @@ const DatePage = () => {
     navigate("/appointment");
   };
 
+  // Render days: disable days not in therapist's available days.
   const renderDaysInMonth = () => {
     const days = [];
     const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize time for correct comparison
-  
+    today.setHours(0, 0, 0, 0);
+
+    // Create blank days for alignment
     for (let i = 0; i < startDate.getDay(); i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
-  
+
     for (let day = 1; day <= endDate.getDate(); day++) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       date.setHours(0, 0, 0, 0);
-  
+
       const isPastDate = date < today && date.toDateString() !== today.toDateString();
-      const isBooked = bookedDates[`${date.getFullYear()}-${date.getMonth() + 1}-${day}`];
-  
+      
+      // If a therapist is selected, check if day is one of the therapist's available days.
+      let availableToday = true;
+      if (therapistInfo && therapistInfo.daysAvailable) {
+        const dayAbbrev = dayMap[date.getDay()]; // e.g., "Sun", "Mon", etc.
+        availableToday = therapistInfo.daysAvailable.includes(dayAbbrev);
+      }
+      
+      // Also check if the date is booked (using your bookedDates structure)
+      const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${day}`;
+      const isBooked = bookedDates[dateKey];
+
       days.push(
         <button
           key={day}
-          disabled={isPastDate || (isBooked && isBooked.isFullyBooked)}
-          className={`w-8 h-8 flex items-center justify-center rounded-full
-             ${isPastDate ? "text-gray-400 cursor-not-allowed" : ""}
+          disabled={isPastDate || !availableToday || (isBooked && isBooked.isFullyBooked)}
+          className={`w-8 h-8 flex items-center justify-center rounded-full 
+            ${isPastDate || !availableToday ? "text-gray-400 cursor-not-allowed" : ""}
             ${isBooked && isBooked.isFullyBooked ? "bg-red-400 text-white cursor-not-allowed" : ""}
             ${selectedDate?.toDateString() === date.toDateString() ? "bg-green-500 text-white" : "hover:bg-gray-200"}
           `}
-          onClick={() => !isPastDate && handleDateChange(date)}
+          onClick={() => !isPastDate && availableToday && handleDateChange(date)}
         >
           {day}
         </button>
       );
     }
-  
     return days;
   };
-  
-  
+
+  // Render available time slots using the dynamically generated slots.
   const renderTimes = () => {
     const formattedDate = selectedDate
       ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`
@@ -166,7 +241,7 @@ const DatePage = () => {
       <div className="flex-1 bg-[#EDF6FF] flex items-center justify-center px-20">
         <div className="flex w-[800px] h-[500px] bg-white rounded-lg shadow-lg">
           <div className="w-[250px] bg-[#FEE8C9] rounded-l-lg p-4 flex flex-col justify-start">
-          <ul className="space-y-3">
+            <ul className="space-y-3">
               <li className="relative flex items-center bg-white rounded-lg p-3">
                 <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
@@ -195,7 +270,6 @@ const DatePage = () => {
                 </div>
               </li>
             </ul>
-
           </div>
           <div className="flex-1 p-6 flex flex-col justify-between">
             <div>
@@ -210,8 +284,8 @@ const DatePage = () => {
                   </NavLink>
                   <h2 className="text-lg font-bold">Date and Time</h2>
                 </div>
-                  <NavLink to="/landing">
-                <img src={close} alt="Close Icon" className="h-5 w-5" />
+                <NavLink to="/landing">
+                  <img src={close} alt="Close Icon" className="h-5 w-5" />
                 </NavLink>
               </div>
 
@@ -223,7 +297,9 @@ const DatePage = () => {
                   </h3>
                   <button onClick={() => handleMonthChange(1)}>&gt;</button>
                 </div>
-                <div className="grid grid-cols-7 gap-2">{renderDaysInMonth()}</div>
+                <div className="grid grid-cols-7 gap-2">
+                  {renderDaysInMonth()}
+                </div>
               </div>
               <div>{renderTimes()}</div>
               {showError && (

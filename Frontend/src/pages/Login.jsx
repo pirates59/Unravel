@@ -1,3 +1,4 @@
+// Login.jsx
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -17,11 +18,9 @@ function Login() {
     setErrorMessage("");
     try {
       const result = await axios.post("http://localhost:3001/login", { email, password });
-      
       if (result.data.success) {
         const { user, token } = result.data;
-        
-        // Save session details in localStorage
+        // Save session details in localStorage.
         localStorage.setItem("token", token);
         localStorage.setItem("username", user.name);
         localStorage.setItem("role", user.role);
@@ -29,14 +28,23 @@ function Login() {
         localStorage.setItem("profileImage", user.profileImage || "upload.png");
         localStorage.setItem("userId", user._id);
         
-        // Redirect based on role and first‑login status
+        // Redirection based on role and whether it's the first login.
         if (user.role === "admin") {
-          navigate("/Users");
-        } else if (user.isFirstLogin) {
-          // Force first‑time users to reset password
-          navigate("/reset", { state: { email: user.email } });
+          navigate("/Users"); // Admin dashboard.
+        } else if (user.role === "doctor") {
+          // For a doctor/therapist first login, pass the isTherapist flag.
+          if (user.isFirstLogin) {
+            navigate("/reset", { state: { email: user.email, isTherapist: true } });
+          } else {
+            navigate("/therapist");
+          }
         } else {
-          navigate("/recent");
+          // For a normal user.
+          if (user.isFirstLogin) {
+            navigate("/profile", { state: { email: user.email } });
+          } else {
+            navigate("/recent");
+          }
         }
       } else {
         setErrorMessage(result.data.message);

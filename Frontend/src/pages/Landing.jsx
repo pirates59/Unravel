@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import axios from "axios";
 import home from "../assets/home.png";
 import logo1 from "../assets/logo1.png";
 import right from "../assets/right.png";
 import landing from "../assets/landing.gif";
-import therapist1 from "../assets/therapist1.png";
-import therapist2 from "../assets/therapist2.png";
-import therapist3 from "../assets/therapist3.png";
 import appoint from "../assets/appoint.png";
 import community from "../assets/community.png";
 import skill from "../assets/skill.png";
@@ -37,7 +35,14 @@ const DynamicText = () => {
 };
 
 const Landing = () => {
-  
+  const [therapists, setTherapists] = useState([]);
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/therapists")
+      .then((res) => setTherapists(res.data))
+      .catch((err) => console.error("Error fetching therapists:", err));
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
@@ -124,45 +129,35 @@ const Landing = () => {
         </div>
       </div>
 
-    {/* Meet Our Therapists Section */}
-    <div className="text-center py-8">
+      <div className="text-center py-8">
         <h2 className="text-2xl font-bold text-gray-900">Meet our Therapists</h2>
         <div className="flex flex-col lg:flex-row justify-center items-center gap-8 mt-8">
-          {/* Therapist Card 1 */}
-          <div className="bg-white shadow-lg rounded-xl p-6 text-center w-80">
-            <img src={therapist1} alt="John Carter" className="w-24 h-24 mx-auto rounded-full mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">John Carter</h3>
-            <p className="text-gray-600 text-sm font-bold">Senior Psychologist</p>
-            <p className="text-gray-600 mt-2">Lorem ipsum dolor sit amet consecte adipiscing elit amet hendrerit pretium nulla sed.</p>
-            <NavLink to="/service">
-            <button className="mt-4 bg-[#EC993D] text-black px-5 py-2 rounded-xl hover:bg-[#d8802c] transition duration-300">Book Now</button>       
-           </NavLink> 
-           
-          </div>
-
-          {/* Therapist Card 2 */}
-          <div className="bg-white shadow-lg rounded-xl p-6 text-center w-80">
-            <img src={therapist2} alt="Sophie Moore" className="w-24 h-24 mx-auto rounded-full mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Sophie Moore</h3>
-            <p className="text-gray-600 text-sm font-bold">Specialist</p>
-            <p className="text-gray-600 mt-2">Lorem ipsum dolor sit amet consecte adipiscing elit amet hendrerit pretium nulla sed .</p>
-            <NavLink to="/service">
-            <button className="mt-4 bg-[#EC993D] text-black px-5 py-2 rounded-xl hover:bg-[#d8802c] transition duration-300">Book Now</button>       
-           </NavLink> 
-          </div>
-
-          {/* Therapist Card 3 */}
-          <div className="bg-white shadow-lg rounded-xl p-6 text-center w-80">
-            <img src={therapist3} alt="Matt Cannon" className="w-24 h-24 mx-auto rounded-full mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Matt Cannon</h3>
-            <p className="text-gray-600 text-sm font-bold">Psychologist</p>
-            <p className="text-gray-600 mt-2">Lorem ipsum dolor sit amet consecte adipiscing elit amet hendrerit pretium nulla sed .</p>
-            <NavLink to="/service">
-            <button className="mt-4 bg-[#EC993D] text-black px-5 py-2 rounded-xl hover:bg-[#d8802c] transition duration-300">Book Now</button>       
-           </NavLink> 
-          </div>
+          {therapists.map((therapist, index) => (
+            <div key={therapist._id || index} className="bg-white shadow-lg rounded-xl p-6 text-center w-80">
+              <img
+                src={
+                  therapist.image
+                    ? `http://localhost:3001/${therapist.image}`
+                    : "https://via.placeholder.com/150?text=No+Image"
+                }
+                alt={therapist.name}
+                className="w-24 h-24 mx-auto rounded-full mb-4"
+              />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{therapist.name}</h3>
+              <p className="text-gray-600 text-sm font-bold">{therapist.specialization}</p>
+              <p className="text-gray-600 mt-2">
+                Lorem ipsum dolor sit amet consecte adipiscing elit amet hendrerit pretium nulla sed.
+              </p>
+              <NavLink to="/service">
+                <button className="mt-4 bg-[#EC993D] text-black px-5 py-2 rounded-xl hover:bg-[#d8802c] transition duration-300">
+                  Book Now
+                </button>
+              </NavLink>
+            </div>
+          ))}
         </div>
       </div>
+
        {/* Therapy Section*/}
        <div className="bg-[url('C:\Users\Admin\Desktop\Unravel\Frontend\src\assets\therapy.png')] bg-cover bg-center py-8 mt-4">
         
