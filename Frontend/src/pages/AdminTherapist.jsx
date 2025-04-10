@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import plusIcon from "../assets/pluss.png";
 import swal from "sweetalert";
@@ -11,12 +11,12 @@ const AdminTherapist = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [specialization, setSpecialization] = useState("");
-  const [daysAvailable, setDaysAvailable] = useState([]); // multiple selection via toggles
+  const [daysAvailable, setDaysAvailable] = useState([]);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [imageFile, setImageFile] = useState(null);
 
-  // Error states for validations
+  // Error states
   const [errors, setErrors] = useState({
     name: "",
     email: "",
@@ -27,26 +27,10 @@ const AdminTherapist = () => {
     image: "",
   });
 
-  // Time options for dropdown (adjust as needed)
-  const timeOptions = [
-    "9:00 a.m.",
-    "10:00 a.m.",
-    "11:00 a.m.",
-    "12:00 p.m.",
-    "1:00 p.m.",
-    "2:00 p.m.",
-    "3:00 p.m.",
-    "4:00 p.m.",
-    "5:00 p.m.",
-  ];
-
-  // Days displayed as toggle circles (Sunday to Friday)
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
-
-  // Specialization options
+  const timeOptions = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00  PM"];
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri","Sat"];
   const specializationOptions = ["Individual Therapy", "Couple Therapy"];
 
-  // Fetch therapists on mount
   useEffect(() => {
     fetchTherapists();
   }, []);
@@ -62,7 +46,7 @@ const AdminTherapist = () => {
 
   const validateForm = () => {
     let valid = true;
-    let newErrors = {
+    const newErrors = {
       name: "",
       email: "",
       specialization: "",
@@ -72,7 +56,6 @@ const AdminTherapist = () => {
       image: "",
     };
 
-    // Validate name: required and not purely numeric
     if (!name.trim()) {
       newErrors.name = "*Required";
       valid = false;
@@ -81,7 +64,6 @@ const AdminTherapist = () => {
       valid = false;
     }
 
-    // Validate email: required and must contain "@"
     if (!email.trim()) {
       newErrors.email = "*Required";
       valid = false;
@@ -90,31 +72,26 @@ const AdminTherapist = () => {
       valid = false;
     }
 
-    // Validate specialization: must be selected
     if (!specialization.trim()) {
       newErrors.specialization = "*Required";
       valid = false;
     }
 
-    // Validate daysAvailable: must select at least one day
-    if (!daysAvailable.length) {
+    if (daysAvailable.length === 0) {
       newErrors.daysAvailable = "*Required";
       valid = false;
     }
 
-    // Validate startTime
     if (!startTime.trim()) {
       newErrors.startTime = "*Required";
       valid = false;
     }
 
-    // Validate endTime
     if (!endTime.trim()) {
       newErrors.endTime = "*Required";
       valid = false;
     }
 
-    // Validate image: required field
     if (!imageFile) {
       newErrors.image = "*Required";
       valid = false;
@@ -125,25 +102,22 @@ const AdminTherapist = () => {
   };
 
   const handleCreateTherapist = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
+
     try {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("email", email);
       formData.append("specialization", specialization);
-      // Convert daysAvailable array to JSON string (adjust if your backend uses a different format)
       formData.append("daysAvailable", JSON.stringify(daysAvailable));
       formData.append("startTime", startTime);
       formData.append("endTime", endTime);
       formData.append("image", imageFile);
 
       const res = await axios.post("http://localhost:3001/therapists", formData);
-      // Add newly created therapist to the list
-      setTherapists((prev) => [...prev, res.data]);
+      setTherapists(prev => [...prev, res.data]);
 
-      // Close modal and reset form + errors
+      // Reset
       setShowModal(false);
       setName("");
       setEmail("");
@@ -166,60 +140,51 @@ const AdminTherapist = () => {
     }
   };
 
-  // Updated delete function with SweetAlert confirmation for deleting a therapist
-  const handleDeleteTherapist = (id) => {
+  const handleDeleteTherapist = id => {
     swal({
       title: "Delete Therapist",
       text: "Are you sure you want to delete this therapist?",
       icon: "warning",
       buttons: true,
       dangerMode: true,
-    }).then((willDelete) => {
+    }).then(willDelete => {
       if (willDelete) {
         axios
           .delete(`http://localhost:3001/therapists/${id}`)
           .then(() => {
             swal("Deleted!", "The therapist has been deleted.", { icon: "success" });
-            setTherapists((prev) => prev.filter((t) => t._id !== id));
+            setTherapists(prev => prev.filter(t => t._id !== id));
           })
-          .catch((error) => {
-            console.error("Error deleting therapist:", error);
+          .catch(err => {
+            console.error("Error deleting therapist:", err);
             swal("Error", "Unable to delete the therapist.", { icon: "error" });
           });
       }
     });
   };
 
-  // Toggle day selection in daysAvailable
-  const handleDayToggle = (day) => {
-    if (daysAvailable.includes(day)) {
-      // If day is already selected, remove it
-      setDaysAvailable(daysAvailable.filter((d) => d !== day));
-    } else {
-      // Otherwise, add it
-      setDaysAvailable([...daysAvailable, day]);
-    }
+  const handleDayToggle = day => {
+    setDaysAvailable(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
   };
 
   return (
     <div className="p-6 w-full">
       {/* Top bar */}
       <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-6">
-          <button className="bg-[#EC993D] px-6 py-2 text-white rounded-lg">
-            Therapists
-          </button>
-        </div>
+        <button className="bg-[#EC993D] px-6 py-2 text-white rounded-lg">
+          Therapists
+        </button>
       </div>
 
-      {/* Grid of therapist cards */}
+      {/* Therapist grid */}
       <div className="grid grid-cols-4 gap-6">
-        {therapists.map((therapist) => (
+        {therapists.map(therapist => (
           <div
             key={therapist._id}
             className="bg-gray-100 rounded-lg shadow p-4 flex flex-col items-center"
           >
-            {/* Therapist image (circular) */}
             <div className="w-28 h-28 mb-3">
               <img
                 src={
@@ -236,18 +201,16 @@ const AdminTherapist = () => {
             </h2>
             <p className="text-sm text-gray-700 mb-1">{therapist.specialization}</p>
             <p className="text-sm text-gray-700 mb-1">{therapist.email}</p>
-
-            {/* Days/time display */}
-            <p className="text-sm text-gray-700 ">
+            <p className="text-sm text-gray-700">
               {therapist.daysAvailable &&
-                JSON.parse(therapist.daysAvailable).join(", ")}{" "}
+                (Array.isArray(therapist.daysAvailable)
+                  ? therapist.daysAvailable.join(", ")
+                  : JSON.parse(therapist.daysAvailable).join(", "))
+              }{" "}
               {therapist.startTime && therapist.endTime && (
-                <>
-                  {therapist.startTime} to {therapist.endTime}
-                </>
+                <> {therapist.startTime} to {therapist.endTime}</>
               )}
             </p>
-
             <button
               onClick={() => handleDeleteTherapist(therapist._id)}
               className="mt-3 bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
@@ -257,21 +220,17 @@ const AdminTherapist = () => {
           </div>
         ))}
 
-        {/* Plus icon card (for adding new therapist) */}
+        {/* Add new */}
         <div
           onClick={() => setShowModal(true)}
           className="bg-gray-100 w-full h-[320px] rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
         >
-          <img
-            src={plusIcon}
-            alt="Add"
-            className="w-10 h-10 text-gray-400 mb-2"
-          />
+          <img src={plusIcon} alt="Add" className="w-10 h-10 mb-2" />
           <span className="text-gray-600 font-medium">Add Therapist</span>
         </div>
       </div>
 
-      {/* Modal for creating a new therapist */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow max-w-md w-full relative">
@@ -283,12 +242,10 @@ const AdminTherapist = () => {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
-              {errors.name && (
-                <small className="text-red-500">{errors.name}</small>
-              )}
+              {errors.name && <small className="text-red-500">{errors.name}</small>}
             </label>
 
             {/* Email */}
@@ -297,26 +254,24 @@ const AdminTherapist = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
-              {errors.email && (
-                <small className="text-red-500">{errors.email}</small>
-              )}
+              {errors.email && <small className="text-red-500">{errors.email}</small>}
             </label>
 
-            {/* Specialization (Dropdown) */}
+            {/* Specialization */}
             <label className="block mb-2">
               <span>Specialization:</span>
               <select
                 value={specialization}
-                onChange={(e) => setSpecialization(e.target.value)}
+                onChange={e => setSpecialization(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">Select Specialization</option>
-                {specializationOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                {specializationOptions.map(opt => (
+                  <option key={opt} value={opt}>
+                    {opt}
                   </option>
                 ))}
               </select>
@@ -325,22 +280,19 @@ const AdminTherapist = () => {
               )}
             </label>
 
-            {/* Days Available (Circle Toggles) */}
+            {/* Days */}
             <label className="block mb-2">
               <span>Days Available:</span>
               <div className="flex space-x-2 mt-2">
-                {dayLabels.map((day) => {
-                  const isSelected = daysAvailable.includes(day);
+                {dayLabels.map(day => {
+                  const sel = daysAvailable.includes(day);
                   return (
                     <div
                       key={day}
                       onClick={() => handleDayToggle(day)}
-                      className={`cursor-pointer w-12 h-12 rounded-full flex items-center justify-center 
-                        ${
-                          isSelected
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 text-black"
-                        }`}
+                      className={`cursor-pointer w-12 h-12 rounded-full flex items-center justify-center ${
+                        sel ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                      }`}
                     >
                       {day}
                     </div>
@@ -348,22 +300,20 @@ const AdminTherapist = () => {
                 })}
               </div>
               {errors.daysAvailable && (
-                <small className="text-red-500 block">
-                  {errors.daysAvailable}
-                </small>
+                <small className="text-red-500 block">{errors.daysAvailable}</small>
               )}
             </label>
 
-            {/* Start Time (Dropdown) */}
+            {/* Start/End Time */}
             <label className="block mb-2">
               <span>Start time:</span>
               <select
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={e => setStartTime(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">Select start time</option>
-                {timeOptions.map((time) => (
+                {timeOptions.map(time => (
                   <option key={time} value={time}>
                     {time}
                   </option>
@@ -374,16 +324,15 @@ const AdminTherapist = () => {
               )}
             </label>
 
-            {/* End Time (Dropdown) */}
             <label className="block mb-2">
               <span>End time:</span>
               <select
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
+                onChange={e => setEndTime(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">Select end time</option>
-                {timeOptions.map((time) => (
+                {timeOptions.map(time => (
                   <option key={time} value={time}>
                     {time}
                   </option>
@@ -396,18 +345,16 @@ const AdminTherapist = () => {
 
             {/* Image */}
             <label className="block mb-4">
-              <span className="text-gray-700">Image:</span>
+              <span>Image:</span>
               <input
                 type="file"
-                onChange={(e) => setImageFile(e.target.files[0])}
+                onChange={e => setImageFile(e.target.files[0])}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
-              {errors.image && (
-                <small className="text-red-500">{errors.image}</small>
-              )}
+              {errors.image && <small className="text-red-500">{errors.image}</small>}
             </label>
 
-            {/* Buttons */}
+            {/* Actions */}
             <div className="flex justify-end">
               <button
                 onClick={() => setShowModal(false)}

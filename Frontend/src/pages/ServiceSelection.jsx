@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, NavLink } from "react-router-dom";
+import axios from "axios";
 import services from "../assets/service.png";
 import calendar from "../assets/calendar.png";
 import user from "../assets/user.png";
@@ -11,10 +12,11 @@ import Footer from "../components/Footer";
 const ServiceSelection = () => {
   const [service, setService] = useState("");
   const [therapist, setTherapist] = useState("");
+  const [therapistList, setTherapistList] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  const location = useLocation();
 
   useEffect(() => {
     const storedService = localStorage.getItem("selectedService");
@@ -31,7 +33,23 @@ const ServiceSelection = () => {
     } else if (storedTherapist) {
       setTherapist(storedTherapist);
     }
+
+    // Fetch therapists from backend
+    axios
+      .get("http://localhost:3001/therapists")
+      .then((res) => setTherapistList(res.data))
+      .catch((err) => console.error("Error fetching therapists:", err));
   }, [location.state]);
+
+  // Filter therapist list based on selected service.
+  const filteredTherapists = therapistList.filter((doc) => {
+    if (service.includes("Individual Therapy")) {
+      return doc.specialization === "Individual Therapy";
+    } else if (service.includes("Couple Therapy")) {
+      return doc.specialization === "Couple Therapy";
+    }
+    return true;
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,7 +79,6 @@ const ServiceSelection = () => {
       const result = await response.json();
 
       if (result.success) {
-      
         navigate("/date", { state: { service, therapist } });
       } else {
         console.error(result.message);
@@ -90,7 +107,7 @@ const ServiceSelection = () => {
                 </div>
               </li>
               <li className="relative flex items-center bg-white rounded-lg p-3">
-                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px] bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
+                <div className="absolute -right-0 mr-4 top-1/2 transform -translate-y-1/2 h-[16px] w-[16px]  bg-white rounded-full border-2 border-[#000000] shadow-lg"></div>
                 <div className="flex items-center">
                   <img src={calendar} alt="Calendar Icon" className="h-5 w-5" />
                   <span className="ml-2 font-semibold text-sm">Date and Time</span>
@@ -109,8 +126,8 @@ const ServiceSelection = () => {
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold mb-4">Service Selection</h2>
               <NavLink to="/landing">
-              <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
-                </NavLink>
+                <img src={close} alt="Close Icon" className="h-5 w-5 mb-4" />
+              </NavLink>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col justify-between flex-grow">
               <div>
@@ -122,8 +139,8 @@ const ServiceSelection = () => {
                     onChange={(e) => setService(e.target.value)}
                   >
                     <option value="">Select Service</option>
-                    <option value="Individual Therapy (In-Person)">Individual Therapy (In-Person)</option>
-                    <option value="Couple Therapy (In-Person)">Couple Therapy (In-Person)</option>
+                    <option value="Individual Therapy ">Individual Therapy</option>
+                    <option value="Couple Therapy ">Couple Therapy</option>
                   </select>
                   {errors.service && <p className="text-red-500 text-sm mt-1">{errors.service}</p>}
                 </div>
@@ -135,9 +152,11 @@ const ServiceSelection = () => {
                     onChange={(e) => setTherapist(e.target.value)}
                   >
                     <option value="">Select Therapist</option>
-                    <option value="Mr. Abhinash Thapa">Mr. Abhinash Thapa</option>
-                    <option value="Mrs. Lekha Chaudhary">Mrs. Lekha Chaudhary</option>
-                    <option value="Mr. Bijay Thakur">Mr. Bijay Thakur</option>
+                    {filteredTherapists.map((doc) => (
+                      <option key={doc._id} value={doc.name}>
+                        {doc.name}
+                      </option>
+                    ))}
                   </select>
                   {errors.therapist && <p className="text-red-500 text-sm mt-1">{errors.therapist}</p>}
                 </div>

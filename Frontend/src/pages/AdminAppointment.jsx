@@ -52,6 +52,7 @@ const AdminAppointment = () => {
             <tr>
               <th className="p-3 font-medium text-left">Name</th>
               <th className="p-3 font-medium text-left">Service</th>
+              <th className="p-3 font-medium text-left">Therapist</th>
               <th className="p-3 font-medium text-left">Date</th>
               <th className="p-3 font-medium text-left">Time</th>
               <th className="p-3 font-medium text-left">Contact</th>
@@ -64,6 +65,7 @@ const AdminAppointment = () => {
                 <tr key={index} className="border-[1px] border-gray-200 relative">
                   <td className="p-3 text-[#6C757D]">{`${appointment.firstName} ${appointment.lastName}`}</td>
                   <td className="p-3 text-[#6C757D]">{appointment.service}</td>
+                  <td className="p-3 text-[#6C757D]">{appointment.therapist}</td>
                   <td className="p-3 text-[#6C757D]">{appointment.date}</td>
                   <td className="p-3 text-[#6C757D]">{appointment.time}</td>
                   <td className="p-3 text-[#6C757D]">{appointment.contact}</td>
