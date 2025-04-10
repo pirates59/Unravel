@@ -1,4 +1,3 @@
-// Login.jsx
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -6,10 +5,13 @@ import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import loginImg from "../assets/login.png";
+import eyeIcon from "../assets/eye.png";       // icon when password is hidden
+import eyeOffIcon from "../assets/eye-off.png";  // icon when password is shown
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // show/hide state
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
@@ -79,13 +81,22 @@ function Login() {
                 className="w-full mb-4 p-2 border rounded"
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                className="w-full mb-4 p-2 border rounded"
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              {/* Password input with toggle */}
+              <div className="relative mb-4">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  className="w-full p-2 border rounded"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <img
+                  src={showPassword ? eyeOffIcon : eyeIcon}
+                  alt={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-2 transform -translate-y-1/2 h-5 w-5 cursor-pointer"
+                />
+              </div>
               {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
               <NavLink to="/forgot">
                 <p className="text-right text-sm text-gray-500 mb-4">Forgot password</p>

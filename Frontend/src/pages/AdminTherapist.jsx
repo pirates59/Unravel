@@ -3,6 +3,7 @@ import axios from "axios";
 import plusIcon from "../assets/pluss.png";
 import swal from "sweetalert";
 
+
 const AdminTherapist = () => {
   const [therapists, setTherapists] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -27,8 +28,8 @@ const AdminTherapist = () => {
     image: "",
   });
 
-  const timeOptions = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00  PM"];
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri","Sat"];
+  const timeOptions = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM"];
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const specializationOptions = ["Individual Therapy", "Couple Therapy"];
 
   useEffect(() => {
@@ -115,7 +116,7 @@ const AdminTherapist = () => {
       formData.append("image", imageFile);
 
       const res = await axios.post("http://localhost:3001/therapists", formData);
-      setTherapists(prev => [...prev, res.data]);
+      setTherapists((prev) => [...prev, res.data]);
 
       // Reset
       setShowModal(false);
@@ -140,22 +141,22 @@ const AdminTherapist = () => {
     }
   };
 
-  const handleDeleteTherapist = id => {
+  const handleDeleteTherapist = (id) => {
     swal({
       title: "Delete Therapist",
       text: "Are you sure you want to delete this therapist?",
       icon: "warning",
       buttons: true,
       dangerMode: true,
-    }).then(willDelete => {
+    }).then((willDelete) => {
       if (willDelete) {
         axios
           .delete(`http://localhost:3001/therapists/${id}`)
           .then(() => {
             swal("Deleted!", "The therapist has been deleted.", { icon: "success" });
-            setTherapists(prev => prev.filter(t => t._id !== id));
+            setTherapists((prev) => prev.filter((t) => t._id !== id));
           })
-          .catch(err => {
+          .catch((err) => {
             console.error("Error deleting therapist:", err);
             swal("Error", "Unable to delete the therapist.", { icon: "error" });
           });
@@ -163,9 +164,9 @@ const AdminTherapist = () => {
     });
   };
 
-  const handleDayToggle = day => {
-    setDaysAvailable(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+  const handleDayToggle = (day) => {
+    setDaysAvailable((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
 
@@ -180,7 +181,7 @@ const AdminTherapist = () => {
 
       {/* Therapist grid */}
       <div className="grid grid-cols-4 gap-6">
-        {therapists.map(therapist => (
+        {therapists.map((therapist) => (
           <div
             key={therapist._id}
             className="bg-gray-100 rounded-lg shadow p-4 flex flex-col items-center"
@@ -205,8 +206,7 @@ const AdminTherapist = () => {
               {therapist.daysAvailable &&
                 (Array.isArray(therapist.daysAvailable)
                   ? therapist.daysAvailable.join(", ")
-                  : JSON.parse(therapist.daysAvailable).join(", "))
-              }{" "}
+                  : JSON.parse(therapist.daysAvailable).join(", "))}
               {therapist.startTime && therapist.endTime && (
                 <> {therapist.startTime} to {therapist.endTime}</>
               )}
@@ -234,6 +234,13 @@ const AdminTherapist = () => {
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow max-w-md w-full relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-5 right-5 text-black hover:text-gray-700 text-3xl font-semibold"
+            >
+              &times;
+            </button>
             <h2 className="text-xl font-semibold mb-4">Add New Therapist</h2>
 
             {/* Name */}
@@ -242,7 +249,7 @@ const AdminTherapist = () => {
               <input
                 type="text"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
               {errors.name && <small className="text-red-500">{errors.name}</small>}
@@ -254,7 +261,7 @@ const AdminTherapist = () => {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
               {errors.email && <small className="text-red-500">{errors.email}</small>}
@@ -265,11 +272,11 @@ const AdminTherapist = () => {
               <span>Specialization:</span>
               <select
                 value={specialization}
-                onChange={e => setSpecialization(e.target.value)}
+                onChange={(e) => setSpecialization(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">Select Specialization</option>
-                {specializationOptions.map(opt => (
+                {specializationOptions.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>
@@ -284,7 +291,7 @@ const AdminTherapist = () => {
             <label className="block mb-2">
               <span>Days Available:</span>
               <div className="flex space-x-2 mt-2">
-                {dayLabels.map(day => {
+                {dayLabels.map((day) => {
                   const sel = daysAvailable.includes(day);
                   return (
                     <div
@@ -309,11 +316,11 @@ const AdminTherapist = () => {
               <span>Start time:</span>
               <select
                 value={startTime}
-                onChange={e => setStartTime(e.target.value)}
+                onChange={(e) => setStartTime(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">Select start time</option>
-                {timeOptions.map(time => (
+                {timeOptions.map((time) => (
                   <option key={time} value={time}>
                     {time}
                   </option>
@@ -328,11 +335,11 @@ const AdminTherapist = () => {
               <span>End time:</span>
               <select
                 value={endTime}
-                onChange={e => setEndTime(e.target.value)}
+                onChange={(e) => setEndTime(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               >
                 <option value="">Select end time</option>
-                {timeOptions.map(time => (
+                {timeOptions.map((time) => (
                   <option key={time} value={time}>
                     {time}
                   </option>
@@ -348,7 +355,7 @@ const AdminTherapist = () => {
               <span>Image:</span>
               <input
                 type="file"
-                onChange={e => setImageFile(e.target.files[0])}
+                onChange={(e) => setImageFile(e.target.files[0])}
                 className="mt-2 block w-full border border-gray-300 rounded px-2 py-1"
               />
               {errors.image && <small className="text-red-500">{errors.image}</small>}

@@ -83,9 +83,7 @@ const AdminCenter = () => {
             key={center._id}
             className="bg-[#E5E7E9] rounded-lg shadow p-4 flex flex-col items-end"
           >
-            <h2 className="font-semibold text-[#EC993D] mb-2">
-              {center.name}
-            </h2>
+            <h2 className="font-semibold text-[#EC993D] mb-2">{center.name}</h2>
             <img
               src={
                 center.image
@@ -121,7 +119,14 @@ const AdminCenter = () => {
       {/* Modal for creating a new center */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow max-w-sm w-full">
+          <div className="bg-white p-6 rounded shadow max-w-sm w-full relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-5 right-5 text-black hover:text-gray-700 text-3xl font-semibold"
+            >
+              &times;
+            </button>
             <h2 className="text-xl font-semibold mb-4">Create a New Center</h2>
             <label className="block mb-3">
               <span className="text-gray-700">Center Name:</span>

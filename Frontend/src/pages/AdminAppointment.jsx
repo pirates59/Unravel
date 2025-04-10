@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import dotIcon from "../assets/dot.png"; // Make sure the asset exists
+import empty from "../assets/empty.png";
 
 const AdminAppointment = () => {
   const [appointments, setAppointments] = useState([]);
@@ -74,8 +74,12 @@ const AdminAppointment = () => {
               ))
             ) : (
               <tr>
+                
                 <td colSpan="6" className="p-3 text-center text-gray-500">
-                  No appointments found.
+                <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
+                <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+                  No appointments found
+                  </div>
                 </td>
               </tr>
             )}
