@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 import dotIcon from "../assets/dot.png";
+import empty from "../assets/empty.png"; // Import the empty image
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -122,54 +123,65 @@ const Users = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user._id} className="border-[1px] border-gray-200 relative">
-                <td className="p-3">
-                  <img
-                    src={`http://localhost:3001/uploads/${user.profileImage}`}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full"
-                  />
-                </td>
-                <td className="p-3 text-[#6C757D]">{user.email}</td>
-                <td className="p-3 text-[#6C757D]">
-                  {user.name} {user.isFrozen && "(Frozen)"}
-                </td>
-                <td className="p-3 relative">
-                  <img
-                    src={dotIcon}
-                    alt="Options"
-                    className="w-4 h-4 ml-3 cursor-pointer"
-                    onClick={() => toggleDropdown(user._id)}
-                  />
-                  {dropdownUserId === user._id && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10"
-                    >
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => {
-                          handleFreeze(user._id);
-                          setDropdownUserId(null);
-                        }}
+            {users.length > 0 ? (
+              users.map((user) => (
+                <tr key={user._id} className="border-[1px] border-gray-200 relative">
+                  <td className="p-3">
+                    <img
+                      src={`http://localhost:3001/uploads/${user.profileImage}`}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  </td>
+                  <td className="p-3 text-[#6C757D]">{user.email}</td>
+                  <td className="p-3 text-[#6C757D]">
+                    {user.name} {user.isFrozen && "(Frozen)"}
+                  </td>
+                  <td className="p-3 relative">
+                    <img
+                      src={dotIcon}
+                      alt="Options"
+                      className="w-4 h-4 ml-3 cursor-pointer"
+                      onClick={() => toggleDropdown(user._id)}
+                    />
+                    {dropdownUserId === user._id && (
+                      <div
+                        ref={dropdownRef}
+                        className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10"
                       >
-                        Freeze
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                        onClick={() => {
-                          handleDelete(user._id);
-                          setDropdownUserId(null);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => {
+                            handleFreeze(user._id);
+                            setDropdownUserId(null);
+                          }}
+                        >
+                          Freeze
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                          onClick={() => {
+                            handleDelete(user._id);
+                            setDropdownUserId(null);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="p-3 text-center text-gray-500">
+                  <div className="flex flex-col justify-center items-center mt-[100px] mr-[9px]">
+                    <img src={empty} alt="No users available" className="w-[180px] h-[180px]" />
+                    <p>No users found</p>
+                  </div>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

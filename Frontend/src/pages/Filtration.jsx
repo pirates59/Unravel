@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 import dotIcon from "../assets/dot.png";
+import empty from "../assets/empty.png";
 
 const Filtration = () => {
   const [reportedComments, setReportedComments] = useState([]);
@@ -202,8 +203,11 @@ const Filtration = () => {
             ))}
             {reportedComments.length === 0 && (
               <tr>
-                <td colSpan="6" className="p-4 text-center text-gray-500">
-                  No reported comments found.
+                <td colSpan="6" className="p-3 text-center text-gray-500">
+                  <div className="flex flex-col justify-center items-center mt-[100px] mr-[9px]">
+                                  <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+                  No reported comments found
+                  </div>
                 </td>
               </tr>
             )}

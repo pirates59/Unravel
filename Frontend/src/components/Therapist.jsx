@@ -5,6 +5,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import userlogo from "../assets/userlogo.png";
 import appointmentIcon from "../assets/appointment.png";
 import logout from "../assets/logout.png";
+import empty from "../assets/empty.png";
 
 const AdminAppointment = () => {
   const [appointments, setAppointments] = useState([]);
@@ -123,11 +124,15 @@ const AdminAppointment = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan="7" className="p-3 text-center text-gray-500">
-                      No appointments found.
-                    </td>
-                  </tr>
+                   <tr>
+                                  
+                                  <td colSpan="6" className="p-3 text-center text-gray-500">
+                                  <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
+                                  <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+                                    No appointments found
+                                    </div>
+                                  </td>
+                                </tr>
                 )}
               </tbody>
             </table>

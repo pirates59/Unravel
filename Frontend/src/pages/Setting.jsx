@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import axios from "axios";
 import leftarrow from "../assets/leftarrow.png";
+import eyeIcon from "../assets/eye.png";       // icon when password is hidden
+import eyeOffIcon from "../assets/eye-off.png";  // icon when password is shown
 
 export default function Setting() {
   // Profile fields + originals for revert on cancel
@@ -21,6 +23,10 @@ export default function Setting() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordSuccessMessage, setPasswordSuccessMessage] = useState("");
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+
+  // States for password visibility toggle in password change form
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
     const storedName = localStorage.getItem("username");
@@ -160,7 +166,6 @@ export default function Setting() {
       </button>
       <div className="bg-gray-100 rounded-md p-6 shadow-md w-[80%] h-[100%]">
         {/* Profile form messages */}
-        
         <div className="flex items-center space-x-4 mb-6">
           <div className="w-28 h-28 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
             {photo ? (
@@ -188,7 +193,7 @@ export default function Setting() {
             <button
               type="button"
               onClick={handleResetPhoto}
-              className="ml-3 inline-block w-[80px] bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors"
+              className="ml-3 inline-block w-[80px] bg-gray-300 text-black px-4 py-2 rounded text-sm font-medium hover:bg-gray-400 transition-colors"
             >
               Reset
             </button>
@@ -197,7 +202,7 @@ export default function Setting() {
         <form onSubmit={handleSaveProfile} className="space-y-5">
           <div className="flex space-x-4">
             <div className="flex-1">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium text-black mb-1">
                 Username
               </label>
               <input
@@ -209,7 +214,7 @@ export default function Setting() {
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
                 E-mail
               </label>
               <input
@@ -228,11 +233,11 @@ export default function Setting() {
             </button>
           </div>
           {profileSuccessMessage && (
-          <div className=" text-green-700">{profileSuccessMessage}</div>
-        )}
-        {profileErrorMessage && (
-          <div className=" text-red-700">{profileErrorMessage}</div>
-        )}
+            <div className=" text-green-700">{profileSuccessMessage}</div>
+          )}
+          {profileErrorMessage && (
+            <div className=" text-red-700">{profileErrorMessage}</div>
+          )}
           <div className="flex justify-end space-x-4 pt-2">
             <button
               type="submit"
@@ -243,7 +248,7 @@ export default function Setting() {
             <button
               type="button"
               onClick={handleCancelProfile}
-              className="bg-gray-300 w-[80px] text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors"
+              className="bg-gray-300 w-[80px] text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors"
             >
               Cancel
             </button>
@@ -251,28 +256,40 @@ export default function Setting() {
         </form>
         <form onSubmit={handleChangePassword} className="space-y-5 mt-8">
           <div className="flex space-x-4">
-            <div className="flex-1">
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="flex-1 relative">
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-black mb-1">
                 Current Password
               </label>
               <input
                 id="currentPassword"
-                type="password"
+                type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              <img
+                src={showCurrentPassword ? eyeOffIcon : eyeIcon}
+                alt={showCurrentPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute top-9 right-3 h-5 w-5 cursor-pointer"
+              />
             </div>
-            <div className="flex-1">
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="flex-1 relative">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-black mb-1">
                 New Password
               </label>
               <input
                 id="newPassword"
-                type="password"
+                type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <img
+                src={showNewPassword ? eyeOffIcon : eyeIcon}
+                alt={showNewPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute top-9 right-3 h-5 w-5 cursor-pointer"
               />
             </div>
           </div>
@@ -288,7 +305,7 @@ export default function Setting() {
             <button
               type="button"
               onClick={handleCancelPassword}
-              className="bg-gray-300 w-[80px] text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors"
+              className="bg-gray-300 w-[80px] text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors"
             >
               Cancel
             </button>

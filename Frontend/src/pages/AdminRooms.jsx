@@ -3,6 +3,7 @@ import axios from "axios";
 import groupIcon from "../assets/group.png";
 import swal from "sweetalert";
 import { useNavigate } from "react-router-dom";
+import empty from "../assets/empty.png";
 
 const AdminRooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -56,47 +57,55 @@ const AdminRooms = () => {
           </button>
         </div>
       </div>
-      {/* Grid of room cards */}
-      <div className="grid grid-cols-4 gap-6">
-        {rooms.map((room) => (
-          <div
-            key={room._id}
-            className="bg-[#E5E7E9] rounded-lg shadow p-4 flex flex-col items-end"
-          >
-            <h2 className="font-semibold text-[#EC993D] mb-2">
-              {room.name}
-            </h2>
-            <img
-              src={
-                room.image
-                  ? `http://localhost:3001/${room.image}`
-                  : "http://localhost:3001/uploads/default.png"
-              }
-              alt={room.name}
-              className="w-56 h-52 object-cover rounded mb-3"
-            />
-            <div className="flex items-center gap-4 justify-end w-full">
-              <div className="flex items-center gap-2">
-                <img
-                  src={groupIcon}
-                  alt="User Count"
-                  className="w-4 h-4 rounded-full"
-                />
-                <span className="text-gray-600 text-sm">{room.count}</span>
+
+      {/* Check if there are no rooms */}
+      {rooms.length === 0 ? (
+        <div className="flex flex-col justify-center items-center mt-[150px] mr-[9px]">
+          <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+          <p>No rooms found</p>
+        </div>
+      ) : (
+        /* Grid of room cards */
+        <div className="grid grid-cols-4 gap-6">
+          {rooms.map((room) => (
+            <div
+              key={room._id}
+              className="bg-[#E5E7E9] rounded-lg shadow p-4 flex flex-col items-end"
+            >
+              <h2 className="font-semibold text-[#EC993D] mb-2">
+                {room.name}
+              </h2>
+              <img
+                src={
+                  room.image
+                    ? `http://localhost:3001/${room.image}`
+                    : "http://localhost:3001/uploads/default.png"
+                }
+                alt={room.name}
+                className="w-56 h-52 object-cover rounded mb-3"
+              />
+              <div className="flex items-center gap-4 justify-end w-full">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={groupIcon}
+                    alt="User Count"
+                    className="w-4 h-4 rounded-full"
+                  />
+                  <span className="text-gray-600 text-sm">{room.count}</span>
+                </div>
+                <button
+                  onClick={() => handleDelete(room._id)}
+                  className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+                >
+                  Delete
+                </button>
               </div>
-              <button
-                onClick={() => handleDelete(room._id)}
-                className="bg-red-500 text-white px-4 py-1 rounded  hover:bg-red-600"
-              >
-                Delete
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-
 };
 
 export default AdminRooms;

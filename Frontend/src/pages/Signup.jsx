@@ -3,6 +3,8 @@ import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import loginImg from "../assets/login.png";
+import eyeIcon from "../assets/eye.png";       // icon when password is hidden (click to show)
+import eyeOffIcon from "../assets/eye-off.png";  // icon when password is shown (click to hide)
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -10,6 +12,7 @@ function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // show/hide state
   const [emailError, setEmailError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
@@ -51,7 +54,6 @@ function Signup() {
       setEmailError("An unexpected error occurred. Please try again.");
     }
   };
-  
 
   return (
     <div className="flex flex-col h-screen">
@@ -86,13 +88,23 @@ function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                className="w-full mb-4 p-2 border rounded"
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              {/* Password input with toggle */}
+              <div className="relative mb-4">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  className="w-full p-2 border rounded"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <img
+                  src={showPassword ? eyeOffIcon : eyeIcon}
+                  alt={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-2 transform -translate-y-1/2 h-5 w-5 cursor-pointer"
+                />
+              </div>
               {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
               {successMessage && <p className="text-green-500 text-sm">{successMessage}</p>}
               <button type="submit" className="w-full bg-[#EC993D] text-white py-2 rounded mt-8">

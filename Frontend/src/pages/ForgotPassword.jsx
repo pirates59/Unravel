@@ -2,6 +2,8 @@ import React, { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoChevronBackOutline } from "react-icons/io5";
 import axios from "axios";
+import eyeIcon from "../assets/eye.png";       // icon when password is hidden
+import eyeOffIcon from "../assets/eye-off.png";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -154,6 +156,8 @@ const ForgotPassword = () => {
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);         // for new password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // for confirm password
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
@@ -195,22 +199,40 @@ const ResetPassword = () => {
       >
         <h2 className="text-3xl font-bold">Reset Password</h2>
         <p className="text-gray-600 text-center">Enter your new password below</p>
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={handlePasswordChange}
-          required
-          className="w-full border border-gray-300 px-6 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#161F36]"
-        />
-        <input
-          type="password"
-          placeholder="Confirm password"
-          value={confirmPassword}
-          onChange={handleConfirmPasswordChange}
-          required
-          className="w-full border border-gray-300 px-6 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#161F36]"
-        />
+        {/* New Password Input */}
+        <div className="relative w-full">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="New password"
+            value={password}
+            onChange={handlePasswordChange}
+            required
+            className="w-full border border-gray-300 px-6 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#161F36]"
+          />
+          <img
+            src={showPassword ? eyeOffIcon : eyeIcon}
+            alt={showPassword ? "Hide password" : "Show password"}
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute top-1/2 right-4 transform -translate-y-1/2 h-5 w-5 cursor-pointer"
+          />
+        </div>
+        {/* Confirm Password Input */}
+        <div className="relative w-full">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+            required
+            className="w-full border border-gray-300 px-6 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#161F36]"
+          />
+          <img
+            src={showConfirmPassword ? eyeOffIcon : eyeIcon}
+            alt={showConfirmPassword ? "Hide password" : "Show password"}
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute top-1/2 right-4 transform -translate-y-1/2 h-5 w-5 cursor-pointer"
+          />
+        </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
           type="submit"
@@ -222,5 +244,7 @@ const ResetPassword = () => {
     </div>
   );
 };
+
+
 
 export { ForgotPassword, ResetPassword };
