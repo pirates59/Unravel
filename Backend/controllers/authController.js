@@ -124,7 +124,7 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-// Reset Password
+// Reset Password (updated)
 exports.resetPassword = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -132,11 +132,24 @@ exports.resetPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
+
+    // Hash the new password
     user.password = await bcrypt.hash(password, 10);
+
+    // Clear OTP values (if any remain)
+    user.otp = null;
+    user.otpExpires = null;
+
+    // Clear first login flag if set (e.g. for therapists)
+    if (user.isFirstLogin) {
+      user.isFirstLogin = false;
+    }
+
     await user.save();
+
     res.json({ success: true, message: "Password reset successfully." });
   } catch (err) {
-    console.error(err);
+    console.error("Reset password error:", err);
     res.status(500).json({ success: false, message: "Failed to reset password." });
   }
 };
