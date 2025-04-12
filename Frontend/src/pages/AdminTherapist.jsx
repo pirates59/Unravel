@@ -1,8 +1,8 @@
+// AdminTherapist Page
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import plusIcon from "../assets/pluss.png";
 import swal from "sweetalert";
-
 
 const AdminTherapist = () => {
   const [therapists, setTherapists] = useState([]);
@@ -118,7 +118,7 @@ const AdminTherapist = () => {
       const res = await axios.post("http://localhost:3001/therapists", formData);
       setTherapists((prev) => [...prev, res.data]);
 
-      // Reset
+      // Reset form fields
       setShowModal(false);
       setName("");
       setEmail("");
@@ -188,11 +188,7 @@ const AdminTherapist = () => {
           >
             <div className="w-28 h-28 mb-3">
               <img
-                src={
-                  therapist.image
-                    ? `http://localhost:3001/${therapist.image}`
-                    : "https://via.placeholder.com/150?text=No+Image"
-                }
+                src={therapist.image ? `http://localhost:3001/${therapist.image}` : "https://via.placeholder.com/150?text=No+Image"}
                 alt={therapist.name}
                 className="w-full h-full object-cover rounded-full"
               />
@@ -207,6 +203,7 @@ const AdminTherapist = () => {
                 (Array.isArray(therapist.daysAvailable)
                   ? therapist.daysAvailable.join(", ")
                   : JSON.parse(therapist.daysAvailable).join(", "))}
+
               {therapist.startTime && therapist.endTime && (
                 <> {therapist.startTime} to {therapist.endTime}</>
               )}
@@ -220,7 +217,7 @@ const AdminTherapist = () => {
           </div>
         ))}
 
-        {/* Add new */}
+        {/* Add new therapist*/}
         <div
           onClick={() => setShowModal(true)}
           className="bg-gray-100 w-full h-[320px] rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
@@ -243,7 +240,7 @@ const AdminTherapist = () => {
             </button>
             <h2 className="text-xl font-semibold mb-4">Add New Therapist</h2>
 
-            {/* Name */}
+            {/* Form fields */}
             <label className="block mb-2">
               <span>Name:</span>
               <input
@@ -255,7 +252,6 @@ const AdminTherapist = () => {
               {errors.name && <small className="text-red-500">{errors.name}</small>}
             </label>
 
-            {/* Email */}
             <label className="block mb-2">
               <span>Email:</span>
               <input
@@ -282,12 +278,10 @@ const AdminTherapist = () => {
                   </option>
                 ))}
               </select>
-              {errors.specialization && (
-                <small className="text-red-500">{errors.specialization}</small>
-              )}
+              {errors.specialization && <small className="text-red-500">{errors.specialization}</small>}
             </label>
 
-            {/* Days */}
+            {/* Days Available */}
             <label className="block mb-2">
               <span>Days Available:</span>
               <div className="flex space-x-2 mt-2">
@@ -297,18 +291,14 @@ const AdminTherapist = () => {
                     <div
                       key={day}
                       onClick={() => handleDayToggle(day)}
-                      className={`cursor-pointer w-12 h-12 rounded-full flex items-center justify-center ${
-                        sel ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
-                      }`}
+                      className={`cursor-pointer w-12 h-12 rounded-full flex items-center justify-center ${sel ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}
                     >
                       {day}
                     </div>
                   );
                 })}
               </div>
-              {errors.daysAvailable && (
-                <small className="text-red-500 block">{errors.daysAvailable}</small>
-              )}
+              {errors.daysAvailable && <small className="text-red-500 block">{errors.daysAvailable}</small>}
             </label>
 
             {/* Start/End Time */}
@@ -326,9 +316,7 @@ const AdminTherapist = () => {
                   </option>
                 ))}
               </select>
-              {errors.startTime && (
-                <small className="text-red-500">{errors.startTime}</small>
-              )}
+              {errors.startTime && <small className="text-red-500">{errors.startTime}</small>}
             </label>
 
             <label className="block mb-2">
@@ -345,9 +333,7 @@ const AdminTherapist = () => {
                   </option>
                 ))}
               </select>
-              {errors.endTime && (
-                <small className="text-red-500">{errors.endTime}</small>
-              )}
+              {errors.endTime && <small className="text-red-500">{errors.endTime}</small>}
             </label>
 
             {/* Image */}

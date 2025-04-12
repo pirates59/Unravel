@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// AdminAppointment Page
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import empty from "../assets/empty.png";
 
@@ -9,19 +10,15 @@ const AdminAppointment = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        // Retrieve token from local storage
         const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No token found. Please login.");
         }
-        // Make GET request with Authorization header
         const response = await axios.get("http://localhost:3001/appointments", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         const data = response.data;
-
-        // Format the date properly before setting state
         const formattedAppointments = data.map(appointment => ({
           ...appointment,
           date: `${appointment.year}-${String(appointment.month).padStart(2, '0')}-${String(appointment.day).padStart(2, '0')}`
@@ -46,7 +43,9 @@ const AdminAppointment = () => {
           </button>
         </div>
       </div>
-      <div className=" relative">
+
+      {/* Table displaying appointments */}
+      <div className="relative">
         <table className="w-full border-collapse">
           <thead className="bg-white text-black border-[2px] border-gray-200">
             <tr>
@@ -74,11 +73,10 @@ const AdminAppointment = () => {
               ))
             ) : (
               <tr>
-                
                 <td colSpan="6" className="p-3 text-center text-gray-500">
-                <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
-                <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
-                  No appointments found
+                  <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
+                    <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+                    No appointments found
                   </div>
                 </td>
               </tr>

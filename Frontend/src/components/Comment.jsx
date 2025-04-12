@@ -1,4 +1,4 @@
-// components/Comment.js
+// Comment Component
 import React, { useState, useEffect, useRef } from "react";
 import sendIcon from "../assets/send.png";
 import hand from "../assets/hand.png";
@@ -84,6 +84,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     };
   }, []);
 
+  // Fetch comments from the backend
   const fetchComments = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -97,6 +98,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
+  // Handle like/unlike functionality for posts
   const handleLike = async () => {
     const token = localStorage.getItem("token");
     const currentUserLocal = localStorage.getItem("username");
@@ -129,6 +131,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
+  // Submit new or edited comment
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
     const token = localStorage.getItem("token");
@@ -184,16 +187,19 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
+  // Toggle comment dropdown (edit/delete options)
   const toggleDropdown = (commentId) => {
     setActiveDropdown(activeDropdown === commentId ? null : commentId);
   };
 
+  // Edit selected comment
   const handleEditComment = (comment) => {
     setEditingCommentId(comment._id);
     setNewComment(comment.text);
     setActiveDropdown(null);
   };
 
+  // Delete selected comment
   const handleDeleteComment = async (commentId) => {
     const token = localStorage.getItem("token");
     try {
@@ -216,6 +222,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
+  // Report a comment
   const handleReportComment = async (commentId) => {
     const token = localStorage.getItem("token");
     try {
@@ -241,13 +248,14 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
     }
   };
 
+  // Handle key press for comment submission (Enter key)
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSubmitComment();
     }
   };
 
-  // Determine display values for the post author (same logic as Feed)
+  // Determine display values for the post author
   const displayPostAuthor =
     String(post.authorId) === localStorage.getItem("userId")
       ? localStorage.getItem("username")
@@ -264,12 +272,14 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
       <div className="bg-white w-full max-w-2xl rounded-lg relative flex flex-col">
+        {/* Close button */}
         <button
           onClick={closeComments}
           className="absolute top-3 right-3 text-gray-600 hover:text-black font-bold text-lg"
         >
           ✕
         </button>
+        {/* Post Information */}
         <div className="p-4 border-b border-gray-300">
           <div className="flex items-center space-x-2 mb-2">
             <img
@@ -299,6 +309,7 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
               />
             </div>
           )}
+          {/* Like and Comment Section */}
           <div className="flex items-center gap-3 text-gray-500 text-sm mt-2">
             <img
               src={liked ? redLike : like}
@@ -323,24 +334,25 @@ const Comment = ({ post, postId, closeComments, likeData, syncLikes }) => {
             </p>
           </div>
         </div>
+        {/* Comment Section */}
         <div className="p-4">
           {comments.length > 0 ? (
             <div className="w-full space-y-3">
               {comments.map((comment) => {
-                // Use the new authorId property to decide if the comment is by the logged-in user.
+                // Display comment author based on logged-in user
                 const displayCommentAuthor =
-  comment.authorId && String(comment.authorId) === localStorage.getItem("userId")
-    ? localStorage.getItem("username")
-    : comment.author;
+                  comment.authorId && String(comment.authorId) === localStorage.getItem("userId")
+                    ? localStorage.getItem("username")
+                    : comment.author;
 
-const displayCommentProfileImage =
-  comment.authorId && String(comment.authorId) === localStorage.getItem("userId")
-    ? (localStorage.getItem("profileImage")?.startsWith("http")
-        ? localStorage.getItem("profileImage")
-        : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`)
-    : comment.profileImage && comment.profileImage !== "default-avatar.png"
-      ? `http://localhost:3001/uploads/${comment.profileImage}`
-      : "default-avatar.png";
+                const displayCommentProfileImage =
+                  comment.authorId && String(comment.authorId) === localStorage.getItem("userId")
+                    ? (localStorage.getItem("profileImage")?.startsWith("http")
+                        ? localStorage.getItem("profileImage")
+                        : `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`)
+                    : comment.profileImage && comment.profileImage !== "default-avatar.png"
+                    ? `http://localhost:3001/uploads/${comment.profileImage}`
+                    : "default-avatar.png";
 
                 const hashtags = getUniqueHashtags(extractHashtags(comment.text));
                 const textWithoutTags = comment.text.replace(/#[a-zA-Z0-9_]+/g, "").trim();
@@ -368,6 +380,7 @@ const displayCommentProfileImage =
                         ))}
                       </div>
                     )}
+                    {/* Comment Options Dropdown */}
                     <div className="absolute top-3 right-3" ref={dropdownRef}>
                       <img
                         src={dotIcon}
@@ -414,6 +427,7 @@ const displayCommentProfileImage =
             </div>
           )}
         </div>
+        {/* Comment Input Section */}
         <div className="p-3 border-t border-gray-300">
           <div className="flex items-center space-x-2">
             <img

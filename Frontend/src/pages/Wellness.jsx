@@ -1,4 +1,4 @@
-// src/components/Wellness.jsx
+// Wellness Page
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -42,7 +42,7 @@ const Wellness = () => {
     } catch (error) {
       console.error("Error fetching videos:", error);
     } finally {
-      // Do not set loading false here as we depend on centers fetch too
+      
     }
   };
 
@@ -80,7 +80,7 @@ const Wellness = () => {
     navigate(`/wellness?topic=${encodeURIComponent(centerName)}`);
   };
 
-  // Handle video play event to set active video index (for controlling mute settings)
+  // Handle video play event to set active video index 
   const handleVideoPlay = (index) => {
     setActiveVideo(index);
   };
@@ -101,13 +101,13 @@ const Wellness = () => {
           ) : matchingCenterExists === false ? (
             <p>No center available for requested topic.</p>
           ) : videos.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {videos.map((video, index) => {
                 const isYoutube =
                   video.URL.includes("youtube.com") ||
                   video.URL.includes("youtu.be");
                 if (isYoutube) {
-                  // Convert YouTube watch URL to embed URL if necessary
+                  // Convert YouTube watch URL to embed URL 
                   let embedUrl = video.URL;
                   if (video.URL.includes("watch?v=")) {
                     embedUrl = video.URL.replace("watch?v=", "embed/");
@@ -123,7 +123,7 @@ const Wellness = () => {
                         allowFullScreen
                       ></iframe>
                       <p className="mt-2 text-sm">Title: {video.Title}</p>
-                      <p className="mt-1 text-sm">Views: {video.Views}</p>
+                      
                     </div>
                   );
                 } else {
