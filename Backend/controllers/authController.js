@@ -24,7 +24,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Example snippet from controllers/authController.js (loginUser)
+// loginUser
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -46,7 +46,7 @@ exports.loginUser = async (req, res) => {
       message: "Login successful.",
       token,
       user: {
-        _id: user._id,         // NEW: send user id
+        _id: user._id,        
         name: user.name,
         email: user.email,
         role: user.role,
@@ -124,7 +124,7 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-// Reset Password (updated)
+// Reset Password 
 exports.resetPassword = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -136,11 +136,11 @@ exports.resetPassword = async (req, res) => {
     // Hash the new password
     user.password = await bcrypt.hash(password, 10);
 
-    // Clear OTP values (if any remain)
+    // Clear OTP values 
     user.otp = null;
     user.otpExpires = null;
 
-    // Clear first login flag if set (e.g. for therapists)
+    // Clear first login flag if set 
     if (user.isFirstLogin) {
       user.isFirstLogin = false;
     }

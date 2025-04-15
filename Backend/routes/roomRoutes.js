@@ -1,3 +1,4 @@
+// routes/roomRoutes.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -13,7 +14,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Create a new room (new rooms start with no active chat, so count is 0)
+// Create a new room 
 router.post("/rooms", upload.single("image"), async (req, res) => {
   try {
     const { name } = req.body;
@@ -36,7 +37,7 @@ router.get("/rooms", async (req, res) => {
     const rooms = await Room.find();
     const roomsWithCount = await Promise.all(
       rooms.map(async (room) => {
-        // Count distinct senderEmail values in messages for this room
+        // Count distinct senderEmail values in messages for rooms
         const uniqueUsers = await Message.distinct("senderEmail", { room: room._id });
         return { ...room.toObject(), count: uniqueUsers.length };
       })

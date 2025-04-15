@@ -10,7 +10,7 @@ const uploadDir = path.join(__dirname, "../uploads");
 exports.createPost = async (req, res) => {
   try {
     const { content } = req.body;
-    const user = req.user; // contains: id, username, email, etc.
+    const user = req.user; 
     const imageFilename = req.file ? req.file.filename : null;
     if (!content && !imageFilename) {
       return res.status(400).json({ error: "Content or image is required" });
@@ -30,7 +30,7 @@ exports.createPost = async (req, res) => {
   }
 };
 
-// Like a post – include actorId in notification
+// Like a post 
 exports.likePost = async (req, res) => {
   const { postId } = req.params;
   let { currentUser, author: actorName, profileImage: actorProfileImage } = req.body;
@@ -74,7 +74,7 @@ exports.likePost = async (req, res) => {
   }
 };
 
-// Add comment – include actorId in both comment and notification
+// Add comment 
 exports.addComment = async (req, res) => {
   const { postId } = req.params;
   const { text, author, profileImage, currentUser } = req.body;
@@ -201,9 +201,7 @@ exports.getComments = async (req, res) => {
   }
 };
 
-
-
-// Update comment – checking using authorId
+// Update comment 
 exports.updateComment = async (req, res) => {
   const { postId, commentId } = req.params;
   const { text, currentUser } = req.body;
@@ -226,7 +224,7 @@ exports.updateComment = async (req, res) => {
   }
 };
 
-// Delete comment – checking using authorId
+// Delete comment 
 exports.deleteComment = async (req, res) => {
   const { postId, commentId } = req.params;
   try {

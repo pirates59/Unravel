@@ -16,7 +16,7 @@ const therapistSchema = new mongoose.Schema({
     required: true,
   },
   daysAvailable: {
-    type: [String], // e.g. ["Sun", "Mon"] or however you want to store
+    type: [String], // e.g. ["Sun", "Mon"] 
     required: true,
   },
   startTime: {

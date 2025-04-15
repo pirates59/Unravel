@@ -1,9 +1,9 @@
-// app.js
+// index.js
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
-require("./config/db"); // Connect to database
+require("./config/db"); // Connection to database
 const http = require("http");
 const app = express();
 
@@ -11,9 +11,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configure CORS to allow requests from your frontend and include the Authorization header
+// Configure CORS to allow requests from frontend and include the Authorization header
 app.use(cors({
-  origin: "http://localhost:5173", // Adjust this to match your frontend URL
+  origin: "http://localhost:5173", 
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
@@ -42,7 +42,7 @@ const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
   cors: {
-    origin: "*", // Adjust for production if needed
+    origin: "*", 
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
@@ -66,7 +66,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("stopTyping", ({ roomId, user }) => {
-    // Optionally, emit a stopTyping event if needed.
+
   });
 
   socket.on("disconnect", () => {});

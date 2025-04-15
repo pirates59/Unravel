@@ -17,6 +17,4 @@ router.post("/reset-password", authController.resetPassword);
 // User routes
 router.post("/update-profile", verifyToken, upload.single("profileImage"), userController.updateProfile);
 
-// Additional routes can be added (fetch users, delete user, etc.)
-
 module.exports = router;

@@ -1,12 +1,14 @@
+// mailer.js
+const nodemailer = require('nodemailer');
 
-const nodemailer = require("nodemailer");
-
+// Create a transporter using Gmail SMTP service
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail', // SMTP service to use
   auth: {
-    user: "lenishaghimire07@gmail.com", // Replace with your Gmail address
-    pass: "aycz dckk hich mciz",         // Replace with your 16-character app password
+    user: 'lenishaghimire07@gmail.com', 
+    pass: 'aycz dckk hich mciz',         
   },
 });
 
+// Export the configured transporter for use in other modules
 module.exports = transporter;

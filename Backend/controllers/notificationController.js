@@ -1,16 +1,17 @@
 // controllers/notificationController.js
-const Notification = require("../models/Notification");
+const Notification = require('../models/Notification');
 
+// Fetch and return notifications for the authenticated user
 exports.getNotifications = async (req, res) => {
   try {
-    // Change query to use recipient as stored in the notification.
-    // (Alternatively, if you store recipient as an id, query by recipient id.)
+    // Get current user's username from request (set by authentication middleware)
     const userName = req.user.username;
-    // Populate actorId to get the latest name and profile image from the Signup collection.
+    // Query notifications for this user, sorted by most recent, and populate actor details
     const notifications = await Notification.find({ recipient: userName })
       .sort({ createdAt: -1 })
-      .populate("actorId", "name profileImage");
-    // If populated, override actorName and actorProfileImage with the current values.
+      .populate('actorId', 'name profileImage');
+
+    // Replace actor fields with populated values if available
     const updatedNotifications = notifications.map((n) => {
       if (n.actorId) {
         return {
@@ -21,27 +22,35 @@ exports.getNotifications = async (req, res) => {
       }
       return n;
     });
+
+    // Respond with the processed notifications array
     res.json({ notifications: updatedNotifications });
   } catch (error) {
+    // Handle unexpected errors
     res.status(500).json({ error: error.message });
   }
 };
 
+// Mark all unread notifications as read for the authenticated user
 exports.markAllAsRead = async (req, res) => {
   try {
     const userName = req.user.username;
-    await Notification.updateMany({ recipient: userName, state: false }, { state: true });
-    res.json({ message: "All notifications marked as read" });
+    await Notification.updateMany(
+      { recipient: userName, state: false },
+      { state: true }
+    );
+    res.json({ message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// Mark a single notification as read by its ID
 exports.markSingleAsRead = async (req, res) => {
   try {
     const notificationId = req.params.notificationId;
     await Notification.findByIdAndUpdate(notificationId, { state: true });
-    res.json({ message: "Notification marked as read" });
+    res.json({ message: 'Notification marked as read' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
