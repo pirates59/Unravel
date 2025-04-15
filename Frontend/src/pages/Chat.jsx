@@ -1,9 +1,9 @@
+// Chat Page
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import io from "socket.io-client";
 import axios from "axios";
 import Swal from "sweetalert2";
-
 import defaultRoomImage from "../assets/anxiety.png";
 import sendIcon from "../assets/send.png";
 import leaveIcon from "../assets/leave.png";
@@ -15,13 +15,13 @@ const Chat = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get anonymous username from location state (or fallback to localStorage/default)
+  // Get anonymous username from location state
   const anonymousUsername =
     (location.state && location.state.username) ||
     localStorage.getItem("username") ||
     "Anonymous";
 
-  // Build current user info using the anonymous username.
+  // Build current user info using the anonymous username
   const currentUser = {
     id: localStorage.getItem("userId") || anonymousUsername,
     name: anonymousUsername,
@@ -35,14 +35,13 @@ const Chat = () => {
   const [roomImage, setRoomImage] = useState("");
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
-  // isJoined tracks whether the user has explicitly joined (via the join button)
   const [isJoined, setIsJoined] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const containerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Create and maintain the socket connection.
+  // Create and maintain the socket connection
   const createSocketConnection = () => {
     if (!socketRef.current) {
       socketRef.current = io(socketServerUrl, { transports: ["websocket"] });
@@ -139,8 +138,7 @@ const Chat = () => {
     }
   };
 
-  // Toggle join/leave via the explicit "Join Chat" or "Leave Chat" button.
-  // If the user explicitly leaves (via the toggle button), we clear their join status.
+
   const handleJoinOrLeave = () => {
     if (isJoined) {
       Swal.fire({

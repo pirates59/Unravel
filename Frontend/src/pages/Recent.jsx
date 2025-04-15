@@ -1,6 +1,6 @@
+//Recent Page
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
 import commentIcon from "../assets/comment.png";
@@ -118,23 +118,6 @@ const Recent = () => {
     }
   };
 
-  const confirmDelete = (postId) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this post?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        handleDelete(postId);
-        Swal.fire("Deleted!", "Your post has been deleted.", "success");
-      }
-    });
-  };
-
   const toggleComments = (postId) => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
@@ -196,7 +179,7 @@ const Recent = () => {
               const cleanedContent = post.content.replace(/#[a-zA-Z0-9_]+/g, "").trim();
               const postLike = likes[post._id] || { count: 0, liked: false };
 
-              // Use updated details if the post belongs to the logged-in user (should not happen in Recent)
+              // Use updated details if the post belongs to the logged-in user 
               const displayAuthor =
                 String(post.authorId) === localStorage.getItem("userId")
                   ? localStorage.getItem("username")

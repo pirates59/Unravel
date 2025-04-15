@@ -1,3 +1,4 @@
+// EditPost Page
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import leftarrow from "../assets/leftarrow.png";
@@ -7,7 +8,6 @@ import location from "../assets/location.png";
 const EditPost = () => {
   const navigate = useNavigate();
   const locationObj = useLocation();
-  // Expecting postId via location state; initialContent and initialImage are optional
   const { postId, content: initialContent, image: initialImage } = locationObj.state || {};
   const [content, setContent] = useState(initialContent || "");
   const [selectedImage, setSelectedImage] = useState(null);

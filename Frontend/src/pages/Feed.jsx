@@ -1,6 +1,6 @@
+// Feed Page
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import leftarrow from "../assets/leftarrow.png";
 import dotIcon from "../assets/dot.png";
 import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";

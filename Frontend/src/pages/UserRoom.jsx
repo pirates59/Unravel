@@ -1,7 +1,7 @@
+// UserRoom Page
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
 import anxietyImg from "../assets/anxiety.png";
 import plusIcon from "../assets/pluss.png";
 import groupIcon from "../assets/group.png";
@@ -64,8 +64,6 @@ const UserRoom = () => {
   };
 
   // Called when clicking join on a room.
-  // If the user was previously joined (and did not explicitly leave), navigate directly.
-  // Otherwise, show the modal to enter an anonymous username.
   const handleJoinRoom = (room) => {
     const storedJoin = localStorage.getItem(`chat_joined_${room._id}`);
     const storedUsername = localStorage.getItem(`chat_username_${room._id}`);
@@ -79,13 +77,13 @@ const UserRoom = () => {
     }
   };
 
-  // Submit the anonymous username and store join status for the room.
+  // Submit the anonymous username and store join status for the room
   const submitJoin = () => {
     if (!joinUsername.trim()) {
       setJoinError("Username is required.");
       return;
     }
-    // Save join status and username for future entry (if user leaves with the back button)
+    // Save join status and username for future entry 
     localStorage.setItem(`chat_joined_${selectedRoom._id}`, "true");
     localStorage.setItem(`chat_username_${selectedRoom._id}`, joinUsername);
     navigate(`/chat/${selectedRoom._id}`, { state: { username: joinUsername } });

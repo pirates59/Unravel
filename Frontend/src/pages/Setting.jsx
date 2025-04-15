@@ -1,8 +1,9 @@
+// Setting Page
 import React, { useState, useEffect } from "react"; 
 import axios from "axios";
 import leftarrow from "../assets/leftarrow.png";
-import eyeIcon from "../assets/eye.png";       // icon when password is hidden
-import eyeOffIcon from "../assets/eye-off.png";  // icon when password is shown
+import eyeIcon from "../assets/eye.png";       
+import eyeOffIcon from "../assets/eye-off.png"; 
 
 export default function Setting() {
   // Profile fields + originals for revert on cancel
@@ -59,13 +60,13 @@ export default function Setting() {
     }
   };
 
-  // Reset photo button: revert to the current profile picture from storage
+  // Reset photo button revert to the current profile picture from storage
   const handleResetPhoto = () => {
     setPhoto(origPhoto);
     setSelectedFile(null);
   };
 
-  // Save Profile: send updated username, email, and profile image (if any) to backend
+  // Save Profile
   const handleSaveProfile = (e) => {
     e.preventDefault();
     setProfileSuccessMessage("");
@@ -149,7 +150,7 @@ export default function Setting() {
       });
   };
 
-  // Cancel Password changes: clear fields and messages
+  // Cancel Password changes
   const handleCancelPassword = () => {
     setCurrentPassword("");
     setNewPassword("");

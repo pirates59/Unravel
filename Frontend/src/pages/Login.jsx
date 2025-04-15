@@ -1,3 +1,4 @@
+// Login Page
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -5,20 +6,23 @@ import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import loginImg from "../assets/login.png";
-import eyeIcon from "../assets/eye.png";       // icon when password is hidden
-import eyeOffIcon from "../assets/eye-off.png";  // icon when password is shown
+import eyeIcon from "../assets/eye.png";      
+import eyeOffIcon from "../assets/eye-off.png";  
+
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // show/hide state
+  const [showPassword, setShowPassword] = useState(false); // Toggle state for showing/hiding password
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
+  // Handle form submission for login.
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
+    setErrorMessage(""); 
     try {
+      // Send a POST request to the login endpoint with email and password
       const result = await axios.post("http://localhost:3001/login", { email, password });
       if (result.data.success) {
         const { user, token } = result.data;
@@ -30,18 +34,16 @@ function Login() {
         localStorage.setItem("profileImage", user.profileImage || "upload.png");
         localStorage.setItem("userId", user._id);
         
-        // Redirection based on role and whether it's the first login.
+        // Conditional navigation based on the user's role and first login status.
         if (user.role === "admin") {
-          navigate("/Users"); // Admin dashboard.
+          navigate("/Users");
         } else if (user.role === "doctor") {
-          // For a doctor/therapist first login, pass the isTherapist flag.
           if (user.isFirstLogin) {
             navigate("/reset", { state: { email: user.email, isTherapist: true } });
           } else {
             navigate("/therapist");
           }
         } else {
-          // For a normal user.
           if (user.isFirstLogin) {
             navigate("/profile", { state: { email: user.email } });
           } else {
@@ -72,6 +74,7 @@ function Login() {
               </button>
             </NavLink>
             <h2 className="text-xl font-semibold mb-4">Login with email:</h2>
+            {/* Login form submission handling */}
             <form onSubmit={handleSubmit}>
               <input
                 type="email"
@@ -81,7 +84,6 @@ function Login() {
                 className="w-full mb-4 p-2 border rounded"
                 onChange={(e) => setEmail(e.target.value)}
               />
-              {/* Password input with toggle */}
               <div className="relative mb-4">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -90,6 +92,7 @@ function Login() {
                   className="w-full p-2 border rounded"
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                {/* Icon to toggle password visibility */}
                 <img
                   src={showPassword ? eyeOffIcon : eyeIcon}
                   alt={showPassword ? "Hide password" : "Show password"}
@@ -97,6 +100,7 @@ function Login() {
                   className="absolute top-1/2 right-2 transform -translate-y-1/2 h-5 w-5 cursor-pointer"
                 />
               </div>
+              {/* Display error message if present */}
               {errorMessage && <p className="text-red-500 text-sm mb-4">{errorMessage}</p>}
               <NavLink to="/forgot">
                 <p className="text-right text-sm text-gray-500 mb-4">Forgot password</p>
@@ -116,6 +120,7 @@ function Login() {
           </div>
         </div>
       </div>
+      {/* Footer component rendered at the bottom */}
       <Footer />
     </div>
   );

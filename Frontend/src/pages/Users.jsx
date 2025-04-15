@@ -1,8 +1,9 @@
+// Users Page 
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 import dotIcon from "../assets/dot.png";
-import empty from "../assets/empty.png"; // Import the empty image
+import empty from "../assets/empty.png";
 
 const Users = () => {
   const [users, setUsers] = useState([]);

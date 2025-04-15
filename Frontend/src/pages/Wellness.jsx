@@ -15,9 +15,7 @@ const Wellness = () => {
   const [videos, setVideos] = useState([]);
   const [centers, setCenters] = useState([]);
   const [loading, setLoading] = useState(true);
-  // New state for active video index to control sound settings
   const [activeVideo, setActiveVideo] = useState(null);
-  // New state to track if a matching center exists for the chosen topic
   const [matchingCenterExists, setMatchingCenterExists] = useState(null);
 
   useEffect(() => {
@@ -99,7 +97,12 @@ const Wellness = () => {
           {loading ? (
             <p>Loading videos...</p>
           ) : matchingCenterExists === false ? (
-            <p>No center available for requested topic.</p>
+            <div className="flex flex-col justify-center items-center mt-[100px] ">
+            
+            <img src={NoVideo} alt="No posts available" className="w-[180px] h-[180px]" />
+            <p className= " ml-4 text-gray-700 font-medium"> No center available for requested topic.</p>
+            </div>
+           
           ) : videos.length > 0 ? (
             <div className="grid grid-cols-3 gap-4">
               {videos.map((video, index) => {
