@@ -22,5 +22,4 @@ const BookingSchema = new mongoose.Schema({
   therapist: { type: String, required: true },
 });
 
-// Export the Booking model based on the schema
 module.exports = mongoose.model("Booking", BookingSchema);
