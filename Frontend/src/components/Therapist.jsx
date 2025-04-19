@@ -1,4 +1,4 @@
-// AdminAppointment.jsx (or TherapistAppointment.jsx if used for doctor users)
+// Therapist Component
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -15,7 +15,6 @@ const AdminAppointment = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        // Retrieve token and user details from local storage
         const token = localStorage.getItem("token");
         const currentUser = localStorage.getItem("username");
         const currentRole = localStorage.getItem("role");
@@ -23,26 +22,23 @@ const AdminAppointment = () => {
         if (!token) {
           throw new Error("No token found. Please login.");
         }
-        // Make GET request with Authorization header
         const response = await axios.get("http://localhost:3001/appointments", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         const data = response.data;
-
-        // Format the date properly before setting state
         let formattedAppointments = data.map(appointment => ({
           ...appointment,
           date: `${appointment.year}-${String(appointment.month).padStart(2, '0')}-${String(appointment.day).padStart(2, '0')}`
         }));
 
-        // If the logged-in user is a doctor, filter appointments to show only their own.
+        // Filter appointments if the current role is doctor
         if (currentRole === "doctor" && currentUser) {
           formattedAppointments = formattedAppointments.filter(appointment =>
             appointment.therapist.toLowerCase() === currentUser.toLowerCase()
           );
         }
-        
+
         setAppointments(formattedAppointments);
       } catch (error) {
         console.error("Error fetching appointments:", error);
@@ -52,7 +48,7 @@ const AdminAppointment = () => {
     fetchAppointments();
   }, []);
 
-  // Handler for logout functionality.
+  // Handler for logout functionality
   const handleLogout = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("token");
@@ -85,16 +81,16 @@ const AdminAppointment = () => {
           </div>
         </div>
       </div>
+
       {/* Main Content */}
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="p-6 w-full">
-          {/* Top bar */}
           <div className="flex justify-between items-center mb-6">
             <button className="bg-[#EC993D] px-6 py-2 text-white rounded-lg">
               Appointments
             </button>
           </div>
-          {/* Appointment Table */}
+
           <div className="relative">
             <table className="w-full border-collapse">
               <thead className="bg-white text-black border-[2px] border-gray-200">
@@ -124,15 +120,14 @@ const AdminAppointment = () => {
                     </tr>
                   ))
                 ) : (
-                   <tr>
-                                  
-                                  <td colSpan="6" className="p-3 text-center text-gray-500">
-                                  <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
-                                  <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
-                                    No appointments found
-                                    </div>
-                                  </td>
-                                </tr>
+                  <tr>
+                    <td colSpan="6" className="p-3 text-center text-gray-500">
+                      <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
+                        <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+                        No appointments found
+                      </div>
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>

@@ -1,5 +1,5 @@
+//Sidebar Component
 import React from "react";
-import { NavLink } from "react-router-dom";
 import service from "../assets/service.png";
 import calendar from "../assets/calendar.png";
 import user from "../assets/user.png";

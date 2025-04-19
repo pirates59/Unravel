@@ -1,8 +1,9 @@
+//Forgot Password and Reset Password
 import React, { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IoChevronBackOutline } from "react-icons/io5";
 import axios from "axios";
-import eyeIcon from "../assets/eye.png";       // icon when password is hidden
+import eyeIcon from "../assets/eye.png";   
 import eyeOffIcon from "../assets/eye-off.png";
 
 const ForgotPassword = () => {
@@ -11,7 +12,7 @@ const ForgotPassword = () => {
   // Initialize OTP as an array of 6 empty strings
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [error, setError] = useState("");
-  // Create 6 refs for the OTP input fields
+  // Creates 6 refs for the OTP input fields
   const inputRefs = Array.from({ length: 6 }, () => useRef(null));
   const navigate = useNavigate();
 
@@ -40,7 +41,7 @@ const ForgotPassword = () => {
       const otpArray = [...otp];
       otpArray[index] = value;
       setOtp(otpArray);
-      // Move focus to next field if a digit was entered.
+      // Move focus to next field if a digit was entered
       if (value && index < inputRefs.length - 1) {
         inputRefs[index + 1].current.focus();
       }
@@ -152,7 +153,7 @@ const ForgotPassword = () => {
   );
 };
 
-// ------------------------- ResetPassword Component -------------------------
+// ResetPassword Component 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -162,7 +163,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
-  // Get the flag to know if this is the therapist (doctor) reset flow.
   const isTherapist = location.state?.isTherapist;
 
   const handlePasswordChange = (e) => setPassword(e.target.value);

@@ -1,10 +1,11 @@
+// Signup Page
 import React, { useState } from "react";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import leftarrow from "../assets/leftarrow.png";
 import loginImg from "../assets/login.png";
-import eyeIcon from "../assets/eye.png";       // icon when password is hidden (click to show)
-import eyeOffIcon from "../assets/eye-off.png";  // icon when password is shown (click to hide)
+import eyeIcon from "../assets/eye.png";       
+import eyeOffIcon from "../assets/eye-off.png"; 
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -12,7 +13,7 @@ function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // show/hide state
+  const [showPassword, setShowPassword] = useState(false); 
   const [emailError, setEmailError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setEmailError("");
-    setSuccessMessage(""); // Clear any previous success message
+    setSuccessMessage("");
   
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address.");
@@ -39,10 +40,10 @@ function Signup() {
         return;
       }
   
-      // Call register endpoint. The server will assign role based on whether this is the first user.
+      // Call register endpoint
       const regResponse = await axios.post("http://localhost:3001/register", { name, email, password });
       
-      // Set success message based on role: include role for admin only.
+      // Set success message based on role
       if (regResponse.data.user.role === "admin") {
         setSuccessMessage(`Registration successful! Your role is: ${regResponse.data.user.role}`);
       } else {

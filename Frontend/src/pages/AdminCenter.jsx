@@ -1,3 +1,4 @@
+// AdminCenter Page
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import plusIcon from "../assets/pluss.png";
@@ -24,6 +25,7 @@ const AdminCenter = () => {
     fetchCenters();
   }, []);
 
+  // Create a new center
   const handleCreateCenter = async () => {
     try {
       const formData = new FormData();
@@ -55,7 +57,6 @@ const AdminCenter = () => {
           .delete(`http://localhost:3001/centers/${centerId}`)
           .then(() => {
             swal("Deleted!", "The center has been deleted.", { icon: "success" });
-            // Update the centers list by filtering out the deleted center
             setCenters(centers.filter((center) => center._id !== centerId));
           })
           .catch((error) => {
@@ -76,6 +77,7 @@ const AdminCenter = () => {
           </button>
         </div>
       </div>
+
       {/* Grid of center cards */}
       <div className="grid grid-cols-4 gap-6">
         {centers.map((center) => (
@@ -85,11 +87,7 @@ const AdminCenter = () => {
           >
             <h2 className="font-semibold text-[#EC993D] mb-2">{center.name}</h2>
             <img
-              src={
-                center.image
-                  ? `http://localhost:3001/${center.image}`
-                  : "http://localhost:3001/uploads/default.png"
-              }
+              src={center.image ? `http://localhost:3001/${center.image}` : "http://localhost:3001/uploads/default.png"}
               alt={center.name}
               className="w-56 h-52 object-cover rounded mb-3"
             />
@@ -103,6 +101,7 @@ const AdminCenter = () => {
             </div>
           </div>
         ))}
+        
         {/* Create Center Card */}
         <div
           onClick={() => setShowModal(true)}
@@ -116,6 +115,7 @@ const AdminCenter = () => {
           <span className="text-gray-600 font-medium">Create a Center</span>
         </div>
       </div>
+
       {/* Modal for creating a new center */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">

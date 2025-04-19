@@ -14,7 +14,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Create a new center (room)
-// Admin creates a room with a name (e.g., "Relationship", "Family") and an image.
 router.post("/centers", upload.single("image"), async (req, res) => {
   try {
     const { name } = req.body;

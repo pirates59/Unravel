@@ -1,9 +1,8 @@
-// UserSidebar.jsx
+// UserSidebar Component
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import io from "socket.io-client";
-
 import userlogo from "../assets/userlogo.png";
 import plus from "../assets/plus.png";
 import feed from "../assets/feed.png";
@@ -14,13 +13,13 @@ import setting from "../assets/setting.png";
 import upload from "../assets/upload.jpg";
 import logout from "../assets/logout.png";
 import notificationIcon from "../assets/notification.png";
-
 import Notification from "../components/Notification";
 import Comment from "../components/Comment";
 
 const UserSidebar = ({ children, openChangePassword }) => {
   const navigate = useNavigate();
 
+  // Logout function
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
@@ -31,21 +30,18 @@ const UserSidebar = ({ children, openChangePassword }) => {
     ? `http://localhost:3001/uploads/${localStorage.getItem("profileImage")}`
     : upload;
 
-  // State for notifications
   const [showNotification, setShowNotification] = useState(false);
   const [socketNotifications, setSocketNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationOverlayPost, setNotificationOverlayPost] = useState(null);
   const [showNotificationOverlay, setShowNotificationOverlay] = useState(false);
 
-  // State for user dropdown (for change password)
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
   const token = localStorage.getItem("token");
 
-  // Refs for click outside detection
   const notifRef = useRef(null);
   const userDropdownRef = useRef(null);
   const notificationIconRef = useRef(null);
@@ -86,7 +82,6 @@ const UserSidebar = ({ children, openChangePassword }) => {
     }
   }, [showNotification]);
 
-  // Close notification and user dropdown if clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
@@ -122,10 +117,9 @@ const UserSidebar = ({ children, openChangePassword }) => {
     }
   };
 
-  
-
   return (
     <div className="flex h-screen">
+      {/* Sidebar */}
       <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
         <div className="mb-10">
           <img
@@ -170,7 +164,7 @@ const UserSidebar = ({ children, openChangePassword }) => {
           <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
             <img src={setting} alt="Settings" className="w-5 h-5" />
             <NavLink to="/setting" className="flex-1">
-            Settings
+              Settings
             </NavLink>
           </div>
           <div
@@ -183,6 +177,7 @@ const UserSidebar = ({ children, openChangePassword }) => {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <div className="flex justify-end items-center p-4 bg-white relative">
           <div className="relative">
@@ -221,7 +216,6 @@ const UserSidebar = ({ children, openChangePassword }) => {
               className="w-8 h-8 rounded-full cursor-pointer"
               onClick={() => setShowUserDropdown((prev) => !prev)}
             />
-            
           </div>
         </div>
         <div className="flex-1 p-6 overflow-y-auto">{children}</div>

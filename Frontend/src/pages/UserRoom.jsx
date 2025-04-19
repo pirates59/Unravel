@@ -1,7 +1,7 @@
+// UserRoom Page
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
 import anxietyImg from "../assets/anxiety.png";
 import plusIcon from "../assets/pluss.png";
 import groupIcon from "../assets/group.png";
@@ -9,10 +9,16 @@ import leftarrow from "../assets/leftarrow.png";
 
 const UserRoom = () => {
   const [rooms, setRooms] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [roomImage, setRoomImage] = useState(null);
   const [errors, setErrors] = useState({});
+
+  // For joining a room with an anonymous username
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [joinUsername, setJoinUsername] = useState("");
+  const [joinError, setJoinError] = useState("");
 
   const navigate = useNavigate();
 
@@ -30,7 +36,7 @@ const UserRoom = () => {
   };
 
   const handleCreateRoom = async () => {
-    // Validate inputs
+    // Validate inputs for room creation
     const newErrors = {};
     if (!roomName.trim()) {
       newErrors.roomName = "*Required";
@@ -48,13 +54,40 @@ const UserRoom = () => {
       formData.append("image", roomImage);
       const res = await axios.post("http://localhost:3001/rooms", formData);
       setRooms([...rooms, res.data]);
-      setShowModal(false);
+      setShowCreateModal(false);
       setRoomName("");
       setRoomImage(null);
       setErrors({});
     } catch (error) {
       console.error("Error creating room:", error);
     }
+  };
+
+  // Called when clicking join on a room.
+  const handleJoinRoom = (room) => {
+    const storedJoin = localStorage.getItem(`chat_joined_${room._id}`);
+    const storedUsername = localStorage.getItem(`chat_username_${room._id}`);
+    if (storedJoin === "true" && storedUsername) {
+      navigate(`/chat/${room._id}`, { state: { username: storedUsername } });
+    } else {
+      setSelectedRoom(room);
+      setJoinUsername("");
+      setJoinError("");
+      setShowJoinModal(true);
+    }
+  };
+
+  // Submit the anonymous username and store join status for the room
+  const submitJoin = () => {
+    if (!joinUsername.trim()) {
+      setJoinError("Username is required.");
+      return;
+    }
+    // Save join status and username for future entry 
+    localStorage.setItem(`chat_joined_${selectedRoom._id}`, "true");
+    localStorage.setItem(`chat_username_${selectedRoom._id}`, joinUsername);
+    navigate(`/chat/${selectedRoom._id}`, { state: { username: joinUsername } });
+    setShowJoinModal(false);
   };
 
   return (
@@ -93,10 +126,10 @@ const UserRoom = () => {
                 <span className="text-gray-600 text-sm">{room.count || 0}</span>
               </div>
               <button
-                onClick={() => navigate(`/chat/${room._id}`)}
+                onClick={() => handleJoinRoom(room)}
                 className="bg-[#EC993D] text-white px-4 py-1 rounded hover:bg-orange-400"
               >
-                Enter
+                Join
               </button>
             </div>
           </div>
@@ -104,7 +137,7 @@ const UserRoom = () => {
 
         <div
           onClick={() => {
-            setShowModal(true);
+            setShowCreateModal(true);
             setErrors({});
           }}
           className="bg-gray-100 w-[283px] h-[320px] rounded-lg shadow p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition"
@@ -118,12 +151,12 @@ const UserRoom = () => {
         </div>
       </div>
 
-      {showModal && (
+      {/* Modal for creating a new room */}
+      {showCreateModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow max-w-sm w-full relative">
-           
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => setShowCreateModal(false)}
               className="absolute top-5 right-5 text-black hover:text-gray-700 text-3xl font-semibold"
             >
               &times;
@@ -166,7 +199,7 @@ const UserRoom = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => {
-                  setShowModal(false);
+                  setShowCreateModal(false);
                   setErrors({});
                 }}
                 className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
@@ -178,6 +211,49 @@ const UserRoom = () => {
                 className="bg-blue-500 text-white px-4 py-2 rounded"
               >
                 Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for entering anonymous username when joining a room */}
+      {showJoinModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow max-w-sm w-full relative">
+            <button
+              onClick={() => setShowJoinModal(false)}
+              className="absolute top-5 right-5 text-black hover:text-gray-700 text-3xl font-semibold"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-semibold mb-4">Enter Username</h2>
+            <p className="mb-4">Enter the name you wish to use in this chat room.</p>
+            <input
+              type="text"
+              value={joinUsername}
+              onChange={(e) => {
+                setJoinUsername(e.target.value);
+                if (e.target.value.trim()) setJoinError("");
+              }}
+              className="mt-1 block w-full border border-gray-300 rounded px-2 py-1"
+              placeholder="Your username"
+            />
+            {joinError && (
+              <span className="text-red-500 text-sm">{joinError}</span>
+            )}
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowJoinModal(false)}
+                className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitJoin}
+                className="bg-[#EC993D] text-white px-4 py-2 rounded"
+              >
+                Join Chat
               </button>
             </div>
           </div>

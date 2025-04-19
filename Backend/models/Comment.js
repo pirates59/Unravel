@@ -1,6 +1,8 @@
+//models/Comment.js
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+// Schema for comments on posts
 const CommentSchema = new Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -11,7 +13,7 @@ const CommentSchema = new Schema({
     type: String,
     required: true,
   },
-  // New authorId field to identify the comment owner
+  // Reference to the user who created the comment
   authorId: {
     type: Schema.Types.ObjectId,
     ref: "Signup",
@@ -21,6 +23,7 @@ const CommentSchema = new Schema({
     type: String,
     required: true,
   },
+  // Optional profile image for the author
   profileImage: {
     type: String,
     default: "default-avatar.png",

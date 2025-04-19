@@ -1,17 +1,18 @@
+# Ai_services.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
 import joblib
 import re
 
-# --- Helper function for text cleaning (if needed for prediction) ---
+# Helper function for text cleaning
 def clean_text(text):
     text = re.sub(r'[^\x00-\x7F]+', '', text)
     text = re.sub(r'[^\w\s]', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-# --- (Optional) Load your trained model and vectorizer for prediction ---
+# Load trained model and vectorizer for prediction
 try:
     vectorizer = joblib.load('tfidf_vectorizer.pkl')
     model = joblib.load('recommendation_model.pkl')
@@ -32,7 +33,7 @@ def recommend_topic(description, threshold=0.5):
     else:
         return None, None
 
-# --- Load dataset.csv once ---
+# Load dataset.csv once
 DATASET_PATH = 'dataset.csv'
 try:
     df_dataset = pd.read_csv(DATASET_PATH)
@@ -40,11 +41,11 @@ except Exception as e:
     print("Error loading dataset:", e)
     df_dataset = pd.DataFrame()
 
-# --- Initialize Flask ---
+# Initialize Flask
 app = Flask(__name__)
 CORS(app)
 
-# --- (Optional) Endpoint: Predict Topic from Description ---
+# Endpoint: Predict Topic from Description
 @app.route("/predict_topic", methods=["POST"])
 def predict_topic():
     data = request.json
@@ -58,7 +59,7 @@ def predict_topic():
     else:
         return jsonify({"error": "No suitable topic found"}), 404
 
-# --- Endpoint: Recommend Videos by Topic (from dataset.csv) ---
+# Endpoint: Recommend Videos by Topic (from dataset.csv)
 @app.route("/recommend_videos", methods=["GET"])
 def recommend_videos():
     topic = request.args.get("topic", "").strip()
@@ -74,8 +75,8 @@ def recommend_videos():
     filtered_videos["Views"] = pd.to_numeric(filtered_videos["Views"], errors='coerce')
     filtered_videos = filtered_videos.dropna(subset=["Views"])
 
-    # Sort by views (highest first) and take the top 5 videos
-    top_videos = filtered_videos.sort_values(by="Views", ascending=False).head(5)
+    # Sort by views (highest first) and take the top 15 videos
+    top_videos = filtered_videos.sort_values(by="Views", ascending=False).head(15)
 
     # Return selected columns (e.g., Title, URL, Views, Video ID)
     result = top_videos[["Title", "URL", "Views", "Video ID"]]

@@ -1,3 +1,4 @@
+// Appointment Page
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -45,10 +46,10 @@ const Appointment = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // We use useNavigate for redirection
+  // useNavigate for redirection
   const navigate = useNavigate();
 
-  // Load temporary data from localStorage on page load
+  // Load temporary data from localStorage 
   useEffect(() => {
     const savedData = localStorage.getItem("appointmentFormData");
     const temporaryBooking = JSON.parse(localStorage.getItem("temporaryBooking"));
@@ -61,7 +62,7 @@ const Appointment = () => {
       // Parse the date correctly, adjusting for timezone
       const date = new Date(temporaryBooking.date);
       const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-      setSelectedDate(localDate.toISOString().split("T")[0]); // Store as YYYY-MM-DD
+      setSelectedDate(localDate.toISOString().split("T")[0]); // Stored as YYYY-MM-DD
       setSelectedTime(temporaryBooking.time);
     }
   }, []);
@@ -196,7 +197,6 @@ const Appointment = () => {
               </div>
 
               <div>
-                {/* First Name and Last Name in one row */}
                 <div className="mb-4 flex gap-4">
                   <div className="w-1/2">
                     <label className="block mb-1 font-medium text-sm">
@@ -226,7 +226,6 @@ const Appointment = () => {
                   </div>
                 </div>
 
-                {/* Email and Contact in one row below */}
                 <div className="mb-4 flex gap-4">
                   <div className="w-1/2">
                     <label className="block mb-1 font-medium text-sm">

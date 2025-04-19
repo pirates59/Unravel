@@ -1,3 +1,4 @@
+// AdminRooms Page
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import groupIcon from "../assets/group.png";
@@ -65,7 +66,7 @@ const AdminRooms = () => {
           <p>No rooms found</p>
         </div>
       ) : (
-        /* Grid of room cards */
+        // Grid of room cards
         <div className="grid grid-cols-4 gap-6">
           {rooms.map((room) => (
             <div
@@ -76,11 +77,7 @@ const AdminRooms = () => {
                 {room.name}
               </h2>
               <img
-                src={
-                  room.image
-                    ? `http://localhost:3001/${room.image}`
-                    : "http://localhost:3001/uploads/default.png"
-                }
+                src={room.image ? `http://localhost:3001/${room.image}` : "http://localhost:3001/uploads/default.png"}
                 alt={room.name}
                 className="w-56 h-52 object-cover rounded mb-3"
               />

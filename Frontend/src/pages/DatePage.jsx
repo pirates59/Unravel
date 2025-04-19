@@ -1,3 +1,4 @@
+// Date Page
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, NavLink } from "react-router-dom";
@@ -10,7 +11,7 @@ import user from "../assets/user.png";
 import close from "../assets/close.png";
 import appoint from "../assets/appoint.png";
 
-// Helper: Map JS day number to abbreviated day name.
+// Helper: Map JS day number to abbreviated day name
 const dayMap = {
   0: "Sun",
   1: "Mon",
@@ -21,7 +22,7 @@ const dayMap = {
   6: "Sat",
 };
 
-// Helper: Convert a time string (e.g. "9:00 AM") to minutes since midnight.
+// Helper: Convert a time string (e.g. "9:00 AM") to minutes since midnight
 const convertTimeStringToMinutes = (timeStr) => {
   const [time, modifier] = timeStr.split(" ");
   let [hours, minutes] = time.split(":").map(Number);
@@ -31,7 +32,6 @@ const convertTimeStringToMinutes = (timeStr) => {
 };
 
 // Helper: Given start and end time strings, generate one-hour slots.
-// (Adjust interval as needed.)
 const generateTimeSlots = (startTime, endTime) => {
   const slots = [];
   const startMinutes = convertTimeStringToMinutes(startTime);
@@ -75,7 +75,7 @@ const DatePage = () => {
     "December",
   ];
 
-  // Fetch booked dates for the month.
+  // Fetch booked dates for the month
   useEffect(() => {
     const fetchBookedDates = async () => {
       try {
@@ -94,7 +94,7 @@ const DatePage = () => {
     fetchBookedDates();
   }, [currentDate]);
 
-  // Retrieve stored booking info.
+  // Retrieve stored booking info
   useEffect(() => {
     const storedBooking = JSON.parse(localStorage.getItem("temporaryBooking"));
     if (storedBooking) {
@@ -103,7 +103,7 @@ const DatePage = () => {
     }
   }, []);
 
-  // Fetch therapist details from backend based on selected therapist name.
+  // Fetch therapist details from backend based on selected therapist name
   useEffect(() => {
     const selectedTherapist = localStorage.getItem("selectedTherapist");
     if (selectedTherapist) {
@@ -174,10 +174,10 @@ const DatePage = () => {
 
       const isPastDate = date < today && date.toDateString() !== today.toDateString();
       
-      // If a therapist is selected, check if day is one of the therapist's available days.
+      // If a therapist is selected, check if day is one of the therapist's available days
       let availableToday = true;
       if (therapistInfo && therapistInfo.daysAvailable) {
-        const dayAbbrev = dayMap[date.getDay()]; // e.g., "Sun", "Mon", etc.
+        const dayAbbrev = dayMap[date.getDay()];
         availableToday = therapistInfo.daysAvailable.includes(dayAbbrev);
       }
       
@@ -203,7 +203,7 @@ const DatePage = () => {
     return days;
   };
 
-  // Render available time slots using the dynamically generated slots.
+  // Render available time slots using the dynamically generated slots
   const renderTimes = () => {
     const formattedDate = selectedDate
       ? `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`

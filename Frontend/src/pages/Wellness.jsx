@@ -1,4 +1,4 @@
-// src/components/Wellness.jsx
+// Wellness Page
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -15,9 +15,7 @@ const Wellness = () => {
   const [videos, setVideos] = useState([]);
   const [centers, setCenters] = useState([]);
   const [loading, setLoading] = useState(true);
-  // New state for active video index to control sound settings
   const [activeVideo, setActiveVideo] = useState(null);
-  // New state to track if a matching center exists for the chosen topic
   const [matchingCenterExists, setMatchingCenterExists] = useState(null);
 
   useEffect(() => {
@@ -42,7 +40,7 @@ const Wellness = () => {
     } catch (error) {
       console.error("Error fetching videos:", error);
     } finally {
-      // Do not set loading false here as we depend on centers fetch too
+      
     }
   };
 
@@ -80,7 +78,7 @@ const Wellness = () => {
     navigate(`/wellness?topic=${encodeURIComponent(centerName)}`);
   };
 
-  // Handle video play event to set active video index (for controlling mute settings)
+  // Handle video play event to set active video index 
   const handleVideoPlay = (index) => {
     setActiveVideo(index);
   };
@@ -99,15 +97,20 @@ const Wellness = () => {
           {loading ? (
             <p>Loading videos...</p>
           ) : matchingCenterExists === false ? (
-            <p>No center available for requested topic.</p>
+            <div className="flex flex-col justify-center items-center mt-[100px] ">
+            
+            <img src={NoVideo} alt="No posts available" className="w-[180px] h-[180px]" />
+            <p className= " ml-4 text-gray-700 font-medium"> No center available for requested topic.</p>
+            </div>
+           
           ) : videos.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {videos.map((video, index) => {
                 const isYoutube =
                   video.URL.includes("youtube.com") ||
                   video.URL.includes("youtu.be");
                 if (isYoutube) {
-                  // Convert YouTube watch URL to embed URL if necessary
+                  // Convert YouTube watch URL to embed URL 
                   let embedUrl = video.URL;
                   if (video.URL.includes("watch?v=")) {
                     embedUrl = video.URL.replace("watch?v=", "embed/");
@@ -123,7 +126,7 @@ const Wellness = () => {
                         allowFullScreen
                       ></iframe>
                       <p className="mt-2 text-sm">Title: {video.Title}</p>
-                      <p className="mt-1 text-sm">Views: {video.Views}</p>
+                      
                     </div>
                   );
                 } else {

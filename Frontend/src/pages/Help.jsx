@@ -1,3 +1,4 @@
+// Help Page
 import React, { useState } from "react";
 import leftarrow from "../assets/leftarrow.png";
 import siren from "../assets/siren.png";
@@ -24,7 +25,7 @@ const Help = () => {
     alert("Phone number copied!");
   };
 
-  // Initiate phone call (for devices that support tel links)
+  // Initiate phone call
   const callNumber = () => {
     window.location.href = "tel:1166";
   };
@@ -69,7 +70,6 @@ const Help = () => {
     {showEmergencyOverlay && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white w-[240px] p-4 rounded-md shadow-lg flex flex-col items-center">
-            {/* Phone Number + Copy + Call in one row */}
             <div className="flex items-center mb-4 space-x-2">
               <span className="text-gray-700 font-semibold mr-8">Phone: 1166</span>
 
@@ -78,13 +78,10 @@ const Help = () => {
                 <img src={copy} alt="Copy" className="w-5 h-5" />
               </button>
 
-              {/* Call button (directly next to copy icon) */}
               <button onClick={callNumber}>
                 <img src={call} alt="Call" className="w-5 h-5" />
               </button>
             </div>
-
-            {/* OK Button below the icons */}
             <button
               onClick={handleCloseOverlay}
                  className="text-black px-4 py-2 rounded ml-40"

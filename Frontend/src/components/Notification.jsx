@@ -1,4 +1,4 @@
-// components/Notification.jsx
+// Notification Component
 import React from "react";
 import { format } from "date-fns";
 import axios from "axios";
@@ -13,6 +13,7 @@ const Notification = ({
 }) => {
   const [fetchedNotifications, setFetchedNotifications] = React.useState([]);
 
+  // Fetch notifications on component mount
   React.useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -54,6 +55,7 @@ const Notification = ({
     }
   };
 
+  // Helper to get image URL for notification profile image
   const getImageUrl = (profileImage) => {
     if (!profileImage || profileImage === "default-avatar.png") {
       return "/assets/default-avatar.png";
@@ -64,6 +66,7 @@ const Notification = ({
     return `${apiBaseUrl}/uploads/${profileImage}`;
   };
 
+  // Helper to format date string
   const formatDateString = (dateString) => {
     return format(new Date(dateString), "MMMM dd, yyyy 'at' h:mmaaa");
   };

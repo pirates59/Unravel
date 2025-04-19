@@ -1,3 +1,4 @@
+// routes/therapistRoutes.js
 const express = require("express");
 const router = express.Router();
 const path = require("path");
@@ -28,7 +29,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// GET /therapists — fetch all therapists
+// Fetch all therapists
 router.get("/therapists", async (req, res) => {
   try {
     const therapists = await Therapist.find();
@@ -69,7 +70,7 @@ router.post("/therapists", upload.single("image"), async (req, res) => {
     });
     const savedTherapist = await newTherapist.save();
 
-    // Generate a one‑time default password (e.g., a 6‑digit number)
+    // Generate a one‑time default password
     const defaultPassword = crypto.randomInt(100000, 999999).toString();
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
@@ -88,7 +89,7 @@ router.post("/therapists", upload.single("image"), async (req, res) => {
       isFirstLogin: true,
     });
 
-    // Send email with the default password (non‑blocking)
+    // Send email with the default password 
     transporter
       .sendMail({
         from: '"Unravel" <no-reply@yourapp.com>',
@@ -124,7 +125,7 @@ router.post("/therapists", upload.single("image"), async (req, res) => {
   }
 });
 
-// DELETE /therapists/:id — delete a therapist by ID
+// DELETE therapist by ID
 router.delete("/therapists/:id", async (req, res) => {
   try {
     const deleted = await Therapist.findByIdAndDelete(req.params.id);

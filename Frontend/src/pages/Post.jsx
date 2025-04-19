@@ -1,17 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import leftarrow from "../assets/leftarrow.png";
-import gallery from "../assets/gallery.png";
-import location from "../assets/location.png";
+// Post Page
+import React, { useState, useEffect, useRef } from "react"; 
+import { useNavigate } from "react-router-dom"; 
+import leftarrow from "../assets/leftarrow.png"; 
+import gallery from "../assets/gallery.png"; 
+import location from "../assets/location.png"; 
 
 const Post = () => {
+  // Declare state variables for content, author, selected image, and image preview.
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  
+  // Hook for navigation actions.
   const navigate = useNavigate();
-
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
@@ -19,23 +22,24 @@ const Post = () => {
     }
   }, []);
 
-  // Retrieve profile image filename from localStorage, default if not set
+  // Retrieve profile image filename from localStorage
   const profileImageName =
     localStorage.getItem("profileImage") || "default-avatar.png";
   const profileImageUrl =
     profileImageName !== "default-avatar.png"
       ? `http://localhost:3001/uploads/${profileImageName}`
-      : "default-avatar.png";
+      : "default-avatar.png"; 
 
-  // Handle file selection, set the file and create a preview URL
-  const handleImageChange = (e) => {
+  // Handler function for file selection.
+   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedImage(e.target.files[0]);
       setImagePreview(URL.createObjectURL(e.target.files[0]));
     }
   };
 
-  // Remove the selected image, clear preview, and reset file input
+
+  // Clears the preview and resets the file input.
   const removeImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
@@ -44,33 +48,35 @@ const Post = () => {
     }
   };
 
-  // Submit the post using FormData to include both text and image
+  // Async function to handle form submission.
   const handleSubmit = async () => {
-    // Require at least text or an image to post
+    // Validate that there's either text content or an image before posting.
     if (!content.trim() && !selectedImage) {
       return;
     }
     try {
+      // Create a FormData object to package author, content, and optional image.
       const formData = new FormData();
       formData.append("author", author);
       formData.append("content", content);
       formData.append("profileImage", profileImageName);
-
       if (selectedImage) {
         formData.append("image", selectedImage);
       }
 
-      // Retrieve the JWT token from localStorage
+      // Retrieve JWT token for authentication from localStorage
       const token = localStorage.getItem("token");
 
+      // Send POST request to backend with the post data
       const res = await fetch("http://localhost:3001/api/posts", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`, 
         },
         body: formData,
       });
 
+      // On success, navigate the user to the feed page
       if (res.ok) {
         navigate("/feed");
       } else {
@@ -83,12 +89,12 @@ const Post = () => {
 
   return (
     <div>
-      {/* Back Button */}
+      {/* Back Button to navigate to the previous page */}
       <button className="mb-[30px]" onClick={() => navigate(-1)}>
         <img src={leftarrow} alt="Back" className="w-6 h-6" />
       </button>
 
-      {/* Post Box */}
+      {/* Container for the post box */}
       <div className="bg-gray-100 p-4 rounded-lg shadow-md w-[80%] h-[65%]">
         <div className="flex items-center mb-3">
           <img
@@ -99,9 +105,9 @@ const Post = () => {
           <span className="font-semibold">{author}</span>
         </div>
 
-        {/* Container with relative positioning */}
+        {/* Main post container  */}
         <div className="bg-gray-300 rounded-lg p-4 text-black font-semibold w-full min-h-[350px] relative">
-          {/* Hidden file input for image selection */}
+          {/* Hidden file input for image selection, triggered when clicking gallery icon */}
           <input
             type="file"
             accept="image/*"
@@ -110,7 +116,7 @@ const Post = () => {
             className="hidden"
           />
 
-          {/* TEXTAREA: "What's Happening?" at the top */}
+          {/* Textarea for user to input post content */}
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -118,7 +124,7 @@ const Post = () => {
             className="bg-transparent w-full h-8 resize-none outline-none mb-2"
           />
 
-          {/* If an image is selected, show preview + close button in a row */}
+          {/* Display image preview if an image has been selected */}
           {imagePreview && (
             <div className="flex items-center space-x-3 mb-[80px]">
               <img
@@ -126,6 +132,7 @@ const Post = () => {
                 alt="Preview"
                 className="max-h-[200px] object-contain rounded-lg"
               />
+              {/* Button to remove selected image */}
               <button
                 onClick={removeImage}
                 className="text-white rounded-full w-8 h-8 flex items-center ml-[80px] mb-[180px]"
@@ -135,27 +142,13 @@ const Post = () => {
             </div>
           )}
 
-          {/* Add to your post bar */}
           <div
             className="
-              bg-white
-              flex
-              items-center
-              justify-between
-              p-4
-              rounded-lg
-              absolute
-              bottom-0
-              left-0
-              right-0
-              m-4
-              shadow-md
-            "
+              bg-white flex items-center justify-between p-4 rounded-lg absolute bottom-0 left-0  right-0 m-4 shadow-md"
           >
             <p className="text-gray-700 font-normal">Add to your post</p>
-
-            {/* Icons on the right */}
             <div className="flex items-center space-x-3 text-gray-600">
+              {/* Gallery icon triggers the file input click */}
               <img
                 src={gallery}
                 alt="Gallery"
@@ -167,7 +160,7 @@ const Post = () => {
           </div>
         </div>
 
-        {/* Post Button */}
+        {/* Post button */}
         <div className="flex justify-end mt-3">
           <button
             className="bg-[#EC993D] text-white px-8 py-2 rounded-lg"

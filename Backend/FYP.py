@@ -1,4 +1,4 @@
-# --- Model Training Section (run once) ---
+# Model Training Section FYP.py
 import pandas as pd
 import re
 import joblib
@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
-# Load and clean your dataset
+# Load and clean dataset
 df = pd.read_csv('dataset.csv')
 
 def clean_text(text):
