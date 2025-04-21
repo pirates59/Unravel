@@ -11,7 +11,6 @@ const Wellness = () => {
   const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const topic = queryParams.get("topic");
-
   const [videos, setVideos] = useState([]);
   const [centers, setCenters] = useState([]);
   const [loading, setLoading] = useState(true);

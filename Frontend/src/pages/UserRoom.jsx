@@ -83,8 +83,7 @@ const UserRoom = () => {
       setJoinError("Username is required.");
       return;
     }
-    // Save join status and username for future entry 
-    localStorage.setItem(`chat_joined_${selectedRoom._id}`, "true");
+    // Only save username, not join status
     localStorage.setItem(`chat_username_${selectedRoom._id}`, joinUsername);
     navigate(`/chat/${selectedRoom._id}`, { state: { username: joinUsername } });
     setShowJoinModal(false);

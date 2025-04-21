@@ -1,4 +1,4 @@
-// Therapist Component
+// Therapist Appointments Component
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -7,11 +7,10 @@ import appointmentIcon from "../assets/appointment.png";
 import logout from "../assets/logout.png";
 import empty from "../assets/empty.png";
 
-const AdminAppointment = () => {
+const TherapistAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch appointments from backend with token
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -22,20 +21,38 @@ const AdminAppointment = () => {
         if (!token) {
           throw new Error("No token found. Please login.");
         }
-        const response = await axios.get("http://localhost:3001/appointments", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
 
-        const data = response.data;
-        let formattedAppointments = data.map(appointment => ({
-          ...appointment,
-          date: `${appointment.year}-${String(appointment.month).padStart(2, '0')}-${String(appointment.day).padStart(2, '0')}`
+        const response = await axios.get(
+          "http://localhost:3001/appointments",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Normalize response data to an array
+        const payload = response.data;
+        let apptsArray = [];
+        if (Array.isArray(payload)) {
+          apptsArray = payload;
+        } else if (Array.isArray(payload.data)) {
+          apptsArray = payload.data;
+        } else if (Array.isArray(payload.appointments)) {
+          apptsArray = payload.appointments;
+        } else {
+          console.error("Unexpected appointments response format:", payload);
+          return;
+        }
+
+        // Format date on each appointment object
+        let formattedAppointments = apptsArray.map((apt) => ({
+          ...apt,
+          date: `${apt.year}-${String(apt.month).padStart(2, '0')}-${String(
+            apt.day
+          ).padStart(2, '0')}`
         }));
 
-        // Filter appointments if the current role is doctor
+        // If user is a doctor, filter by therapist name
         if (currentRole === "doctor" && currentUser) {
-          formattedAppointments = formattedAppointments.filter(appointment =>
-            appointment.therapist.toLowerCase() === currentUser.toLowerCase()
+          formattedAppointments = formattedAppointments.filter(
+            (apt) => apt.therapist.toLowerCase() === currentUser.toLowerCase()
           );
         }
 
@@ -48,7 +65,6 @@ const AdminAppointment = () => {
     fetchAppointments();
   }, []);
 
-  // Handler for logout functionality
   const handleLogout = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("token");
@@ -61,7 +77,11 @@ const AdminAppointment = () => {
       {/* Sidebar */}
       <div className="w-64 bg-[#EC993D] text-white flex flex-col p-5">
         <div className="mb-10">
-          <img src={userlogo} alt="Logo" className="w-[300px] h-[70px] ml-[-14px] mt-[-14px]" />
+          <img
+            src={userlogo}
+            alt="Logo"
+            className="w-[300px] h-[70px] ml-[-14px] mt-[-14px]"
+          />
         </div>
         <nav className="flex flex-col space-y-3">
           <div className="flex items-center space-x-3 cursor-pointer hover:bg-[#D97B28] hover:rounded p-2 transition-colors duration-300">
@@ -71,7 +91,7 @@ const AdminAppointment = () => {
             </NavLink>
           </div>
         </nav>
-        <div className="mt-auto flex flex-col ">
+        <div className="mt-auto flex flex-col">
           <div
             onClick={handleLogout}
             className="flex items-center space-x-3 cursor-pointer hover:opacity-80"
@@ -106,8 +126,11 @@ const AdminAppointment = () => {
               </thead>
               <tbody>
                 {appointments.length > 0 ? (
-                  appointments.map((appointment, index) => (
-                    <tr key={index} className="border-[1px] border-gray-200 relative">
+                  appointments.map((appointment, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-[1px] border-gray-200 relative"
+                    >
                       <td className="p-3 text-[#6C757D]">
                         {`${appointment.firstName} ${appointment.lastName}`}
                       </td>
@@ -121,9 +144,13 @@ const AdminAppointment = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="p-3 text-center text-gray-500">
-                      <div className="flex flex-col justify-center items-center mt-[100px] ml-[140px]">
-                        <img src={empty} alt="No posts available" className="w-[180px] h-[180px]" />
+                    <td colSpan="7" className="p-3 text-center text-gray-500">
+                      <div className="flex flex-col justify-center items-center mt-[100px]">
+                        <img
+                          src={empty}
+                          alt="No appointments available"
+                          className="w-[180px] h-[180px]"
+                        />
                         No appointments found
                       </div>
                     </td>
@@ -138,4 +165,4 @@ const AdminAppointment = () => {
   );
 };
 
-export default AdminAppointment;
+export default TherapistAppointments;

@@ -5,7 +5,6 @@ import like from "../assets/like.png";
 import redLike from "../assets/redLike.png";
 import commentIcon from "../assets/comment.png";
 import NoPost from "../assets/NoPost.png";
-import Swal from "sweetalert2";
 import Comment from "../components/Comment";
 
 // Helper functions

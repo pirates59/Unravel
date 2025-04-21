@@ -1,4 +1,4 @@
-// Chat Page
+// Full Updated Chat.jsx Component
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import io from "socket.io-client";
@@ -15,13 +15,11 @@ const Chat = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get anonymous username from location state
   const anonymousUsername =
     (location.state && location.state.username) ||
     localStorage.getItem("username") ||
     "Anonymous";
 
-  // Build current user info using the anonymous username
   const currentUser = {
     id: localStorage.getItem("userId") || anonymousUsername,
     name: anonymousUsername,
@@ -41,7 +39,6 @@ const Chat = () => {
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Create and maintain the socket connection
   const createSocketConnection = () => {
     if (!socketRef.current) {
       socketRef.current = io(socketServerUrl, { transports: ["websocket"] });
@@ -69,15 +66,12 @@ const Chat = () => {
     }
   };
 
-  // On mount, fetch room details and messages.
   useEffect(() => {
     axios.get("http://localhost:3001/rooms").then((res) => {
       const room = res.data.find((r) => r._id === roomId);
       if (room) {
         setRoomName(room.name);
-        setRoomImage(
-          room.image ? `http://localhost:3001/${room.image}` : defaultRoomImage
-        );
+        setRoomImage(room.image ? `http://localhost:3001/${room.image}` : defaultRoomImage);
       }
     });
 
@@ -86,15 +80,15 @@ const Chat = () => {
       .then((res) => setMessages(res.data))
       .catch((err) => console.error("Error fetching messages:", err));
 
-    // Auto join if the user was previously joined (via localStorage)
     const storedJoin = localStorage.getItem(`chat_joined_${roomId}`);
     if (storedJoin === "true") {
       setIsJoined(true);
       createSocketConnection();
       socketRef.current.emit("joinRoom", roomId, currentUser);
+    } else {
+      setIsJoined(false);
     }
 
-    // On unmount, disconnect the socket.
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -125,10 +119,7 @@ const Chat = () => {
         senderImage: currentUser.image,
         text,
       };
-      await axios.post(
-        `http://localhost:3001/rooms/${roomId}/messages`,
-        messageData
-      );
+      await axios.post(`http://localhost:3001/rooms/${roomId}/messages`, messageData);
       setText("");
       if (socketRef.current) {
         socketRef.current.emit("stopTyping", { roomId, user: currentUser });
@@ -137,7 +128,6 @@ const Chat = () => {
       console.error("Error sending message:", error);
     }
   };
-
 
   const handleJoinOrLeave = () => {
     if (isJoined) {
@@ -152,7 +142,6 @@ const Chat = () => {
         if (result.isConfirmed) {
           setIsJoined(false);
           localStorage.setItem(`chat_joined_${roomId}`, "false");
-          localStorage.removeItem(`chat_username_${roomId}`);
           if (socketRef.current) {
             socketRef.current.emit("leaveRoom", roomId, currentUser);
           }
@@ -164,17 +153,13 @@ const Chat = () => {
             system: true,
           };
           setMessages((prev) => [...prev, systemLeaveMessage]);
-          await axios.post(
-            `http://localhost:3001/rooms/${roomId}/messages`,
-            systemLeaveMessage
-          );
+          await axios.post(`http://localhost:3001/rooms/${roomId}/messages`, systemLeaveMessage);
         }
       });
     } else {
       createSocketConnection();
       socketRef.current.emit("joinRoom", roomId, currentUser);
       setIsJoined(true);
-      // Mark that the user has explicitly joined the room.
       localStorage.setItem(`chat_joined_${roomId}`, "true");
       localStorage.setItem(`chat_username_${roomId}`, currentUser.name);
       const systemJoinMessage = {
@@ -185,10 +170,7 @@ const Chat = () => {
         system: true,
       };
       setMessages((prev) => [...prev, systemJoinMessage]);
-      axios.post(
-        `http://localhost:3001/rooms/${roomId}/messages`,
-        systemJoinMessage
-      );
+      axios.post(`http://localhost:3001/rooms/${roomId}/messages`, systemJoinMessage);
     }
   };
 
@@ -203,7 +185,6 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col w-full h-full bg-gray-100">
-      {/* Top Bar */}
       <div className="flex h-[70px] items-center justify-between bg-[#D9D9D9] px-6 py-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full overflow-hidden">
@@ -212,11 +193,7 @@ const Chat = () => {
           <h1 className="text-xl font-semibold">{roomName || "Chat Room"}</h1>
         </div>
         <div className="flex gap-3 items-center">
-          {/* Back button: simply navigates back without altering join status */}
-          <button onClick={() => navigate("/rooms")}>
-            <img src={leaveIcon} alt="Back" className="w-9 h-9" />
-          </button>
-          {/* Explicit join/leave toggle */}
+          <button onClick={() => navigate("/rooms")}> <img src={leaveIcon} alt="Back" className="w-9 h-9" /></button>
           <button
             onClick={handleJoinOrLeave}
             className="bg-[#EC993D] text-white px-6 py-2 rounded-md text-sm font-medium"
@@ -226,7 +203,12 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Chat Messages */}
+      {!isJoined && (
+        <div className="bg-yellow-100 border border-yellow-200 text-yellow-600 text-sm text-center px-4 py-2">
+          You must click "Join Chat" to send messages in this room.
+        </div>
+      )}
+
       <div ref={containerRef} className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((msg, index) => {
           if (msg.senderId === "SYSTEM") {
@@ -278,7 +260,6 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
       <div className="px-3 py-4 border-t border-gray-200">
         <div className="flex items-center space-x-3">
           <input
