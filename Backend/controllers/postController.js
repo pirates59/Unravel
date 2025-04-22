@@ -30,6 +30,82 @@ exports.createPost = async (req, res) => {
   }
 };
 
+// Get all posts with comment count
+exports.getPosts = async (req, res) => {
+  try {
+    let posts = await Post.find().sort({ createdAt: -1 });
+    posts = await Promise.all(
+      posts.map(async (post) => {
+        const commentCount = await Comment.countDocuments({ postId: post._id });
+        return { ...post.toObject(), commentCount };
+      })
+    );
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get a single post by id
+exports.getPostById = async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Update a post
+exports.updatePost = async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    if (req.body.content !== undefined) {
+      post.content = req.body.content;
+    }
+    if (req.file) {
+      if (post.image) {
+        const oldImagePath = path.join(uploadDir, post.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      post.image = req.file.filename;
+    }
+    if (req.body.removeImage === "true") {
+      if (post.image) {
+        const oldImagePath = path.join(uploadDir, post.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      post.image = null;
+    }
+    await post.save();
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Delete a post
+exports.deletePost = async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const deletedPost = await Post.findByIdAndDelete(postId);
+    if (!deletedPost) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.json({ message: "Post deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Like a post 
 exports.likePost = async (req, res) => {
   const { postId } = req.params;
@@ -113,81 +189,6 @@ exports.addComment = async (req, res) => {
     res.status(500).json({ error: "Failed to add comment." });
   }
 };
-// Get all posts with comment count
-exports.getPosts = async (req, res) => {
-  try {
-    let posts = await Post.find().sort({ createdAt: -1 });
-    posts = await Promise.all(
-      posts.map(async (post) => {
-        const commentCount = await Comment.countDocuments({ postId: post._id });
-        return { ...post.toObject(), commentCount };
-      })
-    );
-    res.json(posts);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get a single post by id
-exports.getPostById = async (req, res) => {
-  const { postId } = req.params;
-  try {
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ error: "Post not found" });
-    res.json(post);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Update a post
-exports.updatePost = async (req, res) => {
-  const { postId } = req.params;
-  try {
-    const post = await Post.findById(postId);
-    if (!post) return res.status(404).json({ error: "Post not found" });
-    if (req.body.content !== undefined) {
-      post.content = req.body.content;
-    }
-    if (req.file) {
-      if (post.image) {
-        const oldImagePath = path.join(uploadDir, post.image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-      post.image = req.file.filename;
-    }
-    if (req.body.removeImage === "true") {
-      if (post.image) {
-        const oldImagePath = path.join(uploadDir, post.image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-      }
-      post.image = null;
-    }
-    await post.save();
-    res.json(post);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Delete a post
-exports.deletePost = async (req, res) => {
-  const { postId } = req.params;
-  try {
-    const deletedPost = await Post.findByIdAndDelete(postId);
-    if (!deletedPost) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-    res.json({ message: "Post deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
 // Get comments for a post
 exports.getComments = async (req, res) => {
@@ -241,7 +242,7 @@ exports.deleteComment = async (req, res) => {
   }
 };
 
-// Report comment remains the same
+// Report comment
 exports.reportComment = async (req, res) => {
   const { postId, commentId } = req.params;
   const { currentUser } = req.body;
