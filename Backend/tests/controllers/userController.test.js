@@ -1,6 +1,5 @@
 // tests/controllers/userController.test.js
 
-// --- Explicit mock factories so all methods exist as jest.fn() ---
 jest.mock('../../models/Signup', () => ({
     find: jest.fn(),
     findOneAndUpdate: jest.fn(),

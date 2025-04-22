@@ -1,6 +1,4 @@
 // tests/controllers/authController.test.js
-
-// Mock the SignupModel module before importing the controller
 jest.mock('../../models/Signup', () => ({
   countDocuments: jest.fn(),
   create: jest.fn(),

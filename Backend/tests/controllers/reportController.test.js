@@ -1,6 +1,5 @@
 // tests/controllers/reportController.test.js
 
-// --- Mock the models so all methods exist and are jest.fn() ---  
 jest.mock('../../models/Signup', () => ({ findOne: jest.fn() }));  
 jest.mock('../../models/Comment', () => ({  
   find: jest.fn(),  

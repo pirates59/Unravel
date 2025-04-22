@@ -1,6 +1,5 @@
 // tests/controllers/notificationController.test.js
 
-// Mock Notification model
 jest.mock('../../models/Notification', () => ({
     find: jest.fn(),
     updateMany: jest.fn(),
