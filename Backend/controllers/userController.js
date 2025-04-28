@@ -81,15 +81,24 @@ exports.freezeUser = async (req, res) => {
   }
 };
 
-// Delete a user account by ID
+// Delete a user account by ID and cascade-delete related records
 exports.deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
+    // 1) Delete the user
     const deletedUser = await SignupModel.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found.' });
     }
-    res.json({ message: 'User deleted successfully.' });
+    
+    // 2) Cascade: delete all posts by this user
+    await Post.deleteMany({ authorId: userId });
+    // 3) Cascade: delete all comments by this user
+    await Comment.deleteMany({ authorId: userId });
+    // 4) Cascade: delete all notifications triggered by this user
+    await Notification.deleteMany({ actorId: userId });
+
+    res.json({ message: 'User and related data deleted successfully.' });
   } catch (err) {
     console.error('Error deleting user:', err);
     res.status(500).json({ message: 'Error deleting user.' });

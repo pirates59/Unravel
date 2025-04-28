@@ -1,4 +1,5 @@
 // tests/controllers/authController.test.js
+
 jest.mock('../../models/Signup', () => ({
   countDocuments: jest.fn(),
   create: jest.fn(),
