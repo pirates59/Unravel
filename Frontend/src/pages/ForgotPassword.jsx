@@ -179,7 +179,7 @@ const ResetPassword = () => {
       if (response.data.success) {
         // Redirect based on the flag passed from login/OTP flow.
         if (isTherapist) {
-          navigate("/therapist");
+          navigate("/login");
         } else {
           navigate("/login");
         }

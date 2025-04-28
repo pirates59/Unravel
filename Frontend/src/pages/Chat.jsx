@@ -1,4 +1,4 @@
-// Full Updated Chat.jsx Component
+// Chat Page
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import io from "socket.io-client";

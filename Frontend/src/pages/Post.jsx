@@ -86,6 +86,9 @@ const Post = () => {
       console.error("Error posting content:", error);
     }
   };
+   // Determine if Post button should be enabled
+   const canPost = content.trim() !== "" || selectedImage;
+
 
   return (
     <div>
@@ -162,12 +165,16 @@ const Post = () => {
 
         {/* Post button */}
         <div className="flex justify-end mt-3">
-          <button
-            className="bg-[#EC993D] text-white px-8 py-2 rounded-lg"
+        <button
             onClick={handleSubmit}
+            disabled={!canPost}
+            className={`px-8 py-2 rounded-lg text-white  transition-colors duration-200 ${
+              canPost ? 'bg-[#EC993D] hover:bg-[#d78829]' : 'bg-gray-300 cursor-none'
+            }`}
           >
             Post
           </button>
+
         </div>
       </div>
     </div>
