@@ -6,7 +6,7 @@ jest.mock('../../models/Comment', () => ({
   findByIdAndUpdate: jest.fn(),  
 }));  
 
-// Now require everything under test  
+
 const User = require('../../models/Signup');  
 const Comment = require('../../models/Comment');  
 const reportController = require('../../controllers/reportController');
@@ -16,7 +16,6 @@ describe('reportController.getReportedComments', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // silence console.error for error‑path tests
     jest.spyOn(console, 'error').mockImplementation(() => {});
     req = {};
     res = {
@@ -33,11 +32,10 @@ describe('reportController.getReportedComments', () => {
       { _id: 'c2', text: 'Second', author: 'Bob', createdAt: date2 },
     ];
 
-    // Mock Comment.find().sort(...)
     const sortMock = jest.fn().mockResolvedValue(fakeComments);
     Comment.find.mockReturnValue({ sort: sortMock });
 
-    // For first comment return a user, for second return null
+
     User.findOne
       .mockResolvedValueOnce({
         _id: 'u1',
@@ -53,7 +51,6 @@ describe('reportController.getReportedComments', () => {
     expect(Comment.find).toHaveBeenCalledWith({ reported: true });
     expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
 
-    // Build expected enriched array
     const expected = [
       {
         _id: 'c1',
