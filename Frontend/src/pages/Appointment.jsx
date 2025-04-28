@@ -83,7 +83,7 @@ const Appointment = () => {
 
     // Validate required fields
     if (!firstName || !lastName || !contact || !email || !selectedDate || !selectedTime) {
-      setError("All fields and the selected date and time are required.");
+      setError("All fields are required.");
       setMessage("");
       return;
     }

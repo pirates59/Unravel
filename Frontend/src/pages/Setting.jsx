@@ -146,7 +146,7 @@ export default function Setting() {
       })
       .catch((err) => {
         console.error(err);
-        setPasswordErrorMessage("Enter password correctly");
+        setPasswordErrorMessage("Enter current password correctly");
       });
   };
 

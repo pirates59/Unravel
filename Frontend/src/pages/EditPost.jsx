@@ -1,4 +1,4 @@
-// EditPost Page
+// Edit Post Page
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import leftarrow from "../assets/leftarrow.png";
@@ -103,6 +103,8 @@ const EditPost = () => {
       console.error("Error updating post:", error);
     }
   };
+  // Determine if Post button should be enabled
+  const canPost = content.trim() !== "" || selectedImage;
 
   return (
     <div>
@@ -185,9 +187,12 @@ const EditPost = () => {
 
         {/* Save Button */}
         <div className="flex justify-end mt-3">
-          <button
-            className="bg-[#EC993D] text-white px-8 py-2 rounded-lg"
+        <button
             onClick={handleSubmit}
+            disabled={!canPost}
+            className={`px-8 py-2 rounded-lg text-white  transition-colors duration-200 ${
+              canPost ? 'bg-[#EC993D] hover:bg-[#d78829]' : 'bg-gray-300 cursor-none'
+            }`}
           >
             Save
           </button>

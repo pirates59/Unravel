@@ -1,4 +1,4 @@
-// AdminAppointment.jsx
+// AdminAppointment Page
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import empty from "../assets/empty.png";
