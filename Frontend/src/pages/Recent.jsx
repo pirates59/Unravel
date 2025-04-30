@@ -100,23 +100,6 @@ const Recent = () => {
     setActiveDropdown(activeDropdown === postId ? null : postId);
   };
 
-  const handleDelete = async (postId) => {
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch(`http://localhost:3001/api/posts/${postId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        fetchPosts();
-      } else {
-        console.error("Failed to delete post");
-      }
-    } catch (error) {
-      console.error("Error deleting post:", error);
-    }
-  };
-
   const toggleComments = (postId) => {
     setOpenCommentId(openCommentId === postId ? null : postId);
   };
